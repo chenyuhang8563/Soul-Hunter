@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://b1b1b1b1b1b1b"]
+
+[ext_resource type="Script" uid="uid://b5vyf5xeyyqlu" path="res://Character/Common/character.gd" id="1_char"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(1, 0, 0, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_bg"]
+bg_color = Color(0.1, 0.1, 0.1, 0.5)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_fill"]
+bg_color = Color(1, 0.65, 0, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(15, 17)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
+radius = 9.873196
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_attack_scope"]
+radius = 8.01561
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_melee_hitbox"]
+size = Vector2(18, 10)
+
+[node name="CharacterTemplate" type="CharacterBody2D" unique_id=240269984]
+collision_layer = 3
+script = ExtResource("1_char")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1966064385]
+
+[node name="HPBar" type="ProgressBar" parent="." unique_id=1933057317]
+offset_left = -16.0
+offset_top = -23.0
+offset_right = 16.0
+offset_bottom = -18.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+value = 100.0
+show_percentage = false
+
+[node name="PostureBar" type="ProgressBar" parent="." unique_id=1452710565]
+offset_left = -16.0
+offset_top = -17.0
+offset_right = 16.0
+offset_bottom = -13.0
+scale = Vector2(1, 0.48)
+theme_override_styles/background = SubResource("StyleBoxFlat_posture_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_posture_fill")
+show_percentage = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=749656219]
+position = Vector2(0, -1.5)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Marker2D" type="Marker2D" parent="." unique_id=2094758054]
+
+[node name="VisualScope" type="Area2D" parent="." unique_id=1332281990]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisualScope" unique_id=1879561438]
+scale = Vector2(5, 5)
+shape = SubResource("CircleShape2D_visual_scope")
+
+[node name="AttackScope" type="Area2D" parent="." unique_id=1430574399]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackScope" unique_id=1441694067]
+scale = Vector2(2, 2)
+shape = SubResource("CircleShape2D_attack_scope")
+
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=113976774]
+target_position = Vector2(60, 0)
+
+[node name="MeleeHitbox" type="Area2D" parent="." unique_id=1238684724]
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MeleeHitbox" unique_id=1124018874]
+position = Vector2(15, -2)
+shape = SubResource("RectangleShape2D_melee_hitbox")
+disabled = true
+
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=306858432]
+anim_player = NodePath("../AnimationPlayer")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=280822122]

@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://cmmp0t03foovw"]
+
+[ext_resource type="Texture2D" uid="uid://du21nsjoaf4lk" path="res://Assets/Sprites/UI/icons-keyboard-16x16-1bit-ansdor.png" id="1_aofol"]
+[ext_resource type="Theme" uid="uid://dahsjs0ef0n2k" path="res://Assets/Sprites/UI/text.tres" id="2_e2l8f"]
+
+[node name="KeyButton" type="Node2D" unique_id=2007844175]
+
+[node name="ZXC" type="Sprite2D" parent="." unique_id=165218132]
+position = Vector2(72, 0)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(112, 16, 48, 16)
+
+[node name="F" type="Sprite2D" parent="." unique_id=695509995]
+position = Vector2(67.00001, 26)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(16, 16, 16, 16)
+
+[node name="E" type="Sprite2D" parent="." unique_id=845619703]
+position = Vector2(-6.0000005, 25.999998)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(32, 0, 16, 16)
+
+[node name="Direction" type="Sprite2D" parent="." unique_id=1929961154]
+position = Vector2(-11, 0)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(112, 64, 16, 16)
+
+[node name="Direction2" type="Sprite2D" parent="." unique_id=1736449759]
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(160, 64, 16, 16)
+
+[node name="Direction3" type="Sprite2D" parent="." unique_id=2094939386]
+position = Vector2(11, 0)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(128, 64, 16, 16)
+
+[node name="Direction4" type="Sprite2D" parent="." unique_id=1309881204]
+position = Vector2(0, -11)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(144, 64, 16, 16)
+
+[node name="Label" type="Label" parent="." unique_id=983995747]
+offset_left = -63.0
+offset_top = -6.0
+offset_right = -20.0
+offset_bottom = 5.0
+theme = ExtResource("2_e2l8f")
+text = "Movement"
+metadata/_edit_use_anchors_ = true
+
+[node name="Label2" type="Label" parent="." unique_id=95238887]
+offset_left = 24.0
+offset_top = -5.0
+offset_right = 67.0
+offset_bottom = 6.0
+theme = ExtResource("2_e2l8f")
+text = "Attack"
+
+[node name="Label3" type="Label" parent="." unique_id=279779546]
+offset_left = -63.0
+offset_top = 22.0
+offset_right = -20.0
+offset_bottom = 33.0
+theme = ExtResource("2_e2l8f")
+text = "Interact"
+
+[node name="Label4" type="Label" parent="." unique_id=1966819202]
+offset_left = 24.0
+offset_top = 22.0
+offset_right = 67.0
+offset_bottom = 33.0
+theme = ExtResource("2_e2l8f")
+text = "Possess"
+
+[node name="F2" type="Sprite2D" parent="." unique_id=1632733602]
+position = Vector2(127, 26)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_aofol")
+region_enabled = true
+region_rect = Rect2(96, 64, 16, 16)
+
+[node name="Label5" type="Label" parent="." unique_id=2057652074]
+offset_left = 96.0
+offset_top = 22.0
+offset_right = 139.0
+offset_bottom = 33.0
+theme = ExtResource("2_e2l8f")
+text = "Jump"

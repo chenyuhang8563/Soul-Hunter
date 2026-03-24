@@ -1,0 +1,219 @@
+[gd_scene format=3 uid="uid://ys25otk3sp5k"]
+
+[ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_e8ouo"]
+[ext_resource type="Script" uid="uid://4opleqor7vjp" path="res://Character/Slime/slime.gd" id="1_slime_gd"]
+[ext_resource type="Texture2D" uid="uid://cdaecg4h1ivtd" path="res://Assets/Sprites/Slime/Slime.png" id="2_rn4pd"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_poi7t"]
+animation = &"hard_attack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_sbepb"]
+animation = &"light_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_l33nf"]
+advance_mode = 2
+advance_condition = &"is_light_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wqyu1"]
+advance_mode = 2
+advance_condition = &"is_hard_attack"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_erytu"]
+states/hard_attack/node = SubResource("AnimationNodeAnimation_poi7t")
+states/hard_attack/position = Vector2(402.8, 160)
+states/light_attack/node = SubResource("AnimationNodeAnimation_sbepb")
+states/light_attack/position = Vector2(402.8, 58.4)
+transitions = ["Start", "light_attack", SubResource("AnimationNodeStateMachineTransition_l33nf"), "Start", "hard_attack", SubResource("AnimationNodeStateMachineTransition_wqyu1")]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_cqehq"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_4itkv"]
+animation = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_445mk"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_fr3r8"]
+advance_mode = 2
+advance_condition = &"is_walking"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_nk2y1"]
+advance_mode = 2
+advance_condition = &"is_idle"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_ckstw"]
+states/idle/node = SubResource("AnimationNodeAnimation_cqehq")
+states/idle/position = Vector2(382.8, 92.8)
+states/walk/node = SubResource("AnimationNodeAnimation_4itkv")
+states/walk/position = Vector2(520.4, 92.704)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_445mk"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_fr3r8"), "walk", "idle", SubResource("AnimationNodeStateMachineTransition_nk2y1")]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_r6gwa"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_cqehq"]
+advance_mode = 2
+advance_condition = &"is_light_attack or is_hard_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_4itkv_2"]
+advance_mode = 2
+advance_condition = &"attack_finished"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_t6s8c"]
+states/attack_state_machine/node = SubResource("AnimationNodeStateMachine_erytu")
+states/attack_state_machine/position = Vector2(419.59998, 164)
+states/locomotion_state_machine/node = SubResource("AnimationNodeStateMachine_ckstw")
+states/locomotion_state_machine/position = Vector2(420.4, 42.399998)
+transitions = ["Start", "locomotion_state_machine", SubResource("AnimationNodeStateMachineTransition_r6gwa"), "locomotion_state_machine", "attack_state_machine", SubResource("AnimationNodeStateMachineTransition_cqehq"), "attack_state_machine", "locomotion_state_machine", SubResource("AnimationNodeStateMachineTransition_4itkv_2")]
+
+[sub_resource type="Animation" id="Animation_rn4pd"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_lxe62"]
+resource_name = "death"
+length = 0.40001002
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [60, 61, 62, 63]
+}
+
+[sub_resource type="Animation" id="Animation_elfmi"]
+resource_name = "hard_attack"
+length = 1.2000101
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.90000004, 1, 1.10001),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]
+}
+
+[sub_resource type="Animation" id="Animation_4u883"]
+resource_name = "hurt"
+length = 0.40001002
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [48, 49, 50, 51]
+}
+
+[sub_resource type="Animation" id="Animation_pkgia"]
+resource_name = "idle"
+length = 0.60001004
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="Animation" id="Animation_lphf8"]
+resource_name = "light_attack"
+length = 0.60001004
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [24, 25, 26, 27, 28, 29]
+}
+
+[sub_resource type="Animation" id="Animation_oxwy0"]
+resource_name = "walk"
+length = 0.50001
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 1,
+"values": [13, 14, 15, 16, 17]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nh5ry"]
+_data = {
+&"RESET": SubResource("Animation_rn4pd"),
+&"death": SubResource("Animation_lxe62"),
+&"hard_attack": SubResource("Animation_elfmi"),
+&"hurt": SubResource("Animation_4u883"),
+&"idle": SubResource("Animation_pkgia"),
+&"light_attack": SubResource("Animation_lphf8"),
+&"walk": SubResource("Animation_oxwy0")
+}
+
+[node name="Slime" unique_id=1231243137 instance=ExtResource("1_e8ouo")]
+script = ExtResource("1_slime_gd")
+attack_cooldown = 0.5
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_rn4pd")
+hframes = 12
+vframes = 6
+
+[node name="AnimationTree" parent="." index="9"]
+tree_root = SubResource("AnimationNodeStateMachine_t6s8c")
+parameters/conditions/attack_finished = false
+"parameters/conditions/is_light_attack or is_hard_attack" = false
+parameters/attack_state_machine/conditions/is_hard_attack = false
+parameters/attack_state_machine/conditions/is_light_attack = false
+parameters/locomotion_state_machine/conditions/is_idle = false
+parameters/locomotion_state_machine/conditions/is_walking = false
+
+[node name="AnimationPlayer" parent="." index="10"]
+libraries/ = SubResource("AnimationLibrary_nh5ry")

@@ -1,0 +1,330 @@
+[gd_scene format=3 uid="uid://bktv8jcuya3k7"]
+
+[ext_resource type="Script" uid="uid://bq3s2oj5b2cgl" path="res://Character/Soldier/soldier.gd" id="1_170xr"]
+[ext_resource type="Texture2D" uid="uid://d3fvsfmjo68kf" path="res://Assets/Sprites/Soldier/Soldier.png" id="1_xgcsp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(1, 0, 0, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_bg"]
+bg_color = Color(0.1, 0.1, 0.1, 0.5)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_fill"]
+bg_color = Color(1, 0.65, 0, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_170xr"]
+size = Vector2(13, 17)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
+radius = 9.873196
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_attack_scope"]
+radius = 8.01561
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_melee_hitbox"]
+size = Vector2(18, 10)
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_18yrk"]
+animation = &"ultimate_attack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_w8xp3"]
+animation = &"hard_attack"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_4g4w4"]
+animation = &"light_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_tcrmn"]
+advance_mode = 2
+advance_condition = &"is_light_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_5eii5"]
+advance_mode = 2
+advance_condition = &"is_hard_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_kifkl"]
+advance_mode = 2
+advance_condition = &"is_bow_attack"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_owjrc"]
+states/bow_attack/node = SubResource("AnimationNodeAnimation_18yrk")
+states/bow_attack/position = Vector2(408, 272)
+states/hard_attack/node = SubResource("AnimationNodeAnimation_w8xp3")
+states/hard_attack/position = Vector2(406, 168)
+states/light_attack/node = SubResource("AnimationNodeAnimation_4g4w4")
+states/light_attack/position = Vector2(406, 66)
+transitions = ["Start", "light_attack", SubResource("AnimationNodeStateMachineTransition_tcrmn"), "Start", "hard_attack", SubResource("AnimationNodeStateMachineTransition_5eii5"), "Start", "bow_attack", SubResource("AnimationNodeStateMachineTransition_kifkl")]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_xxt7n"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ikqhm"]
+animation = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_yw4qp"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_r0gir"]
+advance_mode = 2
+advance_condition = &"is_walking"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_kg1kf"]
+advance_mode = 2
+advance_condition = &"is_idle"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_cu50p"]
+states/idle/node = SubResource("AnimationNodeAnimation_xxt7n")
+states/idle/position = Vector2(387, 89)
+states/walk/node = SubResource("AnimationNodeAnimation_ikqhm")
+states/walk/position = Vector2(520, 89)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_yw4qp"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_r0gir"), "walk", "idle", SubResource("AnimationNodeStateMachineTransition_kg1kf")]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_j93p0"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_0739n"]
+advance_mode = 2
+advance_condition = &"is_any_attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_uih17"]
+advance_mode = 2
+advance_condition = &"attack_finished"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_elo1f"]
+states/attack_state_machine/node = SubResource("AnimationNodeStateMachine_owjrc")
+states/attack_state_machine/position = Vector2(430, 168)
+states/locomotion_state_machine/node = SubResource("AnimationNodeStateMachine_cu50p")
+states/locomotion_state_machine/position = Vector2(426, 44)
+transitions = ["Start", "locomotion_state_machine", SubResource("AnimationNodeStateMachineTransition_j93p0"), "locomotion_state_machine", "attack_state_machine", SubResource("AnimationNodeStateMachineTransition_0739n"), "attack_state_machine", "locomotion_state_machine", SubResource("AnimationNodeStateMachineTransition_uih17")]
+
+[sub_resource type="Animation" id="Animation_xgcsp"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_xpkqf"]
+resource_name = "death"
+length = 0.40001002
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [54, 55, 56, 57]
+}
+
+[sub_resource type="Animation" id="Animation_wy5rv"]
+resource_name = "hard_attack"
+length = 0.60001004
+loop_mode = 2
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [27, 28, 29, 30, 31, 32]
+}
+
+[sub_resource type="Animation" id="Animation_u0pxw"]
+resource_name = "hurt"
+length = 0.40001002
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [45, 46, 47, 48]
+}
+
+[sub_resource type="Animation" id="Animation_t0odl"]
+resource_name = "idle"
+length = 0.6
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="Animation" id="Animation_grm7c"]
+resource_name = "light_attack"
+length = 0.60001004
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [18, 19, 20, 21, 22, 23]
+}
+
+[sub_resource type="Animation" id="Animation_170xr"]
+resource_name = "ultimate_attack"
+length = 0.80001
+loop_mode = 2
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [36, 37, 38, 39, 40, 41, 42, 43]
+}
+
+[sub_resource type="Animation" id="Animation_i5jvm"]
+resource_name = "walk"
+length = 0.70001
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Soldier:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [9, 10, 11, 12, 13, 14, 15]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_66mda"]
+_data = {
+&"RESET": SubResource("Animation_xgcsp"),
+&"death": SubResource("Animation_xpkqf"),
+&"hard_attack": SubResource("Animation_wy5rv"),
+&"hurt": SubResource("Animation_u0pxw"),
+&"idle": SubResource("Animation_t0odl"),
+&"light_attack": SubResource("Animation_grm7c"),
+&"ultimate_attack": SubResource("Animation_170xr"),
+&"walk": SubResource("Animation_i5jvm")
+}
+
+[node name="Soldier" type="CharacterBody2D" unique_id=812296209]
+collision_layer = 3
+script = ExtResource("1_170xr")
+
+[node name="Soldier" type="Sprite2D" parent="." unique_id=470808698]
+texture = ExtResource("1_xgcsp")
+hframes = 9
+vframes = 7
+
+[node name="HPBar" type="ProgressBar" parent="." unique_id=118302443]
+offset_left = -16.0
+offset_top = -23.0
+offset_right = 16.0
+offset_bottom = -18.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+value = 100.0
+show_percentage = false
+
+[node name="PostureBar" type="ProgressBar" parent="." unique_id=903188902]
+offset_left = -16.0
+offset_top = -17.0
+offset_right = 16.0
+offset_bottom = -13.0
+scale = Vector2(1, 0.48000246)
+theme_override_styles/background = SubResource("StyleBoxFlat_posture_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_posture_fill")
+show_percentage = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=995205059]
+position = Vector2(-0.5, -1.5)
+shape = SubResource("RectangleShape2D_170xr")
+
+[node name="Marker2D" type="Marker2D" parent="." unique_id=2078106797]
+
+[node name="VisualScope" type="Area2D" parent="." unique_id=1323224273]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisualScope" unique_id=257803097]
+scale = Vector2(5, 5)
+shape = SubResource("CircleShape2D_visual_scope")
+
+[node name="AttackScope" type="Area2D" parent="." unique_id=1233938070]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackScope" unique_id=726043159]
+scale = Vector2(2, 2)
+shape = SubResource("CircleShape2D_attack_scope")
+
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=1576064996]
+target_position = Vector2(60, 0)
+
+[node name="MeleeHitbox" type="Area2D" parent="." unique_id=304991112]
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MeleeHitbox" unique_id=177437512]
+position = Vector2(15, -2)
+shape = SubResource("RectangleShape2D_melee_hitbox")
+disabled = true
+
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=2024293202]
+tree_root = SubResource("AnimationNodeStateMachine_elo1f")
+anim_player = NodePath("../AnimationPlayer")
+parameters/conditions/attack_finished = true
+parameters/conditions/is_any_attack = false
+parameters/attack_state_machine/conditions/is_bow_attack = false
+parameters/attack_state_machine/conditions/is_hard_attack = false
+parameters/attack_state_machine/conditions/is_light_attack = false
+parameters/locomotion_state_machine/conditions/is_idle = true
+parameters/locomotion_state_machine/conditions/is_walking = false
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1856246226]
+libraries/ = SubResource("AnimationLibrary_66mda")

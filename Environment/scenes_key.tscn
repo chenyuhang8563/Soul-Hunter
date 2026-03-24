@@ -1,0 +1,72 @@
+[gd_scene load_steps=12 format=3 uid="uid://bu8rc2g5x323a"]
+
+[ext_resource type="Texture2D" uid="uid://bxf3m02u7p6bw" path="res://Assets/Tiles/scenes_key_idle.png" id="1_cygbl"]
+[ext_resource type="Script" path="res://Environment/scenes_key.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fbdau"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1b6re"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_emblm"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bvqy4"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_buati"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fxad8"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_prbko"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(96, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jiaew"]
+atlas = ExtResource("1_cygbl")
+region = Rect2(112, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_0grkk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fbdau")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1b6re")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_emblm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bvqy4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_buati")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fxad8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_prbko")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jiaew")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]
+
+[node name="ScenesKey" type="AnimatedSprite2D" unique_id=1731158154]
+sprite_frames = SubResource("SpriteFrames_0grkk")
+script = ExtResource("2_script")

@@ -1,0 +1,87 @@
+[gd_scene format=3 uid="uid://btapjjqi5ij7l"]
+
+[ext_resource type="Texture2D" uid="uid://cjn3h3y4w6oh2" path="res://Assets/Tiles/Chests.png" id="1_ukitk"]
+[ext_resource type="Script" uid="uid://cfkdroxi8bilv" path="res://Environment/chests.gd" id="2_6kwf5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6kwf5"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(0, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rqfoe"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(48, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vabc3"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(96, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ofsua"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(144, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5htdn"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(192, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_swwr6"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(0, 32, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hr0ki"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(48, 32, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_242fw"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(96, 32, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pwurh"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(144, 32, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ih4o2"]
+atlas = ExtResource("1_ukitk")
+region = Rect2(192, 32, 48, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_404c5"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6kwf5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rqfoe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vabc3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ofsua")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5htdn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_swwr6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hr0ki")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_242fw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pwurh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ih4o2")
+}],
+"loop": false,
+"name": &"open",
+"speed": 10.0
+}]
+
+[node name="Chests" type="AnimatedSprite2D" unique_id=537327927]
+sprite_frames = SubResource("SpriteFrames_404c5")
+animation = &"open"
+script = ExtResource("2_6kwf5")

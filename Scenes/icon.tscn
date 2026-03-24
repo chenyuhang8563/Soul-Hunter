@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://c0tmehg41kye8"]
+
+[ext_resource type="Texture2D" uid="uid://bmybprlxgxw1p" path="res://Assets/Sprites/UI/F.png" id="1_7vlay"]
+
+[node name="icon" type="Sprite2D" unique_id=1604793092]
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_7vlay")

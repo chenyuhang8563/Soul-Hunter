@@ -1,0 +1,25 @@
+{
+  "character_id": "archer",
+  "default_name": "Archer",
+  "nodes": {
+    "start": {
+      "text": "你好，战士。前方的区域已经被怪物占领了。",
+      "next_id": "ask_help"
+    },
+    "ask_help": {
+      "text": "我们需要你的力量来清除它们，你准备好出发了吗？",
+      "options": [
+        {"text": "我已经准备好了。", "next_id": "ready"},
+        {"text": "让我再准备一下。", "next_id": "not_ready"}
+      ]
+    },
+    "ready": {
+      "text": "太好了！愿胜利与你同在。",
+      "next_id": ""
+    },
+    "not_ready": {
+      "text": "没问题，准备好了随时来找我。",
+      "next_id": ""
+    }
+  }
+}

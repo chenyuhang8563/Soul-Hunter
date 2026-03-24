@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://cx6m2l7r8jxxx"]
+
+[ext_resource type="Script" uid="uid://w0qkobe6s36o" path="res://Scenes/UI/dialogue_ui.gd" id="1_xxx"]
+
+[node name="DialogueUI" type="CanvasLayer" unique_id=19644662]
+layer = 100
+script = ExtResource("1_xxx")
+
+[node name="Control" type="Control" parent="." unique_id=1820629962]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Control" unique_id=205255555]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -50.0
+offset_right = 100.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/PanelContainer" unique_id=1102241830]
+layout_mode = 2
+
+[node name="Avatar" type="Control" parent="Control/PanelContainer/HBoxContainer" unique_id=1729425427]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+
+[node name="AvatarSprite" type="Sprite2D" parent="Control/PanelContainer/HBoxContainer/Avatar" unique_id=149065423]
+position = Vector2(16, 20)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/PanelContainer/HBoxContainer" unique_id=1939608395]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="Control/PanelContainer/HBoxContainer/VBoxContainer" unique_id=808291916]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 6
+text = "Name"
+vertical_alignment = 2
+
+[node name="TextLabel" type="RichTextLabel" parent="Control/PanelContainer/HBoxContainer/VBoxContainer" unique_id=104746638]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 6
+bbcode_enabled = true
+text = "Text"
+scroll_active = false
+
+[node name="NextIndicator" type="Label" parent="Control" unique_id=436401024]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 90.0
+offset_top = -18.0
+offset_right = 100.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 6
+text = "v"
+
+[node name="OptionsContainer" type="VBoxContainer" parent="Control" unique_id=950422245]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 100.0
+offset_top = -65.0
+offset_right = 160.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 2

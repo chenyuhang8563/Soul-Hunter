@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cnt5ojv8scbhj"]
+
+[ext_resource type="Texture2D" uid="uid://d1i3ehelk74t2" path="res://Assets/Sprites/UI/arrow_isometric_outlined.png" id="1_516qh"]
+
+[node name="ArrowPointer" type="Sprite2D" unique_id=1194652569]
+texture = ExtResource("1_516qh")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
