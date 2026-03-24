@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+.trae/
 
 # Submodules (have their own git repos)
 godot-mcp/
