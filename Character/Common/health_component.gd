@@ -13,6 +13,18 @@ func setup(initial_max_health: float) -> void:
 	current_health = max_health
 	health_changed.emit(current_health, max_health)
 
+func set_max_health(new_max_health: float, keep_ratio: bool = false) -> void:
+	var next_max_health := maxf(1.0, new_max_health)
+	if is_equal_approx(max_health, next_max_health):
+		return
+	var previous_ratio := get_hp_ratio()
+	max_health = next_max_health
+	if keep_ratio:
+		current_health = clampf(max_health * previous_ratio, 0.0, max_health)
+	else:
+		current_health = minf(current_health, max_health)
+	health_changed.emit(current_health, max_health)
+
 func apply_damage(amount: float, source: CharacterBody2D = null) -> void:
 	if amount <= 0.0 or not is_alive():
 		return

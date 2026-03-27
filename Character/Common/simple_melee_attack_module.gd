@@ -44,10 +44,10 @@ func start_attack(light_attack: bool) -> void:
 		return
 	if light_attack:
 		_begin_attack("light_attack", _get_light_attack_duration(light_attack_duration), true, true, false, false)
-		_queue_damage_event(light_attack_hit_delay, stats.light_attack_damage, melee_attack_range, true, true)
+		_queue_stat_damage_event(light_attack_hit_delay, &"light_attack_damage", stats.light_attack_damage, melee_attack_range, true, true)
 	else:
 		_begin_attack("hard_attack", hard_attack_duration, false, false, true, false)
-		_queue_damage_event(hard_attack_hit_delay, stats.hard_attack_damage, melee_attack_range, true, true)
+		_queue_stat_damage_event(hard_attack_hit_delay, &"hard_attack_damage", stats.hard_attack_damage, melee_attack_range, true, true)
 
 func reset() -> void:
 	force_stop()

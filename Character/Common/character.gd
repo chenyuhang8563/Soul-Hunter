@@ -10,6 +10,10 @@ const CharacterUIPresenterScript := preload("res://Character/Common/character_ui
 const CharacterLifecycleScript := preload("res://Character/Common/character_lifecycle.gd")
 const CharacterInteractionScript := preload("res://Character/Common/character_interaction.gd")
 const CharacterControlStateScript := preload("res://Character/Common/character_control_state.gd")
+const BuffContextScript := preload("res://Character/Common/Buffs/buff_context.gd")
+const BuffControllerScript := preload("res://Character/Common/Buffs/buff_controller.gd")
+const BUFF_ICON_MARGIN := Vector2(6.0, 6.0)
+const BUFF_ICON_SPACING := 2.0
 
 const KNOCKBACK_VELOCITY := 140.0
 const KNOCKBACK_DECAY := 490.0
@@ -52,6 +56,8 @@ var dash_time_left: float = 0.0
 var detach_module: DetachModule = null
 
 var health := HealthComponent.new()
+var buff_context = null
+var buff_controller = null
 var is_dead := false
 var is_hurt_playing := false
 var ui_presenter = null
@@ -74,6 +80,7 @@ var knockback_velocity := 0.0
 var _default_collision_layer := 0
 var _default_collision_mask := 0
 var _respawn_scene_path := ""
+var _buff_icon_nodes: Dictionary = {}
 
 func _ready() -> void:
 	if stats == null:
@@ -88,6 +95,8 @@ func _ready() -> void:
 	if animation_player != null and not animation_player.animation_finished.is_connected(_on_animation_finished):
 		animation_player.animation_finished.connect(_on_animation_finished)
 	_setup_helpers()
+	_setup_buff_system()
+	_clear_static_buff_icon_placeholder()
 	_setup_health()
 	add_to_group("possessable_character")
 	set_player_controlled(start_player_controlled)
@@ -113,10 +122,17 @@ func _exit_tree() -> void:
 		health.damaged.disconnect(_on_damaged)
 	if health.died.is_connected(_on_died):
 		health.died.disconnect(_on_died)
+	if buff_controller != null and buff_controller.stats_changed.is_connected(_on_buff_stats_changed):
+		buff_controller.stats_changed.disconnect(_on_buff_stats_changed)
+	if buff_controller != null and buff_controller.buff_added.is_connected(_on_buff_added):
+		buff_controller.buff_added.disconnect(_on_buff_added)
+	if buff_controller != null and buff_controller.buff_removed.is_connected(_on_buff_removed):
+		buff_controller.buff_removed.disconnect(_on_buff_removed)
 	if animation_player != null and animation_player.animation_finished.is_connected(_on_animation_finished):
 		animation_player.animation_finished.disconnect(_on_animation_finished)
 	if interaction_state != null:
 		interaction_state._clear_current_interaction_target()
+	_clear_all_buff_icons()
 
 func _set_locomotion_conditions(input_dir: float) -> void:
 	if animation_tree == null:
@@ -173,7 +189,139 @@ func _setup_health() -> void:
 	health.health_changed.connect(_on_health_changed)
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
-	health.setup(stats.max_health)
+	health.setup(get_stat_value(&"max_health", stats.max_health))
+
+func _setup_buff_system() -> void:
+	buff_context = BuffContextScript.new()
+	buff_context.setup(
+		self,
+		Callable(self, "get_base_stat_value"),
+		Callable(self, "_receive_buff_damage"),
+		Callable(self, "_receive_buff_heal"),
+		Callable(self, "_is_buff_host_alive")
+	)
+	buff_controller = BuffControllerScript.new()
+	buff_controller.setup(buff_context)
+	buff_controller.stats_changed.connect(_on_buff_stats_changed)
+	buff_controller.buff_added.connect(_on_buff_added)
+	buff_controller.buff_removed.connect(_on_buff_removed)
+
+func _on_buff_stats_changed() -> void:
+	if health == null:
+		return
+	health.set_max_health(get_stat_value(&"max_health", stats.max_health))
+
+func _on_buff_added(buff) -> void:
+	if buff == null or not buff.has_method("create_icon_instance"):
+		return
+	var icon = buff.create_icon_instance()
+	if icon == null:
+		return
+	if icon.has_method("bind_buff"):
+		icon.bind_buff(buff)
+	add_child(icon)
+	_buff_icon_nodes[buff.get_instance_id()] = {
+		"buff": buff,
+		"node": icon,
+	}
+	_refresh_buff_icon_positions()
+
+func _on_buff_removed(buff) -> void:
+	if buff == null:
+		return
+	var buff_id = int(buff.get_instance_id())
+	if not _buff_icon_nodes.has(buff_id):
+		return
+	var entry: Dictionary = _buff_icon_nodes[buff_id]
+	var icon = entry.get("node") as Node2D
+	if icon != null and is_instance_valid(icon):
+		icon.queue_free()
+	_buff_icon_nodes.erase(buff_id)
+	_refresh_buff_icon_positions()
+
+func _clear_static_buff_icon_placeholder() -> void:
+	var placeholder = get_node_or_null("Buff Icon") as Node2D
+	if placeholder != null:
+		placeholder.queue_free()
+
+func _clear_all_buff_icons() -> void:
+	for entry in _buff_icon_nodes.values():
+		var icon = entry.get("node") as Node2D
+		if icon != null and is_instance_valid(icon):
+			icon.queue_free()
+	_buff_icon_nodes.clear()
+
+func _refresh_buff_icon_positions() -> void:
+	var entries: Array[Dictionary] = []
+	for entry in _buff_icon_nodes.values():
+		entries.append(entry)
+	entries.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		var left_buff = left.get("buff")
+		var right_buff = right.get("buff")
+		if left_buff == null:
+			return false
+		if right_buff == null:
+			return true
+		return int(left_buff.get_meta("buff_sequence", 0)) < int(right_buff.get_meta("buff_sequence", 0))
+	)
+	var anchor: Vector2 = _get_buff_icon_anchor_position()
+	var current_x: float = anchor.x
+	for entry in entries:
+		var icon = entry.get("node") as Node2D
+		if icon == null or not is_instance_valid(icon):
+			continue
+		var half_width: float = _get_buff_icon_half_width(icon)
+		icon.position = Vector2(current_x + half_width, anchor.y)
+		current_x += half_width * 2.0 + BUFF_ICON_SPACING
+
+func _get_buff_icon_anchor_position() -> Vector2:
+	if hp_bar == null:
+		return BUFF_ICON_MARGIN
+	return Vector2(hp_bar.offset_right, hp_bar.offset_bottom) + BUFF_ICON_MARGIN
+
+func _get_buff_icon_half_width(icon: Node2D) -> float:
+	if icon is Sprite2D:
+		var sprite = icon as Sprite2D
+		if sprite.texture != null:
+			return sprite.texture.get_size().x * absf(sprite.scale.x) * 0.5
+	return 8.0
+
+func _receive_buff_damage(amount: float, source: CharacterBody2D = null) -> void:
+	if lifecycle_state != null:
+		lifecycle_state.apply_damage(amount, source)
+
+func _receive_buff_heal(amount: float) -> void:
+	if lifecycle_state != null:
+		lifecycle_state.heal(amount)
+
+func _is_buff_host_alive() -> bool:
+	if lifecycle_state != null:
+		return lifecycle_state.is_alive()
+	return not is_dead
+
+func get_base_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
+	if stats == null:
+		return fallback
+	return stats.get_value(stat_id, fallback)
+
+func get_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
+	if buff_controller != null:
+		return buff_controller.get_stat_value(stat_id, get_base_stat_value(stat_id, fallback))
+	return get_base_stat_value(stat_id, fallback)
+
+func add_buff(buff):
+	if buff_controller == null:
+		return null
+	return buff_controller.add_buff(buff)
+
+func remove_buff(buff) -> bool:
+	if buff_controller == null:
+		return false
+	return buff_controller.remove_buff(buff)
+
+func clear_buffs() -> void:
+	if buff_controller != null:
+		buff_controller.clear()
 
 func _on_health_changed(current_health: float, max_health: float) -> void:
 	if lifecycle_state != null:
@@ -274,6 +422,8 @@ func _process(delta: float) -> void:
 		control_state.try_toggle_developer_mode()
 	if interaction_state != null:
 		interaction_state.process(delta)
+	if buff_controller != null and not is_dead:
+		buff_controller.update(delta)
 	if is_dead:
 		return
 	if lifecycle_state != null:

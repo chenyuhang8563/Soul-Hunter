@@ -103,12 +103,12 @@ func start_ai_attack() -> bool:
 func _start_light_attack() -> void:
 	animation_tree.active = true
 	_begin_attack("light_attack", _get_light_attack_duration(LIGHT_ATTACK_DURATION), true, true, false, false)
-	_queue_damage_event(LIGHT_ATTACK_HIT_DELAY, stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_stat_damage_event(LIGHT_ATTACK_HIT_DELAY, &"light_attack_damage", stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
 
 func _start_ultimate_attack() -> void:
 	animation_tree.active = true
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
-	var hit_damage := stats.ultimate_attack / float(ULTIMATE_HIT_COUNT)
+	var hit_damage := _get_stat_value(&"ultimate_attack", stats.ultimate_attack) / float(ULTIMATE_HIT_COUNT)
 	for hit_time in ultimate_hit_times:
 		_queue_damage_event(float(hit_time), hit_damage, ULTIMATE_ATTACK_RANGE, false, false)
 
@@ -120,7 +120,7 @@ func _start_hard_segment(combo_step: int) -> void:
 	var segment_hit_delay: float = HARD_ATTACK_HIT_DELAYS[combo_step - 1]
 	
 	_begin_attack("hard_attack", segment_duration, false, false, true, false)
-	_queue_damage_event(segment_hit_delay, stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_stat_damage_event(segment_hit_delay, &"hard_attack_damage", stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
 	if animation_player != null and animation_player.has_animation("hard_attack"):
 		animation_tree.active = false
 		# 恢复播放速度并定位到段开始

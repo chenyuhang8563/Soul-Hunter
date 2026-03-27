@@ -53,6 +53,8 @@ func on_damaged(_amount: float, _current_health: float, _max_health: float, sour
 
 func on_died(_killer: CharacterBody2D) -> void:
 	owner.is_dead = true
+	if owner.has_method("clear_buffs"):
+		owner.clear_buffs()
 	owner.is_hurt_playing = false
 	owner._clear_possessed_highlight()
 	owner._clear_possession_prompt_icon()
@@ -96,7 +98,7 @@ func revive() -> void:
 	if owner.hp_bar != null:
 		owner.hp_bar.visible = true
 	owner._on_revived()
-	owner.health.setup(owner.stats.max_health)
+	owner.health.setup(owner.get_stat_value(&"max_health", owner.stats.max_health))
 	owner.current_posture = 0.0
 	owner.time_since_last_posture_increase = 0.0
 	owner._get_ui_presenter().update_posture(owner.current_posture, owner.max_posture)

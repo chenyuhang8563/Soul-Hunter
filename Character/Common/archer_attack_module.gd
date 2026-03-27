@@ -18,10 +18,10 @@ func start_attack(light_attack: bool) -> void:
 		return
 	if light_attack:
 		_begin_attack("light_attack", _get_light_attack_duration(light_attack_duration), true, true, false, false)
-		_queue_damage_event(light_attack_hit_delay, stats.light_attack_damage, melee_attack_range, false, true)
+		_queue_stat_damage_event(light_attack_hit_delay, &"light_attack_damage", stats.light_attack_damage, melee_attack_range, false, true)
 	else:
 		_begin_attack("hard_attack", hard_attack_duration, false, false, true, false)
-		_queue_damage_event(hard_attack_hit_delay, stats.hard_attack_damage, melee_attack_range, false, true)
+		_queue_stat_damage_event(hard_attack_hit_delay, &"hard_attack_damage", stats.hard_attack_damage, melee_attack_range, false, true)
 
 func _handle_damage_event_override(event: Dictionary) -> bool:
 	if owner == null or sprite == null:
@@ -30,7 +30,7 @@ func _handle_damage_event_override(event: Dictionary) -> bool:
 	var facing_dir := Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
 	var spawn_pos := owner.global_position + Vector2(0.0, -2.0) + facing_dir * 10.0
 	arrow_instance.position = spawn_pos
-	arrow_instance.setup(facing_dir, float(event.get("damage", 10.0)), owner)
+	arrow_instance.setup(facing_dir, _resolve_damage_event_amount(event), owner)
 	var spawn_parent := owner.get_parent()
 	if spawn_parent == null:
 		spawn_parent = owner.get_tree().current_scene

@@ -143,6 +143,24 @@ func _queue_damage_event(
 		"triggered": false
 	})
 
+func _queue_stat_damage_event(
+		trigger_time: float,
+		stat_id: StringName,
+		fallback_damage: float,
+		attack_range: float,
+		require_facing: bool,
+		prefer_context_target: bool
+) -> void:
+	damage_events.append({
+		"trigger_time": maxf(0.0, trigger_time),
+		"damage": fallback_damage,
+		"stat_id": stat_id,
+		"range": maxf(0.0, attack_range),
+		"require_facing": require_facing,
+		"prefer_context_target": prefer_context_target,
+		"triggered": false
+	})
+
 func _on_attack_started(_attack_name: String) -> void:
 	pass
 
@@ -192,7 +210,7 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 			if _check_clash(current_target):
 				_handle_clash(current_target)
 			else:
-				_apply_damage_to_target(current_target, float(event.get("damage", 0.0)))
+				_apply_damage_to_target(current_target, _resolve_damage_event_amount(event))
 			applied = true
 	if applied:
 		return
@@ -201,7 +219,7 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 		if _check_clash(hit_target):
 			_handle_clash(hit_target)
 		else:
-			_apply_damage_to_target(hit_target, float(event.get("damage", 0.0)))
+			_apply_damage_to_target(hit_target, _resolve_damage_event_amount(event))
 
 func _handle_damage_event_override(_event: Dictionary) -> bool:
 	return false
@@ -351,6 +369,18 @@ func _get_effective_damage(target: Node2D, base_damage: float) -> float:
 	if owner != null and DeveloperMode.applies_to(owner) and _is_enemy_character_target(target):
 		return _get_lethal_damage(target)
 	return base_damage
+
+func _resolve_damage_event_amount(event: Dictionary) -> float:
+	var stat_id = event.get("stat_id", &"") as StringName
+	var fallback_damage := float(event.get("damage", 0.0))
+	if stat_id == &"":
+		return fallback_damage
+	return _get_stat_value(stat_id, fallback_damage)
+
+func _get_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
+	if owner != null and owner.has_method("get_stat_value"):
+		return float(owner.call("get_stat_value", stat_id, fallback))
+	return fallback
 
 func _is_enemy_character_target(target: Node2D) -> bool:
 	if not (target is CharacterBody2D):

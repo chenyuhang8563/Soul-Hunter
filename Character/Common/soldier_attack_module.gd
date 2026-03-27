@@ -57,15 +57,15 @@ func _action_just_pressed(action_name: StringName) -> bool:
 
 func _start_light_attack() -> void:
 	_begin_attack("light_attack", _get_light_attack_duration(LIGHT_ATTACK_DURATION), true, true, false, false)
-	_queue_damage_event(LIGHT_ATTACK_HIT_DELAY, stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_stat_damage_event(LIGHT_ATTACK_HIT_DELAY, &"light_attack_damage", stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
 
 func _start_hard_attack() -> void:
 	_begin_attack("hard_attack", HARD_ATTACK_DURATION, false, false, true, false)
-	_queue_damage_event(HARD_ATTACK_HIT_DELAY, stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_stat_damage_event(HARD_ATTACK_HIT_DELAY, &"hard_attack_damage", stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
 
 func _start_ultimate_attack() -> void:
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
-	_queue_damage_event(ULTIMATE_ATTACK_HIT_DELAY, stats.ultimate_attack, ULTIMATE_ATTACK_RANGE, false, false)
+	_queue_stat_damage_event(ULTIMATE_ATTACK_HIT_DELAY, &"ultimate_attack", stats.ultimate_attack, ULTIMATE_ATTACK_RANGE, false, false)
 
 func _handle_damage_event_override(event: Dictionary) -> bool:
 	if current_attack == "ultimate_attack":
@@ -77,7 +77,7 @@ func _handle_damage_event_override(event: Dictionary) -> bool:
 		
 		var spawn_pos = owner.global_position + Vector2(0, 0) + facing_dir * 10
 		arrow_instance.position = spawn_pos
-		arrow_instance.setup(facing_dir, float(event.get("damage", 10.0)), owner)
+		arrow_instance.setup(facing_dir, _resolve_damage_event_amount(event), owner)
 		
 		owner.get_parent().add_child(arrow_instance)
 		return true
