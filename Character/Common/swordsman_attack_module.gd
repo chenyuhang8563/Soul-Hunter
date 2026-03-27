@@ -5,15 +5,15 @@ const LIGHT_ATTACK_DURATION := 0.70
 const HARD_SEGMENT_COUNT := 3
 # 重攻击3段时间定义（与动画关键帧对齐）：
 # 第1段: 0.0s-0.5s (frames 45-50)
-# 第2段: 0.6s-0.9s (frames 51-54)  
-# 第3段: 1.0s-1.5s (frames 55-59)
+# 第2段: 0.5s-0.9s (frames 50-54)
+# 第3段: 0.9s-1.5s (frames 54-59)
 const HARD_ATTACK_TIMES := [0.0, 0.5, 0.9, 1.5]
 const ULTIMATE_ATTACK_DURATION := 1.20
 const ULTIMATE_ATTACK_RANGE := 64.0
 const ULTIMATE_HIT_COUNT := 5
 const ATTACK_COOLDOWN := 0.30
 const LIGHT_ATTACK_HIT_DELAY := 0.40
-const HARD_ATTACK_HIT_DELAY := 0.45
+const HARD_ATTACK_HIT_DELAYS := [0.45, 0.30, 0.45]
 const HARD_COMBO_CHAIN_WINDOW := 0.45
 const MELEE_ATTACK_RANGE := 44.0
 
@@ -33,9 +33,10 @@ func setup(
 		_hitbox: Area2D = null,
 		_hitbox_shape: CollisionShape2D = null,
 		character_stats: CharacterStats = null,
-		cooldown: float = ATTACK_COOLDOWN
+		cooldown: float = ATTACK_COOLDOWN,
+		audio_service_node: Node = null
 ) -> void:
-	super.setup(host, sprite_node, tree, player, _hitbox, _hitbox_shape, character_stats, cooldown)
+	super.setup(host, sprite_node, tree, player, _hitbox, _hitbox_shape, character_stats, cooldown, audio_service_node)
 	animation_player = player
 
 func update(delta: float, target: Node2D = null, in_scope: bool = false) -> void:
@@ -101,7 +102,7 @@ func start_ai_attack() -> bool:
 
 func _start_light_attack() -> void:
 	animation_tree.active = true
-	_begin_attack("light_attack", LIGHT_ATTACK_DURATION, true, true, false, false)
+	_begin_attack("light_attack", _get_light_attack_duration(LIGHT_ATTACK_DURATION), true, true, false, false)
 	_queue_damage_event(LIGHT_ATTACK_HIT_DELAY, stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
 
 func _start_ultimate_attack() -> void:
@@ -116,9 +117,10 @@ func _start_hard_segment(combo_step: int) -> void:
 	var segment_start: float = HARD_ATTACK_TIMES[combo_step - 1]
 	var segment_end: float = HARD_ATTACK_TIMES[combo_step]
 	var segment_duration := segment_end - segment_start
+	var segment_hit_delay: float = HARD_ATTACK_HIT_DELAYS[combo_step - 1]
 	
 	_begin_attack("hard_attack", segment_duration, false, false, true, false)
-	_queue_damage_event(HARD_ATTACK_HIT_DELAY, stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_damage_event(segment_hit_delay, stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
 	if animation_player != null and animation_player.has_animation("hard_attack"):
 		animation_tree.active = false
 		# 恢复播放速度并定位到段开始

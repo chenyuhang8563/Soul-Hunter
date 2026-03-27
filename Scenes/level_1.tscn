@@ -2342,8 +2342,6 @@ size = Vector2(40, 35)
 
 [node name="Level1" type="Node2D" unique_id=1564634810]
 script = ExtResource("1_level1")
-player_character = NodePath("Characters/Swordsman")
-archer = NodePath("Characters/Archer")
 
 [node name="Environment" type="Node2D" parent="." unique_id=1943282264]
 

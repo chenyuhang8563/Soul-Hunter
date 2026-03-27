@@ -20,9 +20,10 @@ func setup(
 		_hitbox: Area2D = null,
 		_hitbox_shape: CollisionShape2D = null,
 		character_stats: CharacterStats = null,
-		cooldown: float = ATTACK_COOLDOWN
+		cooldown: float = ATTACK_COOLDOWN,
+		audio_service_node: Node = null
 ) -> void:
-	super.setup(host, sprite_node, tree, player, _hitbox, _hitbox_shape, character_stats, cooldown)
+	super.setup(host, sprite_node, tree, player, _hitbox, _hitbox_shape, character_stats, cooldown, audio_service_node)
 
 func update(delta: float, target: Node2D = null, in_scope: bool = false) -> void:
 	super.update(delta, target, in_scope)
@@ -55,7 +56,7 @@ func _action_just_pressed(action_name: StringName) -> bool:
 	return InputMap.has_action(action_name) and Input.is_action_just_pressed(action_name)
 
 func _start_light_attack() -> void:
-	_begin_attack("light_attack", LIGHT_ATTACK_DURATION, true, true, false, false)
+	_begin_attack("light_attack", _get_light_attack_duration(LIGHT_ATTACK_DURATION), true, true, false, false)
 	_queue_damage_event(LIGHT_ATTACK_HIT_DELAY, stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
 
 func _start_hard_attack() -> void:
@@ -66,10 +67,10 @@ func _start_ultimate_attack() -> void:
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
 	_queue_damage_event(ULTIMATE_ATTACK_HIT_DELAY, stats.ultimate_attack, ULTIMATE_ATTACK_RANGE, false, false)
 
-func _try_apply_damage_event(event: Dictionary) -> void:
+func _handle_damage_event_override(event: Dictionary) -> bool:
 	if current_attack == "ultimate_attack":
 		if owner == null:
-			return
+			return true
 		
 		var arrow_instance = ARROW_SCENE.instantiate()
 		var facing_dir := Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
@@ -79,6 +80,5 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 		arrow_instance.setup(facing_dir, float(event.get("damage", 10.0)), owner)
 		
 		owner.get_parent().add_child(arrow_instance)
-		return
-
-	super._try_apply_damage_event(event)
+		return true
+	return false

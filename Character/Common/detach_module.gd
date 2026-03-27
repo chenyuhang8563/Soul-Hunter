@@ -18,6 +18,9 @@ func update(delta: float) -> void:
 	if owner == null or not owner.is_inside_tree() or owner.is_dead:
 		_cancel_aim()
 		return
+	if DialogueManager.is_dialogue_active():
+		_cancel_aim()
+		return
 
 	if InputMap.has_action("detach") and Input.is_action_just_pressed("detach"):
 		_start_aim()

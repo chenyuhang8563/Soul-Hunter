@@ -7,11 +7,13 @@ const PARAM_IS_BOW_ATTACK := "parameters/attack_state_machine/conditions/is_bow_
 const PARAM_IS_ANY_ATTACK := "parameters/conditions/is_any_attack"
 const PARAM_ATTACK_FINISHED := "parameters/conditions/attack_finished"
 const PARAM_IS_ATTACK_COMBINED := "parameters/conditions/is_light_attack or is_hard_attack"
+const PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER := 0.8
 
 var owner: CharacterBody2D
 var sprite: Sprite2D
 var animation_tree: AnimationTree
 var stats: CharacterStats
+var audio_service: Node = null
 
 var attack_cooldown := 0.30
 var attack_cooldown_left := 0.0
@@ -41,12 +43,14 @@ func setup(
 		_hitbox: Area2D = null,
 		_hitbox_shape: CollisionShape2D = null,
 		character_stats: CharacterStats = null,
-		cooldown: float = 0.30
+		cooldown: float = 0.30,
+		audio_service_node: Node = null
 ) -> void:
 	owner = host
 	sprite = sprite_node
 	animation_tree = tree
 	stats = character_stats
+	audio_service = audio_service_node
 	attack_cooldown = maxf(0.0, cooldown)
 	attack_cooldown_left = 0.0
 	attack_time_left = 0.0
@@ -118,9 +122,8 @@ func _begin_attack(
 	_set_attack_conditions(light_attack, hard_attack, bow_attack)
 	_set_tree_bool(param_attack_finished, false)
 	
-	if owner.has_node("/root/AudioManager") and not bow_attack:
-		var audio_manager = owner.get_node("/root/AudioManager")
-		audio_manager.play_sfx_2d("sword_swing", owner.global_position)
+	if audio_service != null and audio_service.has_method("play_sfx_2d") and not bow_attack:
+		audio_service.play_sfx_2d("sword_swing", owner.global_position)
 		
 	_on_attack_started(attack_name)
 
@@ -181,6 +184,8 @@ func _process_damage_events(elapsed: float) -> void:
 		_try_apply_damage_event(event)
 
 func _try_apply_damage_event(event: Dictionary) -> void:
+	if _handle_damage_event_override(event):
+		return
 	var applied := false
 	if bool(event.get("prefer_context_target", false)):
 		if _is_valid_damage_target(current_target) and current_target_in_scope:
@@ -197,6 +202,9 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 			_handle_clash(hit_target)
 		else:
 			_apply_damage_to_target(hit_target, float(event.get("damage", 0.0)))
+
+func _handle_damage_event_override(_event: Dictionary) -> bool:
+	return false
 
 func _check_clash(target: Node2D) -> bool:
 	if target == null or not target.has_method("get"):
@@ -359,6 +367,11 @@ func _get_lethal_damage(target: Node2D) -> float:
 		if target_health != null and target_health.get("current_health") != null:
 			return maxf(9999.0, float(target_health.current_health) + 1.0)
 	return 9999.0
+
+func _get_light_attack_duration(base_duration: float) -> float:
+	if owner != null and bool(owner.get("is_player_controlled")):
+		return base_duration * PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER
+	return base_duration
 
 func _finish_attack() -> void:
 	var ended_attack := current_attack

@@ -51,6 +51,17 @@ func force_stop() -> void:
 	target = null
 	ai_state = AIState.IDLE
 
+func interrupt_attack() -> void:
+	if attack_module != null:
+		if attack_module.has_method("force_stop"):
+			attack_module.force_stop()
+		elif attack_module.has_method("reset"):
+			attack_module.reset()
+	if target != null:
+		ai_state = AIState.CHASE
+	else:
+		ai_state = AIState.IDLE
+
 func _find_best_target() -> Node2D:
 	var best_target: Node2D
 	var best_distance := INF
@@ -168,15 +179,11 @@ func physics_process_ai(delta: float) -> float:
 
 	# P1-7: 边缘检测逻辑 - 节流优化，每0.15秒检查一次
 	if input_dir != 0.0 and character.is_on_floor():
-		_cliff_check_timer += character.get_process_delta_time()
+		_cliff_check_timer += delta
 		if _cliff_check_timer >= CLIFF_CHECK_INTERVAL:
 			_cliff_check_timer = 0.0
 			var current_scene = character.get_tree().current_scene
-			var tilemap: TileMapLayer = null
-			if current_scene:
-				tilemap = current_scene.get_node_or_null("Environment/TileMapLayer")
-				if not tilemap:
-					tilemap = current_scene.get_node_or_null("TileMapLayer")
+			var tilemap: TileMapLayer = TileMapUtils.get_tilemap_from_scene(current_scene)
 			if tilemap:
 				# 预测角色前方一小段距离的脚下坐标
 				var look_ahead_distance = LOOK_AHEAD_DISTANCE

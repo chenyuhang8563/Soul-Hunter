@@ -2,6 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_p8bq2"]
 [ext_resource type="Texture2D" uid="uid://cwknpst2tgv6s" path="res://Assets/Sprites/Archer/Archer.png" id="2_wt0w0"]
+[ext_resource type="Script" uid="uid://b3p5clrp0suih" path="res://Character/Archer/archer.gd" id="3_v5vcy"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_attack_scope"]
+radius = 44.04543
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_poi7t"]
 animation = &"hard_attack"
@@ -197,21 +201,22 @@ _data = {
 }
 
 [node name="Archer" unique_id=1710627706 instance=ExtResource("1_p8bq2")]
+script = ExtResource("3_v5vcy")
+ai_enabled = false
+attack_cooldown = 0.4
 can_be_possessed = false
 is_interactable_npc = true
 
-[node name="Sprite2D" parent="." index="0"]
+[node name="Sprite2D" parent="." index="0" unique_id=1966064385]
 texture = ExtResource("2_wt0w0")
 hframes = 12
 vframes = 6
 
-[node name="HPBar" parent="." index="1"]
-visible = false
+[node name="CollisionShape2D" parent="AttackScope" parent_id_path=PackedInt32Array(1430574399) index="0" unique_id=1441694067]
+scale = Vector2(1, 1)
+shape = SubResource("CircleShape2D_attack_scope")
 
-[node name="PostureBar" parent="." index="2"]
-visible = false
-
-[node name="AnimationTree" parent="." index="9"]
+[node name="AnimationTree" parent="." index="9" unique_id=306858432]
 tree_root = SubResource("AnimationNodeStateMachine_t6s8c")
 parameters/conditions/attack_finished = true
 "parameters/conditions/is_light_attack or is_hard_attack" = false
@@ -220,5 +225,5 @@ parameters/attack_state_machine/conditions/is_light_attack = false
 parameters/locomotion_state_machine/conditions/is_idle = true
 parameters/locomotion_state_machine/conditions/is_walking = false
 
-[node name="AnimationPlayer" parent="." index="10"]
+[node name="AnimationPlayer" parent="." index="10" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_u57xn")
