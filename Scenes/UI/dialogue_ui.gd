@@ -3,6 +3,10 @@ extends CanvasLayer
 signal dialogue_finished
 signal option_selected(next_id)
 
+const DIALOGUE_FONT := preload("res://Assets/Fonts/quaver.ttf")
+const OPTIONS_GAP_ABOVE_DIALOGUE := 5.0
+const OPTIONS_SHIFT_LEFT := 50.0
+
 @onready var control = $Control
 @onready var panel_container = $Control/PanelContainer
 @onready var avatar = $Control/PanelContainer/HBoxContainer/Avatar
@@ -90,12 +94,22 @@ func show_options():
 	for opt in current_options:
 		var btn = Button.new()
 		btn.text = str(idx) + ". " + opt.get("text", "")
+		btn.add_theme_font_override("font", DIALOGUE_FONT)
 		btn.add_theme_font_size_override("font_size", 6)
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var next_id = opt.get("next_id", "")
 		btn.pressed.connect(func(): _on_option_pressed(next_id))
 		options_container.add_child(btn)
 		idx += 1
+	call_deferred("_update_options_container_position")
+
+func _update_options_container_position():
+	var container_size = options_container.get_combined_minimum_size()
+	options_container.size = container_size
+	options_container.position = Vector2(
+		panel_container.position.x + panel_container.size.x - OPTIONS_SHIFT_LEFT,
+		panel_container.position.y - container_size.y - OPTIONS_GAP_ABOVE_DIALOGUE
+	)
 
 func _on_option_pressed(next_id: String):
 	option_selected.emit(next_id)

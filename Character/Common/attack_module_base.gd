@@ -337,7 +337,28 @@ func _is_valid_damage_target(candidate: Node2D) -> bool:
 func _apply_damage_to_target(target: Node2D, damage: float) -> void:
 	if not _is_valid_damage_target(target):
 		return
-	target.call("apply_damage", damage, owner)
+	target.call("apply_damage", _get_effective_damage(target, damage), owner)
+
+func _get_effective_damage(target: Node2D, base_damage: float) -> float:
+	if owner != null and DeveloperMode.applies_to(owner) and _is_enemy_character_target(target):
+		return _get_lethal_damage(target)
+	return base_damage
+
+func _is_enemy_character_target(target: Node2D) -> bool:
+	if not (target is CharacterBody2D):
+		return false
+	if owner == null:
+		return false
+	if not target.has_method("get_team_id") or not owner.has_method("get_team_id"):
+		return false
+	return int(target.call("get_team_id")) != int(owner.call("get_team_id"))
+
+func _get_lethal_damage(target: Node2D) -> float:
+	if target != null and target.has_method("get"):
+		var target_health = target.get("health")
+		if target_health != null and target_health.get("current_health") != null:
+			return maxf(9999.0, float(target_health.current_health) + 1.0)
+	return 9999.0
 
 func _finish_attack() -> void:
 	var ended_attack := current_attack

@@ -23,6 +23,7 @@
 [ext_resource type="PackedScene" uid="uid://dkjvmp8b5yvwr" path="res://Environment/scene_door.tscn" id="15_sda17"]
 [ext_resource type="PackedScene" uid="uid://ehwbvthv2sps" path="res://Character/Swordsman/swordsman.tscn" id="16_8i23i"]
 [ext_resource type="Texture2D" uid="uid://du21nsjoaf4lk" path="res://Assets/Sprites/UI/icons-keyboard-16x16-1bit-ansdor.png" id="21_imks0"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/task_tracker_ui.tscn" id="22_task_tracker"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8yhm2"]
 size = Vector2(8, 65)
@@ -2451,13 +2452,13 @@ position = Vector2(938, 136)
 
 [node name="Swordsman" parent="Characters" unique_id=1473400387 instance=ExtResource("16_8i23i")]
 position = Vector2(944, 55)
-start_player_controlled = true
-
-[node name="Camera2D" type="Camera2D" parent="Characters/Swordsman" unique_id=1202133739]
-limit_right = 1861
 
 [node name="Soldier" parent="Characters" unique_id=812296209 instance=ExtResource("4_7p6j4")]
-position = Vector2(1026, 128)
+position = Vector2(56, 86)
+start_player_controlled = true
+
+[node name="Camera2D" type="Camera2D" parent="Characters/Soldier" unique_id=1661786052]
+limit_right = 1861
 
 [node name="UI" type="Node2D" parent="." unique_id=366205191]
 
@@ -2541,6 +2542,9 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("21_imks0")
 region_enabled = true
 region_rect = Rect2(112, 64, 64, 16)
+
+[node name="TaskTrackerUI" parent="." unique_id=113901589 instance=ExtResource("22_task_tracker")]
+visible = true
 
 [node name="LevelFinishArea" type="Area2D" parent="." unique_id=1350930754]
 unique_name_in_owner = true

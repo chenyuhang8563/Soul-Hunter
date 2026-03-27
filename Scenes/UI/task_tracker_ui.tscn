@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scenes/UI/task_tracker_ui.gd" id="1_task_tracker"]
+[ext_resource type="Theme" path="res://Assets/Sprites/UI/text.tres" id="2_text_theme"]
+
+[node name="TaskTrackerUI" type="CanvasLayer"]
+layer = 10
+visible = false
+script = ExtResource("1_task_tracker")
+
+[node name="TaskLabel" type="Label" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 172.0
+offset_bottom = 36.0
+theme = ExtResource("2_text_theme")
+autowrap_mode = 2
+text = ""

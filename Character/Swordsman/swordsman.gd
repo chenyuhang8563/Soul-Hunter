@@ -71,6 +71,9 @@ func _physics_process_player(delta: float) -> void:
 	try_common_jump()
 	try_manual_possession()
 	try_manual_detach(delta)
+	if apply_developer_flight_movement():
+		move_and_slide()
+		return
 	
 	if is_detach_blocking_movement():
 		velocity.x = 0.0

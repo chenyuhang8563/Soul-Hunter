@@ -1,0 +1,4 @@
+=== Archer Dialogue Debug ===
+[level_1] connected archer npc_interacted
+[level_1] ready archer=Archer:<CharacterBody2D#93381987718> player=Soldier:<CharacterBody2D#95126818277>
+[level_1] camera_changed new player=Swordsman

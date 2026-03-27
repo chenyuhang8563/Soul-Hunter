@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="TaskSetResource" format=3 uid="uid://buaxl7pvtf0gm"]
+
+[ext_resource type="Script" uid="uid://ioeqhhgjnytx" path="res://Global/Tasks/task_set_resource.gd" id="1_task_set"]
+[ext_resource type="Script" uid="uid://ctpti2vqq7ow1" path="res://Global/Tasks/task_item_resource.gd" id="2_task_item"]
+[ext_resource type="Script" uid="uid://byevdgk81a6o2" path="res://Global/Tasks/task_condition_resource.gd" id="3_task_condition"]
+
+[sub_resource type="Resource" id="TaskCondition_intro"]
+script = ExtResource("3_task_condition")
+all_true = null
+any_true = null
+all_false = PackedStringArray("level_1.archer_dialogue_active", "level_1.archer_dialogue_finished", "level_1.key_collected", "level_1.door_opened", "level_1.level_finished")
+
+[sub_resource type="Resource" id="TaskItem_intro"]
+script = ExtResource("2_task_item")
+id = &"intro_explore"
+title = "Explore forward area"
+priority = 10
+show_when = SubResource("TaskCondition_intro")
+
+[sub_resource type="Resource" id="TaskCondition_listen"]
+script = ExtResource("3_task_condition")
+all_true = PackedStringArray("level_1.archer_dialogue_active")
+any_true = null
+all_false = PackedStringArray("level_1.archer_dialogue_finished")
+
+[sub_resource type="Resource" id="TaskItem_listen"]
+script = ExtResource("2_task_item")
+id = &"listen_archer"
+title = "Listen to Archer"
+priority = 40
+show_when = SubResource("TaskCondition_listen")
+
+[sub_resource type="Resource" id="TaskCondition_find_key"]
+script = ExtResource("3_task_condition")
+all_true = PackedStringArray("level_1.archer_dialogue_finished")
+any_true = null
+all_false = PackedStringArray("level_1.key_collected", "level_1.door_opened", "level_1.level_finished")
+
+[sub_resource type="Resource" id="TaskItem_find_key"]
+script = ExtResource("2_task_item")
+id = &"find_key"
+title = "Find the key"
+priority = 30
+show_when = SubResource("TaskCondition_find_key")
+
+[sub_resource type="Resource" id="TaskCondition_door_opening"]
+script = ExtResource("3_task_condition")
+all_true = PackedStringArray("level_1.key_collected")
+any_true = null
+all_false = PackedStringArray("level_1.door_opened", "level_1.level_finished")
+
+[sub_resource type="Resource" id="TaskItem_door_opening"]
+script = ExtResource("2_task_item")
+id = &"door_opening"
+title = "Door opening"
+priority = 20
+show_when = SubResource("TaskCondition_door_opening")
+
+[sub_resource type="Resource" id="TaskCondition_reach_exit"]
+script = ExtResource("3_task_condition")
+all_true = PackedStringArray("level_1.door_opened")
+any_true = null
+all_false = PackedStringArray("level_1.level_finished")
+
+[sub_resource type="Resource" id="TaskItem_reach_exit"]
+script = ExtResource("2_task_item")
+id = &"reach_exit"
+title = "Head to the exit"
+priority = 15
+show_when = SubResource("TaskCondition_reach_exit")
+
+[sub_resource type="Resource" id="TaskCondition_level_complete"]
+script = ExtResource("3_task_condition")
+all_true = PackedStringArray("level_1.level_finished")
+any_true = null
+all_false = null
+
+[sub_resource type="Resource" id="TaskItem_level_complete"]
+script = ExtResource("2_task_item")
+id = &"level_complete"
+title = "Level complete"
+priority = 5
+show_when = SubResource("TaskCondition_level_complete")
+
+[resource]
+script = ExtResource("1_task_set")
+id = &"level_1"
+items = Array[Resource]([SubResource("TaskItem_intro"), SubResource("TaskItem_listen"), SubResource("TaskItem_find_key"), SubResource("TaskItem_door_opening"), SubResource("TaskItem_reach_exit"), SubResource("TaskItem_level_complete")])

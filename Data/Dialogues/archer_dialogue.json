@@ -3,22 +3,28 @@
   "default_name": "Archer",
   "nodes": {
     "start": {
-      "text": "你好，战士。前方的区域已经被怪物占领了。",
+      "text": "Hello, warrior. The area ahead has already been overrun by monsters.",
       "next_id": "ask_help"
     },
     "ask_help": {
-      "text": "我们需要你的力量来清除它们，你准备好出发了吗？",
+      "text": "We need your strength to clear them out. Are you ready to move out?",
       "options": [
-        {"text": "我已经准备好了。", "next_id": "ready"},
-        {"text": "让我再准备一下。", "next_id": "not_ready"}
+        {
+          "text": "I'm ready.",
+          "next_id": "ready"
+        },
+        {
+          "text": "Give me a moment to prepare.",
+          "next_id": "not_ready"
+        }
       ]
     },
     "ready": {
-      "text": "太好了！愿胜利与你同在。",
+      "text": "Excellent. Victory be with you.",
       "next_id": ""
     },
     "not_ready": {
-      "text": "没问题，准备好了随时来找我。",
+      "text": "No problem. Come back when you're ready.",
       "next_id": ""
     }
   }

@@ -69,6 +69,9 @@ func _physics_process_player(delta: float) -> void:
 	attack_module.try_start_from_input()
 	try_common_jump()
 	try_manual_possession()
+	if apply_developer_flight_movement():
+		move_and_slide()
+		return
 	var input_dir := Input.get_axis("ui_left", "ui_right")
 	if input_dir != 0:
 		sprite.flip_h = input_dir < 0

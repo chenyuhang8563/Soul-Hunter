@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cx6m2l7r8jxxx"]
 
 [ext_resource type="Script" uid="uid://w0qkobe6s36o" path="res://Scenes/UI/dialogue_ui.gd" id="1_xxx"]
+[ext_resource type="FontFile" uid="uid://bmo6inr1t3epg" path="res://Assets/Fonts/quaver.ttf" id="2_font"]
 
 [node name="DialogueUI" type="CanvasLayer" unique_id=19644662]
 layer = 100
@@ -47,6 +48,7 @@ theme_override_constants/separation = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
 theme_override_constants/line_spacing = 0
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 6
 text = "Name"
 vertical_alignment = 2
@@ -54,6 +56,7 @@ vertical_alignment = 2
 [node name="TextLabel" type="RichTextLabel" parent="Control/PanelContainer/HBoxContainer/VBoxContainer" unique_id=104746638]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/normal_font = ExtResource("2_font")
 theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "Text"
@@ -72,20 +75,10 @@ offset_right = 100.0
 offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 6
 text = "v"
 
 [node name="OptionsContainer" type="VBoxContainer" parent="Control" unique_id=950422245]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = 100.0
-offset_top = -65.0
-offset_right = 160.0
-offset_bottom = -10.0
-grow_horizontal = 2
-grow_vertical = 0
+layout_mode = 0
 alignment = 2
