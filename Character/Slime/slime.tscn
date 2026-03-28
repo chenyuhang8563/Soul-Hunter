@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_e8ouo"]
 [ext_resource type="Script" uid="uid://4opleqor7vjp" path="res://Character/Slime/slime.gd" id="1_slime_gd"]
 [ext_resource type="Texture2D" uid="uid://cdaecg4h1ivtd" path="res://Assets/Sprites/Slime/Slime.png" id="2_rn4pd"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/slime_stats.tres" id="3_stats"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_poi7t"]
 animation = &"hard_attack"
@@ -199,7 +200,8 @@ _data = {
 
 [node name="Slime" unique_id=1231243137 instance=ExtResource("1_e8ouo")]
 script = ExtResource("1_slime_gd")
-attack_cooldown = 0.5
+stats = ExtResource("3_stats")
+attack_cooldown = 0.62
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_rn4pd")

@@ -1,6 +1,6 @@
 extends "res://Character/Common/character.gd"
 
-const AI_WALK_SPEED := 50.0
+const AI_WALK_SPEED_RATIO := 0.5
 const RETURN_TOLERANCE := 6.0
 const OrcAttackModuleScript := preload("res://Character/Common/orc_attack_module.gd")
 const AIModuleScript := preload("res://Character/Common/ai_module.gd")
@@ -12,7 +12,7 @@ const CharacterMotionDriverScript := preload("res://Character/Common/character_m
 @onready var attack_scope: Area2D = $AttackScope
 @onready var line_of_sight: RayCast2D = $RayCast2D
 
-@export var attack_cooldown := 0.30
+@export var attack_cooldown := 0.48
 
 var motion_driver: CharacterMotionDriver
 
@@ -26,8 +26,8 @@ func _on_character_ready() -> void:
 	_set_locomotion_conditions(0.0)
 	visual_scope.monitoring = true
 	attack_scope.monitoring = true
-	attack_module.setup(self, sprite, animation_tree, null, null, null, stats, attack_cooldown, AudioManager)
-	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, AI_WALK_SPEED, RETURN_TOLERANCE)
+	attack_module.setup(self, sprite, animation_tree, null, null, null, stats, get_attack_cooldown(attack_cooldown), AudioManager)
+	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, get_player_move_speed() * AI_WALK_SPEED_RATIO, RETURN_TOLERANCE)
 	ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, 1.0, true)
 

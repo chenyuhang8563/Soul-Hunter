@@ -302,7 +302,9 @@ func _is_buff_host_alive() -> bool:
 
 func get_base_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
 	if stat_id == &"move_speed":
-		return player_move_speed
+		fallback = player_move_speed
+	elif stat_id == &"attack_cooldown":
+		fallback = 0.30
 	if stats == null:
 		return fallback
 	return stats.get_value(stat_id, fallback)
@@ -453,13 +455,16 @@ func try_common_jump() -> void:
 
 func get_player_move_speed() -> float:
 	if control_state == null:
-		return player_move_speed
+		return float(get_stat_value(&"move_speed", player_move_speed))
 	return control_state.get_player_move_speed()
 
 func get_developer_move_speed() -> float:
 	if control_state == null:
-		return player_move_speed * DEVELOPER_SPEED_MULTIPLIER
+		return float(get_stat_value(&"move_speed", player_move_speed)) * DEVELOPER_SPEED_MULTIPLIER
 	return control_state.get_developer_move_speed()
+
+func get_attack_cooldown(fallback: float = 0.30) -> float:
+	return float(get_stat_value(&"attack_cooldown", fallback))
 
 func is_developer_mode_active() -> bool:
 	if control_state == null:

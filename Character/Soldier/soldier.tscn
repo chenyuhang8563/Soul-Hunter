@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://d3fvsfmjo68kf" path="res://Assets/Sprites/Soldier/Soldier.png" id="1_xgcsp"]
 [ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_cvq0w"]
 [ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_cvq0w"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/soldier_stats.tres" id="5_stats"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
 bg_color = Color(1, 0, 0, 1)
@@ -263,6 +264,7 @@ _data = {
 [node name="Soldier" type="CharacterBody2D" unique_id=812296209]
 collision_layer = 3
 script = ExtResource("1_170xr")
+stats = ExtResource("5_stats")
 
 [node name="Soldier" type="Sprite2D" parent="." unique_id=470808698]
 texture = ExtResource("1_xgcsp")

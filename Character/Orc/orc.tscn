@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://cm2nsmitdd4ph" path="res://Character/Orc/orc.gd" id="2_0pdio"]
 [ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_xjms1"]
 [ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_xjms1"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/orc_stats.tres" id="5_stats"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
 bg_color = Color(1, 0, 0, 1)
@@ -231,6 +232,7 @@ radius = 8.01561
 [node name="Orc" type="CharacterBody2D" unique_id=1350751769]
 collision_layer = 3
 script = ExtResource("2_0pdio")
+stats = ExtResource("5_stats")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1441734081]
 texture = ExtResource("1_cqehq")

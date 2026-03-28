@@ -1,8 +1,9 @@
 extends "res://Character/Common/character.gd"
 
 const AIR_MOVE_MULTIPLIER := 1.35
-const AI_WALK_SPEED := 50.0
+const AI_WALK_SPEED_RATIO := 0.5
 const RETURN_TOLERANCE := 6.0
+const DEFAULT_ATTACK_COOLDOWN := 0.22
 const SoldierAttackModuleScript := preload("res://Character/Common/soldier_attack_module.gd")
 const AIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")
@@ -30,8 +31,8 @@ func _on_character_ready() -> void:
 	_set_locomotion_conditions(0.0)
 	visual_scope.monitoring = true
 	attack_scope.monitoring = true
-	attack_module.setup(self, sprite, animation_tree, null, melee_hitbox, melee_hitbox_shape, stats, 0.30, AudioManager)
-	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, AI_WALK_SPEED, RETURN_TOLERANCE)
+	attack_module.setup(self, sprite, animation_tree, null, melee_hitbox, melee_hitbox_shape, stats, get_attack_cooldown(DEFAULT_ATTACK_COOLDOWN), AudioManager)
+	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, get_player_move_speed() * AI_WALK_SPEED_RATIO, RETURN_TOLERANCE)
 	ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, false)
 

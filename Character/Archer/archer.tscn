@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_p8bq2"]
 [ext_resource type="Texture2D" uid="uid://cwknpst2tgv6s" path="res://Assets/Sprites/Archer/Archer.png" id="2_wt0w0"]
 [ext_resource type="Script" uid="uid://b3p5clrp0suih" path="res://Character/Archer/archer.gd" id="3_v5vcy"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/archer_stats.tres" id="4_stats"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_attack_scope"]
 radius = 44.04543
@@ -202,8 +203,9 @@ _data = {
 
 [node name="Archer" unique_id=1710627706 instance=ExtResource("1_p8bq2")]
 script = ExtResource("3_v5vcy")
+stats = ExtResource("4_stats")
 ai_enabled = false
-attack_cooldown = 0.4
+attack_cooldown = 0.36
 can_be_possessed = false
 is_interactable_npc = true
 

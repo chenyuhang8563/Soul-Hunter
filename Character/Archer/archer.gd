@@ -1,7 +1,7 @@
 extends "res://Character/Common/character.gd"
 
 const AIR_MOVE_MULTIPLIER := 1.35
-const AI_WALK_SPEED := 45.0
+const AI_WALK_SPEED_RATIO := 0.5
 const RETURN_TOLERANCE := 6.0
 const ArcherAttackModuleScript := preload("res://Character/Common/archer_attack_module.gd")
 const AIModuleScript := preload("res://Character/Common/ai_module.gd")
@@ -14,7 +14,7 @@ const CharacterMotionDriverScript := preload("res://Character/Common/character_m
 @onready var line_of_sight: RayCast2D = $RayCast2D
 
 @export var ai_enabled := false
-@export var attack_cooldown := 0.40
+@export var attack_cooldown := 0.36
 
 var motion_driver: CharacterMotionDriver
 
@@ -23,8 +23,8 @@ func _on_character_ready() -> void:
 	ai_module = AIModuleScript.new()
 	motion_driver = CharacterMotionDriverScript.new()
 	_set_locomotion_conditions(0.0)
-	attack_module.setup(self, sprite, animation_tree, animation_player, null, null, stats, attack_cooldown, AudioManager)
-	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, AI_WALK_SPEED, RETURN_TOLERANCE)
+	attack_module.setup(self, sprite, animation_tree, animation_player, null, null, stats, get_attack_cooldown(attack_cooldown), AudioManager)
+	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, get_player_move_speed() * AI_WALK_SPEED_RATIO, RETURN_TOLERANCE)
 	ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)
 	_refresh_runtime_mode()

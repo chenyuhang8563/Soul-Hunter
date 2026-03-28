@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dexu7d2gidlm3" path="res://Assets/Sprites/Swordsman/Swordsman.png" id="1_mm1tb"]
 [ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_6ldc6"]
 [ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_6ldc6"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/swordsman_stats.tres" id="5_stats"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_733ai"]
 size = Vector2(13, 17)
@@ -261,6 +262,7 @@ _data = {
 [node name="Swordsman" type="CharacterBody2D" unique_id=1473400387]
 collision_layer = 3
 script = ExtResource("1_alxuo")
+stats = ExtResource("5_stats")
 
 [node name="Swordsman" type="Sprite2D" parent="." unique_id=1988997122]
 texture = ExtResource("1_mm1tb")
