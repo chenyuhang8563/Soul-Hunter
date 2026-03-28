@@ -1,6 +1,8 @@
 extends "res://Character/Common/attack_module_base.gd"
 class_name SwordsmanAttackModule
 
+const SwiftnessBuffScript := preload("res://Character/Common/Buffs/swiftness_buff.gd")
+
 const LIGHT_ATTACK_DURATION := 0.70
 const HARD_SEGMENT_COUNT := 3
 # 重攻击3段时间定义（与动画关键帧对齐）：
@@ -22,6 +24,7 @@ var animation_player: AnimationPlayer
 var hard_combo_step := 0
 var hard_combo_chain_left := 0.0
 var hard_waiting_next := false
+var _ultimate_swiftness_granted := false
 var hard_attack_times := PackedFloat32Array(HARD_ATTACK_TIMES)
 var ultimate_hit_times := PackedFloat32Array([0.08, 0.26, 0.44, 0.62, 0.80])
 
@@ -107,6 +110,7 @@ func _start_light_attack() -> void:
 
 func _start_ultimate_attack() -> void:
 	animation_tree.active = true
+	_ultimate_swiftness_granted = false
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
 	var hit_damage := _get_stat_value(&"ultimate_attack", stats.ultimate_attack) / float(ULTIMATE_HIT_COUNT)
 	for hit_time in ultimate_hit_times:
@@ -166,4 +170,13 @@ func _end_hard_combo_wait() -> void:
 	animation_tree.active = true
 
 func _on_force_stop() -> void:
+	_ultimate_swiftness_granted = false
 	_end_hard_combo_wait()
+
+func _apply_damage_to_target(target: Node2D, damage: float) -> void:
+	super._apply_damage_to_target(target, damage)
+	if current_attack != "ultimate_attack" or _ultimate_swiftness_granted:
+		return
+	if owner != null and owner.has_method("add_buff"):
+		owner.add_buff(SwiftnessBuffScript.new())
+		_ultimate_swiftness_granted = true

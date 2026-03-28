@@ -2440,7 +2440,7 @@ scale = Vector2(1.125, 1.125)
 [node name="Characters" type="Node2D" parent="." unique_id=1208115127]
 
 [node name="Archer" parent="Characters" unique_id=1710627706 instance=ExtResource("3_xfk5q")]
-position = Vector2(201, 89)
+position = Vector2(202, 89)
 
 [node name="Slime" parent="Characters" unique_id=1231243137 instance=ExtResource("13_6r07y")]
 position = Vector2(568, 89)

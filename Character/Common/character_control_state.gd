@@ -93,10 +93,15 @@ func try_common_jump() -> void:
 		owner.velocity.y = -owner.jump_velocity
 
 func get_player_move_speed() -> float:
-	return owner.player_move_speed
+	if owner.has_method("get_stat_value"):
+		return float(owner.get_stat_value(&"move_speed", owner.player_move_speed))
+	return float(owner.player_move_speed)
 
 func get_developer_move_speed() -> float:
-	return owner.player_move_speed * owner.DEVELOPER_SPEED_MULTIPLIER
+	var base_move_speed: float = float(owner.player_move_speed)
+	if owner.has_method("get_stat_value"):
+		base_move_speed = float(owner.get_stat_value(&"move_speed", owner.player_move_speed))
+	return base_move_speed * owner.DEVELOPER_SPEED_MULTIPLIER
 
 func is_developer_mode_active() -> bool:
 	return DeveloperMode.applies_to(owner)

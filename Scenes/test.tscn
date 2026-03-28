@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b7torsllpb85n" path="res://Character/Orc/orc.tscn" id="4_35xla"]
 [ext_resource type="PackedScene" uid="uid://ehwbvthv2sps" path="res://Character/Swordsman/swordsman.tscn" id="4_ys1qc"]
 [ext_resource type="PackedScene" uid="uid://dlll1sp3vdsb2" path="res://Character/Archer/archer.tscn" id="5_35xla"]
+[ext_resource type="PackedScene" uid="uid://ys25otk3sp5k" path="res://Character/Slime/slime.tscn" id="6_i3aeo"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("1_lc1oi")
@@ -1158,10 +1159,12 @@ position = Vector2(50, 36)
 position = Vector2(218, 47)
 
 [node name="Orc" parent="." unique_id=1350751769 instance=ExtResource("4_35xla")]
-position = Vector2(141, 0)
+position = Vector2(368, 43)
 
 [node name="Archer" parent="." unique_id=1710627706 instance=ExtResource("5_35xla")]
 position = Vector2(298, 35)
 ai_enabled = true
-attack_cooldown = 0.4
 is_interactable_npc = false
+
+[node name="Slime" parent="." unique_id=1231243137 instance=ExtResource("6_i3aeo")]
+position = Vector2(137, 55)

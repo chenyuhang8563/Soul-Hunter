@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://igmq6qxqbxq" path="res://Character/Swordsman/swordsman.gd" id="1_alxuo"]
 [ext_resource type="Texture2D" uid="uid://dexu7d2gidlm3" path="res://Assets/Sprites/Swordsman/Swordsman.png" id="1_mm1tb"]
+[ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_6ldc6"]
+[ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_6ldc6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_733ai"]
 size = Vector2(13, 17)
@@ -326,3 +328,9 @@ parameters/locomotion_state_machine/conditions/is_walking = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1339909445]
 libraries/ = SubResource("AnimationLibrary_0bb4y")
+
+[node name="DamageNumberSpawner" type="Node2D" parent="." unique_id=2006936045]
+position = Vector2(0, -20)
+script = ExtResource("3_6ldc6")
+label_settings = ExtResource("4_6ldc6")
+metadata/_custom_type_script = "uid://dguo88j37itcm"

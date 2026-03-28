@@ -27,6 +27,7 @@ const PROMPT_ICON_UPDATE_INTERVAL := 0.05
 @onready var posture_bar: ProgressBar = get_node_or_null("PostureBar")
 @onready var animation_tree: AnimationTree = get_node_or_null("AnimationTree")
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer")
+@onready var damage_number_spawner: Node2D = get_node_or_null("DamageNumberSpawner")
 
 @export var stats: CharacterStats
 @export var auto_revive := true
@@ -300,6 +301,8 @@ func _is_buff_host_alive() -> bool:
 	return not is_dead
 
 func get_base_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
+	if stat_id == &"move_speed":
+		return player_move_speed
 	if stats == null:
 		return fallback
 	return stats.get_value(stat_id, fallback)
@@ -351,6 +354,8 @@ func get_hp_ratio() -> float:
 	return lifecycle_state.get_hp_ratio()
 
 func _on_damaged(_amount: float, _current_health: float, _max_health: float, source: CharacterBody2D) -> void:
+	if _amount > 0.0 and damage_number_spawner != null and damage_number_spawner.has_method("spawn_label"):
+		damage_number_spawner.call("spawn_label", _amount, false)
 	if lifecycle_state != null:
 		lifecycle_state.on_damaged(_amount, _current_health, _max_health, source)
 

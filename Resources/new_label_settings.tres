@@ -1,0 +1,9 @@
+[gd_resource type="LabelSettings" format=3 uid="uid://c2d3p2gaalqvr"]
+
+[ext_resource type="FontFile" uid="uid://bmo6inr1t3epg" path="res://Assets/Fonts/quaver.ttf" id="1_sf7bm"]
+
+[resource]
+font = ExtResource("1_sf7bm")
+font_size = 8
+outline_size = 1
+outline_color = Color(0, 0, 0, 1)

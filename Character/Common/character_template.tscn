@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://b1b1b1b1b1b1b"]
 
 [ext_resource type="Script" uid="uid://b5vyf5xeyyqlu" path="res://Character/Common/character.gd" id="1_char"]
+[ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="2_hopkf"]
+[ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="3_hopkf"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
 bg_color = Color(1, 0, 0, 1)
@@ -93,3 +95,9 @@ disabled = true
 anim_player = NodePath("../AnimationPlayer")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=280822122]
+
+[node name="DamageNumberSpawner" type="Node2D" parent="." unique_id=1494533360]
+position = Vector2(0, -20)
+script = ExtResource("2_hopkf")
+label_settings = ExtResource("3_hopkf")
+metadata/_custom_type_script = "uid://dguo88j37itcm"

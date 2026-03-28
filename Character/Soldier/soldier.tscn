@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bq3s2oj5b2cgl" path="res://Character/Soldier/soldier.gd" id="1_170xr"]
 [ext_resource type="Texture2D" uid="uid://d3fvsfmjo68kf" path="res://Assets/Sprites/Soldier/Soldier.png" id="1_xgcsp"]
+[ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_cvq0w"]
+[ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_cvq0w"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
 bg_color = Color(1, 0, 0, 1)
@@ -328,3 +330,9 @@ parameters/locomotion_state_machine/conditions/is_walking = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1856246226]
 libraries/ = SubResource("AnimationLibrary_66mda")
+
+[node name="DamageNumberSpawner" type="Node2D" parent="." unique_id=1142573457]
+position = Vector2(0, -20)
+script = ExtResource("3_cvq0w")
+label_settings = ExtResource("4_cvq0w")
+metadata/_custom_type_script = "uid://dguo88j37itcm"
