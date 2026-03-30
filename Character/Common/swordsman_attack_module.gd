@@ -106,7 +106,7 @@ func start_ai_attack() -> bool:
 func _start_light_attack() -> void:
 	animation_tree.active = true
 	_begin_attack("light_attack", _get_light_attack_duration(LIGHT_ATTACK_DURATION), true, true, false, false)
-	_queue_stat_damage_event(LIGHT_ATTACK_HIT_DELAY, &"light_attack_damage", stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_stat_damage_event(LIGHT_ATTACK_HIT_DELAY, &"light_attack_damage", stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true, _get_light_slash_spec())
 
 func _start_ultimate_attack() -> void:
 	animation_tree.active = true
@@ -114,7 +114,7 @@ func _start_ultimate_attack() -> void:
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
 	var hit_damage := _get_stat_value(&"ultimate_attack", stats.ultimate_attack) / float(ULTIMATE_HIT_COUNT)
 	for hit_time in ultimate_hit_times:
-		_queue_damage_event(float(hit_time), hit_damage, ULTIMATE_ATTACK_RANGE, false, false)
+		_queue_damage_event(float(hit_time), hit_damage, ULTIMATE_ATTACK_RANGE, false, false, _get_ultimate_slash_spec())
 
 func _start_hard_segment(combo_step: int) -> void:
 	# 计算当前段的持续时间
@@ -124,7 +124,7 @@ func _start_hard_segment(combo_step: int) -> void:
 	var segment_hit_delay: float = HARD_ATTACK_HIT_DELAYS[combo_step - 1]
 	
 	_begin_attack("hard_attack", segment_duration, false, false, true, false)
-	_queue_stat_damage_event(segment_hit_delay, &"hard_attack_damage", stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true)
+	_queue_stat_damage_event(segment_hit_delay, &"hard_attack_damage", stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true, _get_hard_slash_spec())
 	if animation_player != null and animation_player.has_animation("hard_attack"):
 		animation_tree.active = false
 		# 恢复播放速度并定位到段开始
@@ -173,10 +173,16 @@ func _on_force_stop() -> void:
 	_ultimate_swiftness_granted = false
 	_end_hard_combo_wait()
 
-func _apply_damage_to_target(target: Node2D, damage: float) -> void:
-	super._apply_damage_to_target(target, damage)
+func _get_ultimate_slash_spec() -> Dictionary:
+	return _create_slash_spec(Vector2(20.0, -6.0), 0.0, Vector2(1.55, 1.0), 0.12, 64.0)
+
+func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
+	var did_apply := super._apply_damage_to_target(target, damage)
+	if not did_apply:
+		return false
 	if current_attack != "ultimate_attack" or _ultimate_swiftness_granted:
-		return
+		return true
 	if owner != null and owner.has_method("add_buff"):
 		owner.add_buff(SwiftnessBuffScript.new())
 		_ultimate_swiftness_granted = true
+	return true

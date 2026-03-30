@@ -13,7 +13,10 @@ func _init() -> void:
 		"light_attack_probability": 0.6,
 	})
 
-func _apply_damage_to_target(target: Node2D, damage: float) -> void:
-	super._apply_damage_to_target(target, damage)
+func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
+	var did_apply := super._apply_damage_to_target(target, damage)
+	if not did_apply:
+		return false
 	if target != null and target.has_method("add_buff"):
 		target.add_buff(SlowedBuffScript.new())
+	return true

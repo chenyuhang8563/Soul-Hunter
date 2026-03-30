@@ -132,7 +132,8 @@ func _queue_damage_event(
 		damage: float,
 		attack_range: float,
 		require_facing: bool,
-		prefer_context_target: bool
+		prefer_context_target: bool,
+		slash_spec: Dictionary = {}
 ) -> void:
 	damage_events.append({
 		"trigger_time": maxf(0.0, trigger_time),
@@ -140,6 +141,7 @@ func _queue_damage_event(
 		"range": maxf(0.0, attack_range),
 		"require_facing": require_facing,
 		"prefer_context_target": prefer_context_target,
+		"slash_spec": slash_spec.duplicate(true),
 		"triggered": false
 	})
 
@@ -149,7 +151,8 @@ func _queue_stat_damage_event(
 		fallback_damage: float,
 		attack_range: float,
 		require_facing: bool,
-		prefer_context_target: bool
+		prefer_context_target: bool,
+		slash_spec: Dictionary = {}
 ) -> void:
 	damage_events.append({
 		"trigger_time": maxf(0.0, trigger_time),
@@ -158,6 +161,7 @@ func _queue_stat_damage_event(
 		"range": maxf(0.0, attack_range),
 		"require_facing": require_facing,
 		"prefer_context_target": prefer_context_target,
+		"slash_spec": slash_spec.duplicate(true),
 		"triggered": false
 	})
 
@@ -175,6 +179,21 @@ func _on_idle_update(_delta: float) -> void:
 
 func _on_force_stop() -> void:
 	pass
+
+func _create_slash_spec(offset: Vector2, rotation_deg: float, base_scale: Vector2, duration: float, reference_range: float) -> Dictionary:
+	return {
+		"offset": offset,
+		"rotation_deg": rotation_deg,
+		"base_scale": base_scale,
+		"duration": duration,
+		"reference_range": reference_range,
+	}
+
+func _get_light_slash_spec() -> Dictionary:
+	return _create_slash_spec(Vector2(14.0, -4.0), 28.0, Vector2(1.25, 0.92), 0.10, 42.0)
+
+func _get_hard_slash_spec() -> Dictionary:
+	return _create_slash_spec(Vector2(18.0, -6.0), 10.0, Vector2(1.25, 0.92), 0.14, 48.0)
 
 func _set_attack_conditions(light_attack: bool, hard_attack: bool, bow_attack: bool) -> void:
 	_set_tree_bool(param_is_light_attack, light_attack)
@@ -201,6 +220,25 @@ func _process_damage_events(elapsed: float) -> void:
 		damage_events[i] = event
 		_try_apply_damage_event(event)
 
+func _play_slash_vfx_from_event(event: Dictionary) -> void:
+	if owner == null or not is_instance_valid(owner) or not owner.is_inside_tree():
+		return
+	var manager := _get_slash_vfx_manager()
+	if manager == null or not manager.has_method("play_slash"):
+		return
+	var spec: Dictionary = event.get("slash_spec", {})
+	if spec.is_empty():
+		return
+	manager.call("play_slash", owner, spec, float(event.get("range", 0.0)))
+
+func _get_slash_vfx_manager() -> Node:
+	if owner == null or not is_instance_valid(owner) or not owner.is_inside_tree():
+		return null
+	var tree := owner.get_tree()
+	if tree == null:
+		return null
+	return tree.root.get_node_or_null("MeleeSlashVfxManager")
+
 func _try_apply_damage_event(event: Dictionary) -> void:
 	if _handle_damage_event_override(event):
 		return
@@ -210,7 +248,8 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 			if _check_clash(current_target):
 				_handle_clash(current_target)
 			else:
-				_apply_damage_to_target(current_target, _resolve_damage_event_amount(event))
+				if _apply_damage_to_target(current_target, _resolve_damage_event_amount(event)):
+					_play_slash_vfx_from_event(event)
 			applied = true
 	if applied:
 		return
@@ -219,7 +258,8 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 		if _check_clash(hit_target):
 			_handle_clash(hit_target)
 		else:
-			_apply_damage_to_target(hit_target, _resolve_damage_event_amount(event))
+			if _apply_damage_to_target(hit_target, _resolve_damage_event_amount(event)):
+				_play_slash_vfx_from_event(event)
 
 func _handle_damage_event_override(_event: Dictionary) -> bool:
 	return false
@@ -360,10 +400,11 @@ func _is_valid_damage_target(candidate: Node2D) -> bool:
 			return false
 	return candidate.has_method("apply_damage")
 
-func _apply_damage_to_target(target: Node2D, damage: float) -> void:
+func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
 	if not _is_valid_damage_target(target):
-		return
+		return false
 	target.call("apply_damage", _get_effective_damage(target, damage), owner)
+	return true
 
 func _get_effective_damage(target: Node2D, base_damage: float) -> float:
 	if owner != null and DeveloperMode.applies_to(owner) and _is_enemy_character_target(target):

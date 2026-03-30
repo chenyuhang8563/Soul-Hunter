@@ -13,9 +13,12 @@ func _init() -> void:
 		"light_attack_probability": 0.6,
 	})
 
-func _apply_damage_to_target(target: Node2D, damage: float) -> void:
-	super._apply_damage_to_target(target, damage)
+func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
+	var did_apply := super._apply_damage_to_target(target, damage)
+	if not did_apply:
+		return false
 	if owner == null or current_attack != "hard_attack":
-		return
+		return true
 	if owner.has_method("add_buff"):
 		owner.add_buff(BerserkBuffScript.new())
+	return true

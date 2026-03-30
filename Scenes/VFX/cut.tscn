@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://chv62mvvyhnlh"]
+
+[ext_resource type="Texture2D" uid="uid://bowi072tovwc" path="res://Assets/Sprites/UI/cut.png" id="1_rmokp"]
+[ext_resource type="Script" uid="uid://dq2tswn66ycc8" path="res://Scenes/VFX/cut_vfx.gd" id="2_cutvfx"]
+
+[node name="Cut" type="Sprite2D" unique_id=1198304369]
+texture = ExtResource("1_rmokp")
+script = ExtResource("2_cutvfx")
