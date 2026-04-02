@@ -5,7 +5,7 @@ const StatModifierScript := preload("res://Character/Common/Buffs/stat_modifier.
 const BuffIconScene := preload("res://Scenes/UI/buff_icon.tscn")
 const SlowedTexture := preload("res://Assets/Sprites/UI/Buffs/slowed.png")
 
-var move_speed_multiplier_penalty := -0.2
+var move_speed_multiplier_penalty := -0.4
 
 func _init() -> void:
 	buff_id = &"slowed"

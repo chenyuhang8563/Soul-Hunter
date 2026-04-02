@@ -314,46 +314,139 @@ func _play_clash_effects(target: Node2D) -> void:
 	var tree = owner.get_tree()
 	
 	# 顿帧 (Hitstop)
-	Engine.time_scale = 0.1
-	var timer = tree.create_timer(0.1, true, false, true)
-	timer.timeout.connect(func(): Engine.time_scale = 1.0)
+	_apply_hitstop(0.1, 0.1)
 	
-	# 创建特效节点
 	var mid_pos = (owner.global_position + target.global_position) / 2.0
-	var effect_node = Node2D.new()
-	effect_node.global_position = mid_pos
-	
 	var current_scene = tree.current_scene
-	if current_scene != null:
-		current_scene.add_child(effect_node)
-	else:
-		tree.root.add_child(effect_node)
-		
-	# 添加火花粒子特效
-	var particles = CPUParticles2D.new()
-	particles.emitting = false
-	particles.one_shot = true
-	particles.explosiveness = 0.9
-	particles.amount = 20
-	particles.lifetime = 0.25
-	particles.spread = 90.0
-	particles.gravity = Vector2(0, 0)
-	particles.initial_velocity_min = 60.0
-	particles.initial_velocity_max = 120.0
-	particles.scale_amount_min = 0.5
-	particles.scale_amount_max = 1.2
-	particles.color = Color(1.0, 0.8, 0.2)
-	effect_node.add_child(particles)
-	particles.emitting = true
+	var effect_parent: Node = current_scene if current_scene != null else tree.root
+	_spawn_particles_from_template(owner, "ParryParticles", effect_parent, mid_pos)
 	
 	# 播放打铁音效
 	if tree.root.has_node("AudioManager"):
 		var audio_manager = tree.root.get_node("AudioManager")
 		audio_manager.play_sfx_2d("sword_clash", mid_pos)
-	
-	# 定时销毁特效节点
-	var free_timer = tree.create_timer(1.0, true, false, true)
-	free_timer.timeout.connect(func(): if is_instance_valid(effect_node): effect_node.queue_free())
+
+func _spawn_particles_from_template(
+		source_node: Node,
+		particle_name: String,
+		effect_parent: Node,
+		world_position: Vector2,
+		horizontal_direction: float = 0.0
+) -> void:
+	if effect_parent == null or source_node == null or not is_instance_valid(source_node):
+		return
+	var particle_template := source_node.find_child(particle_name, true, false)
+	if particle_template == null:
+		push_warning("%s node not found on %s" % [particle_name, source_node.name])
+		return
+	var particle_instance := particle_template.duplicate()
+	if not (particle_instance is Node2D):
+		return
+	var particle_node := particle_instance as Node2D
+	effect_parent.add_child(particle_node)
+	particle_node.global_position = world_position
+	_configure_particle_direction_recursive(particle_node, horizontal_direction)
+	var cleanup_delay := _restart_particles_recursive(particle_node)
+	var tree := source_node.get_tree()
+	if tree == null:
+		return
+	var free_timer = tree.create_timer(cleanup_delay, true, false, true)
+	free_timer.timeout.connect(func(): if is_instance_valid(particle_node): particle_node.queue_free())
+
+func _restart_particles_recursive(node: Node) -> float:
+	var cleanup_delay := 1.0
+	if node is GPUParticles2D:
+		var gpu_particles := node as GPUParticles2D
+		gpu_particles.emitting = false
+		gpu_particles.restart()
+		gpu_particles.emitting = true
+		cleanup_delay = maxf(cleanup_delay, gpu_particles.lifetime + 0.2)
+	elif node is CPUParticles2D:
+		var cpu_particles := node as CPUParticles2D
+		cpu_particles.emitting = false
+		cpu_particles.restart()
+		cpu_particles.emitting = true
+		cleanup_delay = maxf(cleanup_delay, cpu_particles.lifetime + 0.2)
+	for child in node.get_children():
+		cleanup_delay = maxf(cleanup_delay, _restart_particles_recursive(child))
+	return cleanup_delay
+
+func _configure_particle_direction_recursive(node: Node, horizontal_direction: float) -> void:
+	if node is Node2D:
+		_configure_particle_direction(node as Node2D, horizontal_direction)
+	for child in node.get_children():
+		_configure_particle_direction_recursive(child, horizontal_direction)
+
+func _configure_particle_direction(particle_node: Node2D, horizontal_direction: float) -> void:
+	if is_zero_approx(horizontal_direction):
+		return
+	if particle_node is GPUParticles2D:
+		var gpu_particles := particle_node as GPUParticles2D
+		var process_material := gpu_particles.process_material
+		if process_material is ParticleProcessMaterial:
+			var duplicated_material := (process_material as ParticleProcessMaterial).duplicate() as ParticleProcessMaterial
+			var direction: Vector3 = duplicated_material.direction
+			var x_magnitude := absf(direction.x)
+			if is_zero_approx(x_magnitude):
+				x_magnitude = 1.0
+			direction.x = x_magnitude * horizontal_direction
+			duplicated_material.direction = direction
+			gpu_particles.process_material = duplicated_material
+	elif particle_node is CPUParticles2D:
+		var cpu_particles := particle_node as CPUParticles2D
+		var direction_2d: Vector2 = cpu_particles.direction
+		var x_magnitude_2d := absf(direction_2d.x)
+		if is_zero_approx(x_magnitude_2d):
+			x_magnitude_2d = 1.0
+		direction_2d.x = x_magnitude_2d * horizontal_direction
+		cpu_particles.direction = direction_2d
+
+func _get_hit_particle_direction(target: Node2D, source: Node2D) -> float:
+	if target == null or source == null:
+		return 0.0
+	var direction := signf(target.global_position.x - source.global_position.x)
+	if direction == 0.0:
+		direction = 1.0 if randf() > 0.5 else -1.0
+	return direction
+
+func _apply_hitstop(duration: float, time_scale: float = 0.0) -> void:
+	if owner == null or not owner.is_inside_tree():
+		return
+	var tree := owner.get_tree()
+	if tree == null:
+		return
+	var previous_time_scale := Engine.time_scale
+	Engine.time_scale = time_scale
+	var timer := tree.create_timer(duration, true, false, true)
+	timer.timeout.connect(func():
+		if is_equal_approx(Engine.time_scale, time_scale):
+			Engine.time_scale = previous_time_scale if previous_time_scale > 0.0 else 1.0
+	)
+
+func _should_trigger_finisher(target: Node2D, damage: float) -> bool:
+	if not _is_enemy_character_target(target) or not target.has_method("get"):
+		return false
+	if bool(target.get("is_player_controlled")):
+		return false
+	var target_health = target.get("health")
+	if target_health == null:
+		return false
+	var current_health_value = target_health.get("current_health")
+	if current_health_value == null:
+		return false
+	return float(current_health_value) > 0.0 and damage >= float(current_health_value)
+
+func _play_finisher_effect(target: Node2D) -> void:
+	if owner == null or target == null or not owner.is_inside_tree():
+		return
+	var tree := owner.get_tree()
+	if tree == null:
+		return
+	var current_scene = tree.current_scene
+	var effect_parent: Node = current_scene if current_scene != null else tree.root
+	_spawn_particles_from_template(owner, "FinisherBurstParticles", effect_parent, target.global_position)
+	_spawn_particles_from_template(owner, "FinisherSlashParticles", effect_parent, target.global_position)
+	_apply_hitstop(0.3, 0.0)
 
 func _find_attack_target(attack_range: float, require_facing: bool) -> Node2D:
 	if owner == null or attack_range <= 0.0:
@@ -403,7 +496,22 @@ func _is_valid_damage_target(candidate: Node2D) -> bool:
 func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
 	if not _is_valid_damage_target(target):
 		return false
-	target.call("apply_damage", _get_effective_damage(target, damage), owner)
+	var effective_damage := _get_effective_damage(target, damage)
+	var should_trigger_finisher := _should_trigger_finisher(target, effective_damage)
+	target.call("apply_damage", effective_damage, owner)
+	var tree := target.get_tree()
+	if tree != null:
+		var current_scene = tree.current_scene
+		var effect_parent: Node = current_scene if current_scene != null else tree.root
+		_spawn_particles_from_template(
+			target,
+			"HurtParticles",
+			effect_parent,
+			target.global_position,
+			_get_hit_particle_direction(target, owner)
+		)
+	if should_trigger_finisher and target.has_method("is_alive") and not target.is_alive():
+		_play_finisher_effect(target)
 	return true
 
 func _get_effective_damage(target: Node2D, base_damage: float) -> float:

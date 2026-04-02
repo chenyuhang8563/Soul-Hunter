@@ -37,7 +37,9 @@ var unlocked_cam_limit := 0.0
 
 func _ready() -> void:
 	_resolve_scene_references()
-	if is_instance_valid(door):
+	if right_cam_limit > 0.0:
+		locked_cam_limit = right_cam_limit
+	elif is_instance_valid(door):
 		locked_cam_limit = door.global_position.x + CAM_OFFSET
 		right_cam_limit = locked_cam_limit
 	if is_instance_valid(level_finish_area):

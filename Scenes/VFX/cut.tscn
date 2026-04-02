@@ -5,4 +5,5 @@
 
 [node name="Cut" type="Sprite2D" unique_id=1198304369]
 texture = ExtResource("1_rmokp")
+centered = false
 script = ExtResource("2_cutvfx")

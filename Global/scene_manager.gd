@@ -1,5 +1,6 @@
 extends CanvasLayer
 
+@warning_ignore("unused_signal")
 signal camera_changed(new_camera: Camera2D)
 
 @onready var animation_player: AnimationPlayer = $AnimationPlayer

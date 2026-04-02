@@ -1,43 +1,15 @@
 [gd_scene format=3 uid="uid://bktv8jcuya3k7"]
 
-[ext_resource type="Script" uid="uid://bq3s2oj5b2cgl" path="res://Character/Soldier/soldier.gd" id="1_170xr"]
-[ext_resource type="Texture2D" uid="uid://d3fvsfmjo68kf" path="res://Assets/Sprites/Soldier/Soldier.png" id="1_xgcsp"]
-[ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_cvq0w"]
-[ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_cvq0w"]
-[ext_resource type="Resource" path="res://Data/CharacterStats/soldier_stats.tres" id="5_stats"]
+[ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_tpl"]
+[ext_resource type="Script" uid="uid://bq3s2oj5b2cgl" path="res://Character/Soldier/soldier.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://d3fvsfmjo68kf" path="res://Assets/Sprites/Soldier/Soldier.png" id="3_tex"]
+[ext_resource type="Resource" uid="uid://rph4ft1smfw7" path="res://Data/CharacterStats/soldier_stats.tres" id="4_stats"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
-bg_color = Color(1, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_bg"]
-bg_color = Color(0.1, 0.1, 0.1, 0.5)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_fill"]
-bg_color = Color(1, 0.65, 0, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_170xr"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(13, 17)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
 radius = 9.873196
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_attack_scope"]
-radius = 8.01561
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_melee_hitbox"]
-size = Vector2(18, 10)
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_18yrk"]
 animation = &"ultimate_attack"
@@ -116,7 +88,7 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -133,7 +105,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -151,7 +123,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -168,7 +140,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -186,7 +158,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -203,7 +175,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -221,7 +193,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -239,7 +211,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Soldier:frame")
+tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -261,67 +233,24 @@ _data = {
 &"walk": SubResource("Animation_i5jvm")
 }
 
-[node name="Soldier" type="CharacterBody2D" unique_id=812296209]
-collision_layer = 3
-script = ExtResource("1_170xr")
-stats = ExtResource("5_stats")
+[node name="Soldier" unique_id=812296209 instance=ExtResource("1_tpl")]
+script = ExtResource("2_script")
+stats = ExtResource("4_stats")
 
-[node name="Soldier" type="Sprite2D" parent="." unique_id=470808698]
-texture = ExtResource("1_xgcsp")
+[node name="Sprite2D" parent="." index="0" unique_id=1966064385]
+texture = ExtResource("3_tex")
 hframes = 9
 vframes = 7
 
-[node name="HPBar" type="ProgressBar" parent="." unique_id=118302443]
-offset_left = -16.0
-offset_top = -23.0
-offset_right = 16.0
-offset_bottom = -18.0
-theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
-value = 100.0
-show_percentage = false
-
-[node name="PostureBar" type="ProgressBar" parent="." unique_id=903188902]
-offset_left = -16.0
-offset_top = -17.0
-offset_right = 16.0
-offset_bottom = -13.0
-scale = Vector2(1, 0.48000246)
-theme_override_styles/background = SubResource("StyleBoxFlat_posture_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_posture_fill")
-show_percentage = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=995205059]
+[node name="CollisionShape2D" parent="." index="3" unique_id=749656219]
 position = Vector2(-0.5, -1.5)
-shape = SubResource("RectangleShape2D_170xr")
+shape = SubResource("RectangleShape2D_body")
 
-[node name="Marker2D" type="Marker2D" parent="." unique_id=2078106797]
-
-[node name="VisualScope" type="Area2D" parent="." unique_id=1323224273]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="VisualScope" unique_id=257803097]
-scale = Vector2(5, 5)
+[node name="CollisionShape2D" parent="VisualScope" parent_id_path=PackedInt32Array(1332281990) index="0" unique_id=1879561438]
 shape = SubResource("CircleShape2D_visual_scope")
 
-[node name="AttackScope" type="Area2D" parent="." unique_id=1233938070]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackScope" unique_id=726043159]
-scale = Vector2(2, 2)
-shape = SubResource("CircleShape2D_attack_scope")
-
-[node name="RayCast2D" type="RayCast2D" parent="." unique_id=1576064996]
-target_position = Vector2(60, 0)
-
-[node name="MeleeHitbox" type="Area2D" parent="." unique_id=304991112]
-monitoring = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="MeleeHitbox" unique_id=177437512]
-position = Vector2(15, -2)
-shape = SubResource("RectangleShape2D_melee_hitbox")
-disabled = true
-
-[node name="AnimationTree" type="AnimationTree" parent="." unique_id=2024293202]
+[node name="AnimationTree" parent="." index="9" unique_id=306858432]
 tree_root = SubResource("AnimationNodeStateMachine_elo1f")
-anim_player = NodePath("../AnimationPlayer")
 parameters/conditions/attack_finished = true
 parameters/conditions/is_any_attack = false
 parameters/attack_state_machine/conditions/is_bow_attack = false
@@ -330,11 +259,5 @@ parameters/attack_state_machine/conditions/is_light_attack = false
 parameters/locomotion_state_machine/conditions/is_idle = true
 parameters/locomotion_state_machine/conditions/is_walking = false
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1856246226]
+[node name="AnimationPlayer" parent="." index="10" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_66mda")
-
-[node name="DamageNumberSpawner" type="Node2D" parent="." unique_id=1142573457]
-position = Vector2(0, -20)
-script = ExtResource("3_cvq0w")
-label_settings = ExtResource("4_cvq0w")
-metadata/_custom_type_script = "uid://dguo88j37itcm"

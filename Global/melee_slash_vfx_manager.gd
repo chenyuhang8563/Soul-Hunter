@@ -12,7 +12,7 @@ var _active: Array[Node] = []
 func _ready() -> void:
 	_ensure_container()
 
-func play_slash(source: Node2D, spec: Dictionary, attack_range: float) -> void:
+func play_slash(source: Node2D, spec: Dictionary, _attack_range: float) -> void:
 	if source == null or not is_instance_valid(source):
 		return
 	_ensure_container()
@@ -22,8 +22,6 @@ func play_slash(source: Node2D, spec: Dictionary, attack_range: float) -> void:
 	if effect == null:
 		return
 	var resolved_spec := spec.duplicate(true)
-	var reference_range := maxf(float(spec.get("reference_range", 1.0)), 0.001)
-	resolved_spec["length_scale"] = clampf(attack_range / reference_range, 0.85, 1.6)
 	if effect.get_parent() != _container:
 		if effect.get_parent() != null:
 			effect.reparent(_container)
@@ -110,7 +108,7 @@ func _get_model_edge_anchor(source: Node2D) -> Vector2:
 	if sprite == null:
 		return source.global_position
 	var rect := sprite.get_rect()
-	var anchor_local_x := rect.position.x + rect.size.x if sprite.flip_h else rect.position.x
+	var anchor_local_x := rect.position.x + rect.size.x * 0.5
 	var anchor_local_y := rect.position.y + rect.size.y * 0.5
 	return sprite.to_global(Vector2(anchor_local_x, anchor_local_y))
 

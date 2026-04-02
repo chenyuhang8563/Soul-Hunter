@@ -8,7 +8,7 @@ const SwordsmanAttackModuleScript := preload("res://Character/Common/swordsman_a
 const AIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")
 
-@onready var sprite: Sprite2D = $Swordsman
+@onready var sprite: Sprite2D = _find_self_sprite()
 @onready var melee_hitbox: Area2D = $MeleeHitbox
 @onready var melee_hitbox_shape: CollisionShape2D = $MeleeHitbox/CollisionShape2D
 @onready var home_marker: Marker2D = $Marker2D

@@ -24,7 +24,7 @@ func _ready() -> void:
 	fall_area.monitorable = false
 	fall_area.body_entered.connect(_on_fall_body_entered)
 
-func apply_damage(amount: float, source: Node2D = null) -> void:
+func apply_damage(_amount: float, source: Node2D = null) -> void:
 	if is_falling:
 		return
 		

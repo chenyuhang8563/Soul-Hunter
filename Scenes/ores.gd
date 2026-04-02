@@ -11,7 +11,7 @@ var shake_tween: Tween
 func _ready() -> void:
 	original_position = sprite.position
 
-func apply_damage(amount: float, source: Node2D = null) -> void:
+func apply_damage(_amount: float, source: Node2D = null) -> void:
 	# Check if the source is Swordsman
 	var is_swordsman = false
 	if source != null:

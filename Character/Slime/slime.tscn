@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_e8ouo"]
 [ext_resource type="Script" uid="uid://4opleqor7vjp" path="res://Character/Slime/slime.gd" id="1_slime_gd"]
 [ext_resource type="Texture2D" uid="uid://cdaecg4h1ivtd" path="res://Assets/Sprites/Slime/Slime.png" id="2_rn4pd"]
-[ext_resource type="Resource" path="res://Data/CharacterStats/slime_stats.tres" id="3_stats"]
+[ext_resource type="Resource" uid="uid://d0ud8lwja74pi" path="res://Data/CharacterStats/slime_stats.tres" id="3_stats"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_poi7t"]
 animation = &"hard_attack"
@@ -200,15 +200,15 @@ _data = {
 
 [node name="Slime" unique_id=1231243137 instance=ExtResource("1_e8ouo")]
 script = ExtResource("1_slime_gd")
-stats = ExtResource("3_stats")
 attack_cooldown = 0.62
+stats = ExtResource("3_stats")
 
-[node name="Sprite2D" parent="." index="0"]
+[node name="Sprite2D" parent="." index="0" unique_id=1966064385]
 texture = ExtResource("2_rn4pd")
 hframes = 12
 vframes = 6
 
-[node name="AnimationTree" parent="." index="9"]
+[node name="AnimationTree" parent="." index="9" unique_id=306858432]
 tree_root = SubResource("AnimationNodeStateMachine_t6s8c")
 parameters/conditions/attack_finished = false
 "parameters/conditions/is_light_attack or is_hard_attack" = false
@@ -217,5 +217,5 @@ parameters/attack_state_machine/conditions/is_light_attack = false
 parameters/locomotion_state_machine/conditions/is_idle = false
 parameters/locomotion_state_machine/conditions/is_walking = false
 
-[node name="AnimationPlayer" parent="." index="10"]
+[node name="AnimationPlayer" parent="." index="10" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_nh5ry")

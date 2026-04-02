@@ -31,7 +31,11 @@ func _on_body_entered(body: Node2D) -> void:
 	if body is CharacterBody2D:
 		if _is_valid_target(body):
 			if body.has_method("apply_damage"):
+				if shooter != null:
+					shooter.set_meta("damage_is_ranged", true)
 				body.apply_damage(_get_effective_damage(body), shooter)
+				if shooter != null:
+					shooter.remove_meta("damage_is_ranged")
 			queue_free()
 	elif body is TileMap or body is StaticBody2D:
 		queue_free()

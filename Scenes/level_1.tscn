@@ -2340,8 +2340,17 @@ size = Vector2(53, 55)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sda17"]
 size = Vector2(40, 35)
 
+[sub_resource type="Environment" id="Environment_1fal7"]
+background_mode = 3
+glow_enabled = true
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_gcla0"]
+
+[sub_resource type="Compositor" id="Compositor_vr6f4"]
+
 [node name="Level1" type="Node2D" unique_id=1564634810]
 script = ExtResource("1_level1")
+right_cam_limit = 1861.0
 
 [node name="Environment" type="Node2D" parent="." unique_id=1943282264]
 
@@ -2455,9 +2464,6 @@ position = Vector2(944, 55)
 position = Vector2(56, 86)
 start_player_controlled = true
 
-[node name="Camera2D" type="Camera2D" parent="Characters/Soldier" unique_id=1661786052]
-limit_right = 1861
-
 [node name="UI" type="Node2D" parent="." unique_id=366205191]
 
 [node name="KeyButton" parent="UI" unique_id=2007844175 instance=ExtResource("13_6ioyp")]
@@ -2551,5 +2557,10 @@ position = Vector2(1871, 24)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LevelFinishArea" unique_id=725016719]
 position = Vector2(3, 6.5)
 shape = SubResource("RectangleShape2D_sda17")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1188293665]
+environment = SubResource("Environment_1fal7")
+camera_attributes = SubResource("CameraAttributesPractical_gcla0")
+compositor = SubResource("Compositor_vr6f4")
 
 [connection signal="body_entered" from="LevelFinishArea" to="." method="_on_level_finish_area_body_entered"]

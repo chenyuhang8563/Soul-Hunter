@@ -11,17 +11,20 @@ func play_once(world_position: Vector2, facing_left: bool, spec: Dictionary, rel
 	reset_state()
 	_release_cb = release_cb
 	global_position = world_position + _resolve_offset(spec, facing_left)
-	rotation_degrees = _resolve_rotation(facing_left) + randf_range(-5.0, 5.0)
+	rotation_degrees = _resolve_rotation(facing_left) + randf_range(-15.0, 15.0)
 	var base_scale: Vector2 = spec.get("base_scale", Vector2.ONE)
-	var length_scale := float(spec.get("length_scale", 1.0))
-	scale = Vector2(base_scale.x * length_scale, base_scale.y)
-	modulate = Color(1.0, 1.0, 1.0, 0.95)
+	var start_scale := Vector2(base_scale.x * 0.58, base_scale.y)
+	var end_scale := Vector2(base_scale.x * 1.18, base_scale.y)
+	scale = start_scale
+	modulate = Color(1.0, 1.0, 1.0, 0.0)
 	visible = true
-	var duration := maxf(float(spec.get("duration", 0.1)) * 1.5, 0.01)
+	var duration := maxf(float(spec.get("duration", 0.1)), 0.01)
+	var fade_in_duration := maxf(duration * 0.18, 0.01)
+	var fade_out_duration := maxf(duration - fade_in_duration, 0.01)
 	_active_tween = create_tween()
-	_active_tween.set_parallel(true)
-	_active_tween.tween_property(self, "scale:x", scale.x * 1.35, duration)
-	_active_tween.tween_property(self, "modulate:a", 0.0, duration)
+	_active_tween.tween_property(self, "modulate:a", 0.92, fade_in_duration)
+	_active_tween.parallel().tween_property(self, "scale:x", end_scale.x, duration)
+	_active_tween.tween_property(self, "modulate:a", 0.0, fade_out_duration)
 	_active_tween.finished.connect(_on_playback_finished)
 
 func reset_state() -> void:
@@ -41,13 +44,10 @@ func _apply_left_pivot() -> void:
 	if texture == null:
 		offset = Vector2.ZERO
 		return
-	offset = Vector2(0.0, -texture.get_height() * 0.5)
+	offset = Vector2(0.0, -texture.get_height() * 0.5 + 5.0)
 
-func _resolve_offset(spec: Dictionary, facing_left: bool) -> Vector2:
-	var slash_offset: Vector2 = spec.get("offset", Vector2.ZERO)
-	if facing_left:
-		slash_offset.x = -slash_offset.x
-	return slash_offset
+func _resolve_offset(_spec: Dictionary, _facing_left: bool) -> Vector2:
+	return Vector2.ZERO
 
 func _resolve_rotation(facing_left: bool) -> float:
 	if facing_left:

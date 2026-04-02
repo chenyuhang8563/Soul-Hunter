@@ -24,14 +24,11 @@ func set_player_controlled(controlled: bool) -> void:
 		if controlled:
 			owner.add_to_group("player_controlled")
 			var camera: Camera2D = get_camera()
-			if camera == null:
-				camera = Camera2D.new()
-				camera.name = "Camera2D"
-				owner.add_child(camera)
-			camera.enabled = true
-			camera.make_current()
-			if SceneManager.has_signal("camera_changed"):
-				SceneManager.camera_changed.emit(camera)
+			if camera != null:
+				camera.enabled = true
+				camera.make_current()
+				if SceneManager.has_signal("camera_changed"):
+					SceneManager.camera_changed.emit(camera)
 		else:
 			owner.remove_from_group("player_controlled")
 	if owner.interaction_state != null:

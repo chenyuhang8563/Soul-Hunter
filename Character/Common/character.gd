@@ -1,11 +1,13 @@
 extends CharacterBody2D
 
+@warning_ignore("unused_signal")
 signal npc_interacted(interactor: CharacterBody2D)
 
 const ANIM_HURT := "hurt"
 const ANIM_DEATH := "death"
 const HintIconScene := preload("res://Scenes/icon.tscn")
 const PossessionOutlineShader := preload("res://Shaders/possession_outline.gdshader")
+const HitFlashOverlayShader := preload("res://Shaders/hit_flash_overlay.gdshader")
 const CharacterUIPresenterScript := preload("res://Character/Common/character_ui_presenter.gd")
 const CharacterLifecycleScript := preload("res://Character/Common/character_lifecycle.gd")
 const CharacterInteractionScript := preload("res://Character/Common/character_interaction.gd")
@@ -70,6 +72,9 @@ var dialogue_prompt_icon: Node2D
 var possessed_highlight_sprite: Sprite2D
 var possessed_highlight_prev_material: Material
 var possessed_highlight_material: ShaderMaterial
+var hit_flash_overlay_sprite: Sprite2D
+var hit_flash_overlay_material: ShaderMaterial
+var hit_flash_tween: Tween
 var remove_after_death_animation := false
 
 var max_posture := 100.0
@@ -133,6 +138,7 @@ func _exit_tree() -> void:
 		animation_player.animation_finished.disconnect(_on_animation_finished)
 	if interaction_state != null:
 		interaction_state._clear_current_interaction_target()
+	_clear_hit_flash_overlay()
 	_clear_all_buff_icons()
 
 func _set_locomotion_conditions(input_dir: float) -> void:
@@ -358,8 +364,91 @@ func get_hp_ratio() -> float:
 func _on_damaged(_amount: float, _current_health: float, _max_health: float, source: CharacterBody2D) -> void:
 	if _amount > 0.0 and damage_number_spawner != null and damage_number_spawner.has_method("spawn_label"):
 		damage_number_spawner.call("spawn_label", _amount, false)
+	if _amount > 0.0:
+		_play_hit_flash()
+		_trigger_hit_camera_shake(source)
 	if lifecycle_state != null:
 		lifecycle_state.on_damaged(_amount, _current_health, _max_health, source)
+
+func _trigger_hit_camera_shake(source: CharacterBody2D) -> void:
+	if source == null or not is_instance_valid(source):
+		return
+	if source.has_meta("damage_is_ranged") and bool(source.get_meta("damage_is_ranged")):
+		return
+	if not bool(source.get("is_player_controlled")) or not source.has_method("_get_camera"):
+		return
+	var source_camera := source.call("_get_camera") as Camera2D
+	if source_camera == null or not source_camera.enabled or not source_camera.has_method("trigger_hit_shake"):
+		return
+	source_camera.call("trigger_hit_shake", 1.0, 1.0)
+
+func _play_hit_flash() -> void:
+	var overlay := _ensure_hit_flash_overlay()
+	if overlay == null:
+		return
+	_sync_hit_flash_overlay()
+	overlay.visible = true
+	overlay.self_modulate = Color(1.0, 1.0, 1.0, 0.9)
+	if hit_flash_tween != null and hit_flash_tween.is_valid():
+		hit_flash_tween.kill()
+	hit_flash_tween = create_tween()
+	hit_flash_tween.tween_property(overlay, "self_modulate:a", 0.0, 0.12)
+	hit_flash_tween.finished.connect(func():
+		if overlay != null and is_instance_valid(overlay):
+			overlay.visible = false
+	)
+
+func _ensure_hit_flash_overlay() -> Sprite2D:
+	var sprite := _find_self_sprite()
+	if sprite == null:
+		return null
+	if hit_flash_overlay_sprite != null and is_instance_valid(hit_flash_overlay_sprite):
+		if hit_flash_overlay_sprite.get_parent() == self:
+			return hit_flash_overlay_sprite
+		hit_flash_overlay_sprite.queue_free()
+	hit_flash_overlay_sprite = Sprite2D.new()
+	hit_flash_overlay_sprite.name = "HitFlashOverlay"
+	hit_flash_overlay_sprite.visible = false
+	hit_flash_overlay_sprite.self_modulate = Color(1.0, 1.0, 1.0, 0.0)
+	hit_flash_overlay_sprite.z_as_relative = sprite.z_as_relative
+	hit_flash_overlay_sprite.z_index = sprite.z_index + 1
+	if hit_flash_overlay_material == null:
+		hit_flash_overlay_material = ShaderMaterial.new()
+		hit_flash_overlay_material.shader = HitFlashOverlayShader
+	hit_flash_overlay_sprite.material = hit_flash_overlay_material
+	add_child(hit_flash_overlay_sprite)
+	_sync_hit_flash_overlay()
+	return hit_flash_overlay_sprite
+
+func _sync_hit_flash_overlay() -> void:
+	var sprite := _find_self_sprite()
+	var overlay := hit_flash_overlay_sprite
+	if sprite == null or overlay == null or not is_instance_valid(overlay):
+		return
+	overlay.texture = sprite.texture
+	overlay.hframes = sprite.hframes
+	overlay.vframes = sprite.vframes
+	overlay.frame = sprite.frame
+	overlay.frame_coords = sprite.frame_coords
+	overlay.flip_h = sprite.flip_h
+	overlay.flip_v = sprite.flip_v
+	overlay.position = sprite.position
+	overlay.rotation = sprite.rotation
+	overlay.scale = sprite.scale
+	overlay.skew = sprite.skew
+	overlay.offset = sprite.offset
+	overlay.centered = sprite.centered
+	overlay.region_enabled = sprite.region_enabled
+	overlay.region_rect = sprite.region_rect
+	overlay.region_filter_clip_enabled = sprite.region_filter_clip_enabled
+
+func _clear_hit_flash_overlay() -> void:
+	if hit_flash_tween != null and hit_flash_tween.is_valid():
+		hit_flash_tween.kill()
+	hit_flash_tween = null
+	if hit_flash_overlay_sprite != null and is_instance_valid(hit_flash_overlay_sprite):
+		hit_flash_overlay_sprite.queue_free()
+	hit_flash_overlay_sprite = null
 
 func _on_died(_killer: CharacterBody2D) -> void:
 	if lifecycle_state != null:
@@ -425,6 +514,7 @@ func set_interaction_prompt_visible(show_prompt: bool) -> void:
 		interaction_state.set_interaction_prompt_visible(show_prompt)
 
 func _process(delta: float) -> void:
+	_sync_hit_flash_overlay()
 	if control_state != null:
 		control_state.try_toggle_developer_mode()
 	if interaction_state != null:

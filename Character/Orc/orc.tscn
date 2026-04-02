@@ -1,31 +1,9 @@
 [gd_scene format=3 uid="uid://b7torsllpb85n"]
 
-[ext_resource type="Texture2D" uid="uid://07vp5sul5qqn" path="res://Assets/Sprites/Orc/Orc.png" id="1_cqehq"]
-[ext_resource type="Script" uid="uid://cm2nsmitdd4ph" path="res://Character/Orc/orc.gd" id="2_0pdio"]
-[ext_resource type="Script" uid="uid://dguo88j37itcm" path="res://Global/damage_number_spawner.gd" id="3_xjms1"]
-[ext_resource type="LabelSettings" uid="uid://c2d3p2gaalqvr" path="res://Resources/new_label_settings.tres" id="4_xjms1"]
-[ext_resource type="Resource" path="res://Data/CharacterStats/orc_stats.tres" id="5_stats"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
-bg_color = Color(1, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_bg"]
-bg_color = Color(0.1, 0.1, 0.1, 0.5)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_posture_fill"]
-bg_color = Color(1, 0.65, 0, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+[ext_resource type="PackedScene" uid="uid://b1b1b1b1b1b1b" path="res://Character/Common/character_template.tscn" id="1_tpl"]
+[ext_resource type="Texture2D" uid="uid://07vp5sul5qqn" path="res://Assets/Sprites/Orc/Orc.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://cm2nsmitdd4ph" path="res://Character/Orc/orc.gd" id="3_script"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/orc_stats.tres" id="4_stats"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_poi7t"]
 animation = &"hard_attack"
@@ -220,47 +198,23 @@ _data = {
 &"walk": SubResource("Animation_l33nf")
 }
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4itkv"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(13, 17)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_4itkv"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
 radius = 9.873196
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_445mk"]
-radius = 8.01561
+[node name="Orc" unique_id=1350751769 instance=ExtResource("1_tpl")]
+script = ExtResource("3_script")
+stats = ExtResource("4_stats")
 
-[node name="Orc" type="CharacterBody2D" unique_id=1350751769]
-collision_layer = 3
-script = ExtResource("2_0pdio")
-stats = ExtResource("5_stats")
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1441734081]
-texture = ExtResource("1_cqehq")
+[node name="Sprite2D" parent="." index="0" unique_id=1966064385]
+texture = ExtResource("2_tex")
 hframes = 8
 vframes = 6
 
-[node name="HPBar" type="ProgressBar" parent="." unique_id=498589579]
-offset_left = -16.0
-offset_top = -23.0
-offset_right = 16.0
-offset_bottom = -18.0
-theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
-value = 100.0
-show_percentage = false
-
-[node name="PostureBar" type="ProgressBar" parent="." unique_id=407202486]
-offset_left = -16.0
-offset_top = -17.0
-offset_right = 16.0
-offset_bottom = -13.0
-scale = Vector2(1, 0.48000246)
-theme_override_styles/background = SubResource("StyleBoxFlat_posture_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_posture_fill")
-show_percentage = false
-
-[node name="AnimationTree" type="AnimationTree" parent="." unique_id=147515513]
+[node name="AnimationTree" parent="." index="9" unique_id=306858432]
 tree_root = SubResource("AnimationNodeStateMachine_t6s8c")
-anim_player = NodePath("../AnimationPlayer")
 parameters/conditions/attack_finished = true
 "parameters/conditions/is_light_attack or is_hard_attack" = false
 parameters/attack_state_machine/conditions/is_hard_attack = false
@@ -268,32 +222,12 @@ parameters/attack_state_machine/conditions/is_light_attack = false
 parameters/locomotion_state_machine/conditions/is_idle = true
 parameters/locomotion_state_machine/conditions/is_walking = false
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=392996908]
+[node name="AnimationPlayer" parent="." index="10" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_wqyu1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2092081359]
+[node name="CollisionShape2D" parent="." index="3" unique_id=749656219]
 position = Vector2(-0.5, -1.5)
-shape = SubResource("RectangleShape2D_4itkv")
+shape = SubResource("RectangleShape2D_body")
 
-[node name="Marker2D" type="Marker2D" parent="." unique_id=1370538799]
-
-[node name="VisualScope" type="Area2D" parent="." unique_id=1472278780]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="VisualScope" unique_id=551137981]
-scale = Vector2(5, 5)
-shape = SubResource("CircleShape2D_4itkv")
-
-[node name="AttackScope" type="Area2D" parent="." unique_id=873943289]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackScope" unique_id=1410371871]
-scale = Vector2(2, 2)
-shape = SubResource("CircleShape2D_445mk")
-
-[node name="RayCast2D" type="RayCast2D" parent="." unique_id=2092918686]
-target_position = Vector2(60, 0)
-
-[node name="DamageNumberSpawner" type="Node2D" parent="." unique_id=1778836398]
-position = Vector2(0, -20)
-script = ExtResource("3_xjms1")
-label_settings = ExtResource("4_xjms1")
-metadata/_custom_type_script = "uid://dguo88j37itcm"
+[node name="CollisionShape2D" parent="VisualScope" parent_id_path=PackedInt32Array(1332281990) index="0" unique_id=1879561438]
+shape = SubResource("CircleShape2D_visual_scope")
