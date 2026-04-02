@@ -73,8 +73,19 @@ func apply_dash_physics(delta: float) -> bool:
 	if owner.dash_time_left > 0.0:
 		owner.dash_time_left -= delta
 		owner.velocity = owner.dash_velocity
+		if owner.dash_time_left <= 0.0 and owner.has_method("finish_dash"):
+			owner.finish_dash()
 		return true
 	return false
+
+func try_start_dash() -> void:
+	if not owner.is_player_controlled or owner.is_dead or is_player_input_blocked():
+		return
+	if not InputMap.has_action("dash") or not Input.is_action_just_pressed("dash"):
+		return
+	if not owner.has_method("start_dash"):
+		return
+	owner.start_dash(owner.get_facing_direction())
 
 func apply_knockback_physics(delta: float) -> void:
 	if owner.knockback_velocity != 0.0:

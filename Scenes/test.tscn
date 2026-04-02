@@ -1149,6 +1149,8 @@ tile_map_data = PackedByteArray("AAAAAAgAAAAAAAIAAAAAAAkAAAAAAAMAAAAAAAoAAAAAAAU
 tile_set = SubResource("TileSet_qc4db")
 use_kinematic_bodies = true
 
+[node name="AfterimageContainer" type="Node2D" parent="." unique_id=1766407155]
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=73439647]
 position = Vector2(160, 90)
 
@@ -1160,6 +1162,7 @@ position = Vector2(218, 47)
 
 [node name="Orc" parent="." unique_id=1350751769 instance=ExtResource("4_35xla")]
 position = Vector2(368, 43)
+attack_cooldown = 0.48
 
 [node name="Archer" parent="." unique_id=1710627706 instance=ExtResource("5_35xla")]
 position = Vector2(298, 35)

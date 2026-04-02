@@ -360,3 +360,7 @@ process_material = SubResource("ParticleProcessMaterial_finisher_slash")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=674214703]
 script = ExtResource("4_camshake")
+
+[node name="AfterimageTimer" type="Timer" parent="." unique_id=1099384895]
+wait_time = 0.5
+one_shot = true

@@ -38,6 +38,8 @@ func _physics_process_player(delta: float) -> void:
 	if not owner.is_player_input_blocked():
 		if owner.has_method("_handle_player_attack_input"):
 			owner._handle_player_attack_input()
+		if owner.control_state != null:
+			owner.control_state.try_start_dash()
 		owner.try_common_jump()
 		owner.try_manual_possession()
 		if allow_detach:

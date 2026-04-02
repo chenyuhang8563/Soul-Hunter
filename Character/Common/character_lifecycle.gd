@@ -15,6 +15,8 @@ func on_health_changed(current_health: float, max_health: float) -> void:
 func apply_damage(amount: float, source: CharacterBody2D = null) -> void:
 	if owner.is_developer_mode_active():
 		return
+	if owner.has_method("is_damage_invincible") and owner.is_damage_invincible():
+		return
 	owner.health.apply_damage(amount, source)
 
 func add_posture(amount: float) -> void:

@@ -14,6 +14,8 @@ const CharacterInteractionScript := preload("res://Character/Common/character_in
 const CharacterControlStateScript := preload("res://Character/Common/character_control_state.gd")
 const BuffContextScript := preload("res://Character/Common/Buffs/buff_context.gd")
 const BuffControllerScript := preload("res://Character/Common/Buffs/buff_controller.gd")
+const AfterimageScene = preload("res://Scenes/VFX/afterimage.tscn")
+const AFTERIMAGE_POOL_SIZE = 15
 const BUFF_ICON_MARGIN := Vector2(6.0, 6.0)
 const BUFF_ICON_SPACING := 2.0
 
@@ -30,6 +32,9 @@ const PROMPT_ICON_UPDATE_INTERVAL := 0.05
 @onready var animation_tree: AnimationTree = get_node_or_null("AnimationTree")
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer")
 @onready var damage_number_spawner: Node2D = get_node_or_null("DamageNumberSpawner")
+@onready var sprite_2d: Sprite2D = get_node_or_null("Sprite2D")
+@onready var afterimage_container: Node2D = _resolve_afterimage_container()
+@onready var afterimage_timer: Timer = get_node_or_null("AfterimageTimer")
 
 @export var stats: CharacterStats
 @export var auto_revive := true
@@ -47,6 +52,17 @@ const PROMPT_ICON_UPDATE_INTERVAL := 0.05
 @export var is_interactable_npc := false
 @export var dialogue_range := 40.0
 @export var corpse_cleanup_delay := 10.0
+@export var afterimage_enabled: bool = true
+@export var afterimage_color: Color = Color(1,1,1,0.7)
+@export var afterimage_interval: float = 0.05
+@export var afterimage_duration: float = 0.4
+@export var afterimage_final_scale: float = 0.5
+@export var dash_enabled := true
+@export var dash_speed := 280.0
+@export var dash_duration := 0.18
+@export var dash_cooldown := 0.45
+@export var dash_invincibility_duration := 0.18
+
 
 var ai_module: RefCounted = null
 var attack_module: AttackModuleBase = null
@@ -88,6 +104,12 @@ var _default_collision_mask := 0
 var _respawn_scene_path := ""
 var _buff_icon_nodes: Dictionary = {}
 
+var _is_creating_afterimages: bool = false
+var _afterimage_pool = []
+var dash_cooldown_left := 0.0
+var invincibility_time_left := 0.0
+var _dash_collision_exceptions: Array[CharacterBody2D] = []
+
 func _ready() -> void:
 	if stats == null:
 		stats = CharacterStats.new()
@@ -110,6 +132,15 @@ func _ready() -> void:
 		interaction_state.on_ready()
 	_on_character_ready()
 
+	# 初始化对象池
+	_setup_afterimage_pool()
+
+	# 应用自定义时间间隔并连接信号
+	if afterimage_timer != null:
+		afterimage_timer.wait_time = afterimage_interval
+		if not afterimage_timer.timeout.is_connected(_create_afterimage):
+			afterimage_timer.timeout.connect(_create_afterimage)
+
 func _setup_helpers() -> void:
 	lifecycle_state = CharacterLifecycleScript.new()
 	lifecycle_state.setup(self)
@@ -122,6 +153,7 @@ func _on_character_ready() -> void:
 	pass
 
 func _exit_tree() -> void:
+	_clear_dash_collision_exceptions()
 	if health.health_changed.is_connected(_on_health_changed):
 		health.health_changed.disconnect(_on_health_changed)
 	if health.damaged.is_connected(_on_damaged):
@@ -168,6 +200,7 @@ func _on_enter_hurt_override() -> void:
 	_set_locomotion_conditions(0.0)
 
 func _on_enter_dead_override() -> void:
+	finish_dash()
 	if ai_module != null and ai_module.has_method("force_stop"):
 		ai_module.force_stop()
 	_set_locomotion_conditions(0.0)
@@ -515,6 +548,10 @@ func set_interaction_prompt_visible(show_prompt: bool) -> void:
 
 func _process(delta: float) -> void:
 	_sync_hit_flash_overlay()
+	if dash_cooldown_left > 0.0:
+		dash_cooldown_left = maxf(0.0, dash_cooldown_left - delta)
+	if invincibility_time_left > 0.0:
+		invincibility_time_left = maxf(0.0, invincibility_time_left - delta)
 	if control_state != null:
 		control_state.try_toggle_developer_mode()
 	if interaction_state != null:
@@ -534,6 +571,77 @@ func apply_dash_physics(delta: float) -> bool:
 	if control_state == null:
 		return false
 	return control_state.apply_dash_physics(delta)
+
+func can_start_dash() -> bool:
+	if not dash_enabled or not is_player_controlled or is_dead or is_hurt_playing:
+		return false
+	if dash_time_left > 0.0 or dash_cooldown_left > 0.0:
+		return false
+	if control_state != null:
+		if control_state.is_player_input_blocked() or control_state.is_detach_blocking_movement() or control_state.is_developer_mode_active():
+			return false
+	if attack_module != null:
+		if attack_module.has_method("is_busy") and attack_module.is_busy():
+			return false
+		if attack_module.has_method("can_move") and not attack_module.can_move():
+			return false
+	return true
+
+func start_dash(direction: float) -> bool:
+	if not can_start_dash():
+		return false
+	if is_zero_approx(direction):
+		direction = get_facing_direction()
+	dash_velocity = Vector2(direction * dash_speed, 0.0)
+	dash_time_left = dash_duration
+	dash_cooldown_left = dash_cooldown
+	velocity.y = 0.0
+	_set_locomotion_conditions(direction)
+	_apply_dash_collision_passthrough()
+	start_invincibility(dash_invincibility_duration)
+	start_afterimage_effect()
+	return true
+
+func finish_dash() -> void:
+	dash_time_left = 0.0
+	dash_velocity = Vector2.ZERO
+	_clear_dash_collision_exceptions()
+	stop_afterimage_effect()
+
+func get_facing_direction() -> float:
+	var sprite := _find_self_sprite()
+	if sprite != null and sprite.flip_h:
+		return -1.0
+	return 1.0
+
+func start_invincibility(duration: float) -> void:
+	invincibility_time_left = maxf(invincibility_time_left, maxf(0.0, duration))
+
+func is_damage_invincible() -> bool:
+	return invincibility_time_left > 0.0
+
+func _apply_dash_collision_passthrough() -> void:
+	_clear_dash_collision_exceptions()
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("possessable_character"):
+		if not (node is CharacterBody2D):
+			continue
+		var other := node as CharacterBody2D
+		if other == self or not is_instance_valid(other):
+			continue
+		add_collision_exception_with(other)
+		other.add_collision_exception_with(self)
+		_dash_collision_exceptions.append(other)
+
+func _clear_dash_collision_exceptions() -> void:
+	for other in _dash_collision_exceptions:
+		if other == null or not is_instance_valid(other):
+			continue
+		remove_collision_exception_with(other)
+		other.remove_collision_exception_with(self)
+	_dash_collision_exceptions.clear()
 
 func apply_knockback_physics(delta: float) -> void:
 	if control_state != null:
@@ -672,3 +780,79 @@ func _restore_default_collision_state() -> void:
 func _on_corpse_cleanup_timeout() -> void:
 	if lifecycle_state != null:
 		lifecycle_state.on_corpse_cleanup_timeout()
+
+func _resolve_afterimage_container() -> Node2D:
+	var tree := get_tree()
+	if tree == null:
+		return self
+	var current_scene := tree.current_scene
+	if current_scene != null:
+		var existing := current_scene.get_node_or_null("AfterimageContainer") as Node2D
+		if existing != null:
+			return existing
+		var created := Node2D.new()
+		created.name = "AfterimageContainer"
+		current_scene.call_deferred("add_child", created)
+		return created
+	return self
+
+func _setup_afterimage_pool() -> void:
+	if not afterimage_container:
+		push_warning("Afterimage container is not assigned. Afterimage effect will be disabled.")
+		return
+	for i in range(AFTERIMAGE_POOL_SIZE):
+		var afterimage = AfterimageScene.instantiate() as Afterimage
+		afterimage.visible = false
+		afterimage.repool_me.connect(_on_afterimage_repooled)
+		afterimage_container.add_child(afterimage)
+		_afterimage_pool.append(afterimage)
+
+# 当拖影完成生命周期时，将其回收到池中
+func _on_afterimage_repooled(afterimage_instance: Afterimage) -> void:
+	if afterimage_instance == null or not is_instance_valid(afterimage_instance):
+		return
+	if _afterimage_pool.has(afterimage_instance):
+		return
+	_afterimage_pool.append(afterimage_instance)
+
+func start_afterimage_effect() -> void:
+	if not afterimage_enabled or _is_creating_afterimages or sprite_2d == null:
+		return
+	_is_creating_afterimages = true
+	_create_afterimage()
+	if afterimage_timer != null:
+		afterimage_timer.start()
+
+func stop_afterimage_effect() -> void:
+	_is_creating_afterimages = false
+	if afterimage_timer != null:
+		afterimage_timer.stop()
+
+func _create_afterimage() -> void:
+	if not _is_creating_afterimages or sprite_2d == null:
+		return
+	
+	# 1.从池中获取一个可用的拖影实例
+	if _afterimage_pool.is_empty():
+		return # 池中没有可用的实例，跳过这次创建
+
+	var afterimage: Afterimage = _afterimage_pool.pop_front()
+
+	# 2.收集当前状态并调用拖影的初始化方法
+	afterimage.initialize(
+		sprite_2d.texture,
+		sprite_2d.hframes,
+		sprite_2d.vframes,
+		sprite_2d.frame,
+		self.global_transform,
+		sprite_2d.flip_h,
+		sprite_2d.offset,
+		sprite_2d.centered,
+		afterimage_color,
+		afterimage_duration,
+		afterimage_final_scale
+	)
+
+	# 如果效果仍在持续，再次启动计时器
+	if _is_creating_afterimages and afterimage_timer != null:
+		afterimage_timer.start()
