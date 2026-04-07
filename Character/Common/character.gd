@@ -2,6 +2,8 @@ extends CharacterBody2D
 
 @warning_ignore("unused_signal")
 signal npc_interacted(interactor: CharacterBody2D)
+signal damage_dealt(target, final_damage)
+signal dash_finished(start_position, end_position)
 
 const ANIM_HURT := "hurt"
 const ANIM_DEATH := "death"
@@ -14,6 +16,7 @@ const CharacterInteractionScript := preload("res://Character/Common/character_in
 const CharacterControlStateScript := preload("res://Character/Common/character_control_state.gd")
 const BuffContextScript := preload("res://Character/Common/Buffs/buff_context.gd")
 const BuffControllerScript := preload("res://Character/Common/Buffs/buff_controller.gd")
+const RunModifierControllerScript := preload("res://Character/Common/run_modifier_controller.gd")
 const AfterimageScene = preload("res://Scenes/VFX/afterimage.tscn")
 const AFTERIMAGE_POOL_SIZE = 15
 const BUFF_ICON_MARGIN := Vector2(6.0, 6.0)
@@ -26,6 +29,7 @@ const HAZARD_CHECK_DEPTH := 5.0
 const DEVELOPER_SPEED_MULTIPLIER := 2.0
 const HAZARD_CHECK_INTERVAL := 0.1
 const PROMPT_ICON_UPDATE_INTERVAL := 0.05
+const WORLD_COLLISION_MASK := 1
 
 @onready var hp_bar: ProgressBar = get_node_or_null("HPBar")
 @onready var posture_bar: ProgressBar = get_node_or_null("PostureBar")
@@ -77,6 +81,7 @@ var detach_module: DetachModule = null
 var health := HealthComponent.new()
 var buff_context = null
 var buff_controller = null
+var run_modifier_controller: RunModifierController = null
 var is_dead := false
 var is_hurt_playing := false
 var ui_presenter = null
@@ -108,7 +113,7 @@ var _is_creating_afterimages: bool = false
 var _afterimage_pool = []
 var dash_cooldown_left := 0.0
 var invincibility_time_left := 0.0
-var _dash_collision_exceptions: Array[CharacterBody2D] = []
+var _dash_start_position := Vector2.ZERO
 
 func _ready() -> void:
 	if stats == null:
@@ -153,7 +158,6 @@ func _on_character_ready() -> void:
 	pass
 
 func _exit_tree() -> void:
-	_clear_dash_collision_exceptions()
 	if health.health_changed.is_connected(_on_health_changed):
 		health.health_changed.disconnect(_on_health_changed)
 	if health.damaged.is_connected(_on_damaged):
@@ -349,9 +353,18 @@ func get_base_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
 	return stats.get_value(stat_id, fallback)
 
 func get_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
+	var value := get_base_stat_value(stat_id, fallback)
 	if buff_controller != null:
-		return buff_controller.get_stat_value(stat_id, get_base_stat_value(stat_id, fallback))
-	return get_base_stat_value(stat_id, fallback)
+		value = buff_controller.get_stat_value(stat_id, value)
+	if run_modifier_controller != null:
+		value = run_modifier_controller.modify_stat_value(stat_id, value)
+	return value
+
+func ensure_run_modifier_controller() -> RunModifierController:
+	if run_modifier_controller == null:
+		run_modifier_controller = RunModifierControllerScript.new()
+		run_modifier_controller.setup(self)
+	return run_modifier_controller
 
 func add_buff(buff):
 	if buff_controller == null:
@@ -592,21 +605,19 @@ func start_dash(direction: float) -> bool:
 		return false
 	if is_zero_approx(direction):
 		direction = get_facing_direction()
-	dash_velocity = Vector2(direction * dash_speed, 0.0)
-	dash_time_left = dash_duration
-	dash_cooldown_left = dash_cooldown
-	velocity.y = 0.0
-	_set_locomotion_conditions(direction)
-	_apply_dash_collision_passthrough()
-	start_invincibility(dash_invincibility_duration)
-	start_afterimage_effect()
+	_start_dash_state(Vector2(direction * dash_speed, 0.0), dash_duration, dash_cooldown, dash_invincibility_duration)
 	return true
 
 func finish_dash() -> void:
+	var was_dashing := dash_time_left > 0.0 or dash_velocity != Vector2.ZERO
+	var dash_end_position := global_position
 	dash_time_left = 0.0
 	dash_velocity = Vector2.ZERO
-	_clear_dash_collision_exceptions()
+	if not is_dead:
+		_restore_default_collision_state()
 	stop_afterimage_effect()
+	if was_dashing:
+		dash_finished.emit(_dash_start_position, dash_end_position)
 
 func get_facing_direction() -> float:
 	var sprite := _find_self_sprite()
@@ -614,34 +625,32 @@ func get_facing_direction() -> float:
 		return -1.0
 	return 1.0
 
+func start_forced_dash(dash_vector: Vector2, duration: float, invincibility_duration: float = -1.0) -> void:
+	var i_frame_duration := invincibility_duration
+	if i_frame_duration < 0.0:
+		i_frame_duration = minf(duration, dash_invincibility_duration)
+	_start_dash_state(dash_vector, duration, 0.0, i_frame_duration)
+
 func start_invincibility(duration: float) -> void:
 	invincibility_time_left = maxf(invincibility_time_left, maxf(0.0, duration))
 
 func is_damage_invincible() -> bool:
 	return invincibility_time_left > 0.0
 
-func _apply_dash_collision_passthrough() -> void:
-	_clear_dash_collision_exceptions()
-	var tree := get_tree()
-	if tree == null:
-		return
-	for node in tree.get_nodes_in_group("possessable_character"):
-		if not (node is CharacterBody2D):
-			continue
-		var other := node as CharacterBody2D
-		if other == self or not is_instance_valid(other):
-			continue
-		add_collision_exception_with(other)
-		other.add_collision_exception_with(self)
-		_dash_collision_exceptions.append(other)
+func _start_dash_state(dash_vector: Vector2, duration: float, cooldown_duration: float, invincibility_duration: float) -> void:
+	_dash_start_position = global_position
+	dash_velocity = dash_vector
+	dash_time_left = maxf(0.0, duration)
+	dash_cooldown_left = maxf(dash_cooldown_left, cooldown_duration)
+	velocity = dash_vector
+	_set_locomotion_conditions(signf(dash_vector.x))
+	_apply_dash_collision_mask()
+	start_invincibility(invincibility_duration)
+	start_afterimage_effect()
 
-func _clear_dash_collision_exceptions() -> void:
-	for other in _dash_collision_exceptions:
-		if other == null or not is_instance_valid(other):
-			continue
-		remove_collision_exception_with(other)
-		other.remove_collision_exception_with(self)
-	_dash_collision_exceptions.clear()
+func _apply_dash_collision_mask() -> void:
+	collision_layer = 0
+	collision_mask = _default_collision_mask & WORLD_COLLISION_MASK
 
 func apply_knockback_physics(delta: float) -> void:
 	if control_state != null:

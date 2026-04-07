@@ -192,7 +192,8 @@ damping_max = 110.0
 color_ramp = SubResource("GradientTexture1D_rnbd5")
 
 [node name="CharacterTemplate" type="CharacterBody2D" unique_id=240269984]
-collision_layer = 3
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_char")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1966064385]
@@ -225,12 +226,14 @@ shape = SubResource("RectangleShape2D_body")
 [node name="Marker2D" type="Marker2D" parent="." unique_id=2094758054]
 
 [node name="VisualScope" type="Area2D" parent="." unique_id=1332281990]
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="VisualScope" unique_id=1879561438]
 scale = Vector2(5, 5)
 shape = SubResource("CircleShape2D_visual_scope")
 
 [node name="AttackScope" type="Area2D" parent="." unique_id=1430574399]
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackScope" unique_id=1441694067]
 scale = Vector2(2, 2)

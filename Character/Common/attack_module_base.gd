@@ -9,6 +9,10 @@ const PARAM_ATTACK_FINISHED := "parameters/conditions/attack_finished"
 const PARAM_IS_ATTACK_COMBINED := "parameters/conditions/is_light_attack or is_hard_attack"
 const PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER := 0.8
 
+static var _active_hitstop_requests: Dictionary = {}
+static var _next_hitstop_request_id := 1
+static var _hitstop_restore_time_scale := 1.0
+
 var owner: CharacterBody2D
 var sprite: Sprite2D
 var animation_tree: AnimationTree
@@ -242,24 +246,24 @@ func _get_slash_vfx_manager() -> Node:
 func _try_apply_damage_event(event: Dictionary) -> void:
 	if _handle_damage_event_override(event):
 		return
-	var applied := false
+	var hit_targets: Array = []
 	if bool(event.get("prefer_context_target", false)):
 		if _is_valid_damage_target(current_target) and current_target_in_scope:
-			if _check_clash(current_target):
-				_handle_clash(current_target)
-			else:
-				if _apply_damage_to_target(current_target, _resolve_damage_event_amount(event)):
-					_play_slash_vfx_from_event(event)
-			applied = true
-	if applied:
-		return
-	var hit_target: Node2D = _find_attack_target(float(event.get("range", 0.0)), bool(event.get("require_facing", true)))
-	if hit_target != null:
+			hit_targets.append(current_target)
+	for hit_target in _find_attack_targets(float(event.get("range", 0.0)), bool(event.get("require_facing", true))):
+		if not hit_targets.has(hit_target):
+			hit_targets.append(hit_target)
+
+	var dealt_damage := false
+	var damage_amount := _resolve_damage_event_amount(event)
+	for hit_target in hit_targets:
 		if _check_clash(hit_target):
 			_handle_clash(hit_target)
-		else:
-			if _apply_damage_to_target(hit_target, _resolve_damage_event_amount(event)):
-				_play_slash_vfx_from_event(event)
+			continue
+		if _apply_damage_to_target(hit_target, damage_amount):
+			dealt_damage = true
+	if dealt_damage:
+		_play_slash_vfx_from_event(event)
 
 func _handle_damage_event_override(_event: Dictionary) -> bool:
 	return false
@@ -415,13 +419,26 @@ func _apply_hitstop(duration: float, time_scale: float = 0.0) -> void:
 	var tree := owner.get_tree()
 	if tree == null:
 		return
-	var previous_time_scale := Engine.time_scale
-	Engine.time_scale = time_scale
+	if _active_hitstop_requests.is_empty():
+		_hitstop_restore_time_scale = Engine.time_scale if Engine.time_scale > 0.0 else 1.0
+	var request_id := _next_hitstop_request_id
+	_next_hitstop_request_id += 1
+	_active_hitstop_requests[request_id] = time_scale
+	_reapply_hitstop_time_scale()
 	var timer := tree.create_timer(duration, true, false, true)
 	timer.timeout.connect(func():
-		if is_equal_approx(Engine.time_scale, time_scale):
-			Engine.time_scale = previous_time_scale if previous_time_scale > 0.0 else 1.0
+		_active_hitstop_requests.erase(request_id)
+		_reapply_hitstop_time_scale()
 	)
+
+static func _reapply_hitstop_time_scale() -> void:
+	if _active_hitstop_requests.is_empty():
+		Engine.time_scale = _hitstop_restore_time_scale if _hitstop_restore_time_scale > 0.0 else 1.0
+		return
+	var active_time_scale := INF
+	for pending_time_scale in _active_hitstop_requests.values():
+		active_time_scale = minf(active_time_scale, float(pending_time_scale))
+	Engine.time_scale = active_time_scale if active_time_scale < INF else 1.0
 
 func _should_trigger_finisher(target: Node2D, damage: float) -> bool:
 	if not _is_enemy_character_target(target) or not target.has_method("get"):
@@ -448,9 +465,9 @@ func _play_finisher_effect(target: Node2D) -> void:
 	_spawn_particles_from_template(owner, "FinisherSlashParticles", effect_parent, target.global_position)
 	_apply_hitstop(0.3, 0.0)
 
-func _find_attack_target(attack_range: float, require_facing: bool) -> Node2D:
+func _find_attack_targets(attack_range: float, require_facing: bool) -> Array:
 	if owner == null or attack_range <= 0.0:
-		return null
+		return []
 	var shape := CircleShape2D.new()
 	shape.radius = attack_range
 	var query := PhysicsShapeQueryParameters2D.new()
@@ -460,8 +477,7 @@ func _find_attack_target(attack_range: float, require_facing: bool) -> Node2D:
 	query.collide_with_bodies = true
 	query.exclude = [owner]
 	var results := owner.get_world_2d().direct_space_state.intersect_shape(query, 16)
-	var best_target: Node2D
-	var best_distance := INF
+	var targets: Array = []
 	var facing := -1.0 if sprite != null and sprite.flip_h else 1.0
 	for result: Dictionary in results:
 		var collider: Object = result.get("collider")
@@ -474,11 +490,11 @@ func _find_attack_target(attack_range: float, require_facing: bool) -> Node2D:
 			var delta_x := candidate.global_position.x - owner.global_position.x
 			if delta_x * facing <= 0.0:
 				continue
-		var distance := owner.global_position.distance_to(candidate.global_position)
-		if distance < best_distance:
-			best_distance = distance
-			best_target = candidate
-	return best_target
+		targets.append(candidate)
+	targets.sort_custom(func(left: Node2D, right: Node2D) -> bool:
+		return owner.global_position.distance_squared_to(left.global_position) < owner.global_position.distance_squared_to(right.global_position)
+	)
+	return targets
 
 func _is_valid_damage_target(candidate: Node2D) -> bool:
 	if candidate == null:
@@ -499,6 +515,8 @@ func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
 	var effective_damage := _get_effective_damage(target, damage)
 	var should_trigger_finisher := _should_trigger_finisher(target, effective_damage)
 	target.call("apply_damage", effective_damage, owner)
+	if owner != null and owner.has_signal("damage_dealt"):
+		owner.emit_signal("damage_dealt", target, effective_damage)
 	var tree := target.get_tree()
 	if tree != null:
 		var current_scene = tree.current_scene

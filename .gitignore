@@ -5,3 +5,6 @@
 
 # Submodules (have their own git repos)
 godot-mcp/
+tests/
+addons/gut
+.gutconfig.json

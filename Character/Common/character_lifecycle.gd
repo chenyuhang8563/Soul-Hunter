@@ -179,19 +179,4 @@ func _schedule_corpse_cleanup() -> void:
 func on_corpse_cleanup_timeout() -> void:
 	if not owner.is_inside_tree() or not owner.is_dead or owner.is_player_controlled or owner.remove_after_death_animation:
 		return
-	_respawn_from_corpse()
-
-func _respawn_from_corpse() -> void:
-	var parent: Node = owner.get_parent()
-	if parent == null or owner._respawn_scene_path.is_empty():
-		owner.queue_free()
-		return
-	var packed_scene := load(owner._respawn_scene_path) as PackedScene
-	if packed_scene == null:
-		owner.queue_free()
-		return
-	var respawned: Node = packed_scene.instantiate()
-	if respawned is Node2D:
-		(respawned as Node2D).global_position = owner.spawn_position
-	parent.add_child(respawned)
 	owner.queue_free()

@@ -1,0 +1,86 @@
+[gd_resource type="Resource" script_class="RewardPoolDefinition" format=3 uid="uid://c7hugwvqrlwyb"]
+
+[ext_resource type="Script" uid="uid://cpx8dpqrsksst" path="res://Global/Roguelike/reward_pool_definition.gd" id="1_pool"]
+[ext_resource type="Script" uid="uid://dqq1mkowl6hnk" path="res://Global/Roguelike/reward_card_definition.gd" id="2_card"]
+[ext_resource type="Script" uid="uid://bh0aud15ikomr" path="res://Global/Roguelike/reward_effect_definition.gd" id="3_effect"]
+
+[sub_resource type="Resource" id="RewardEffect_attack_light"]
+script = ExtResource("3_effect")
+stat_id = &"light_attack_damage"
+value = 10.0
+
+[sub_resource type="Resource" id="RewardEffect_attack_hard"]
+script = ExtResource("3_effect")
+stat_id = &"hard_attack_damage"
+value = 10.0
+
+[sub_resource type="Resource" id="RewardCard_attack_up"]
+script = ExtResource("2_card")
+id = &"attack_up"
+title = "Attack +10"
+description = "Light attack +10 and hard attack +10 for this run."
+effects = [SubResource("RewardEffect_attack_light"), SubResource("RewardEffect_attack_hard")]
+
+[sub_resource type="Resource" id="RewardEffect_lifesteal"]
+script = ExtResource("3_effect")
+effect_type = 1
+value = 5.0
+
+[sub_resource type="Resource" id="RewardCard_lifesteal"]
+script = ExtResource("2_card")
+id = &"lifesteal"
+title = "Lifesteal +5%"
+description = "Heal for 5% of the final damage you deal."
+effects = [SubResource("RewardEffect_lifesteal")]
+
+[sub_resource type="Resource" id="RewardEffect_dash_damage"]
+script = ExtResource("3_effect")
+effect_type = 2
+value = 10.0
+
+[sub_resource type="Resource" id="RewardCard_dash_slash"]
+script = ExtResource("2_card")
+id = &"dash_slash"
+title = "Dash Slash"
+description = "After dashing, deal 10 damage to enemies on the dash path."
+effects = [SubResource("RewardEffect_dash_damage")]
+
+[sub_resource type="Resource" id="RewardEffect_max_health"]
+script = ExtResource("3_effect")
+stat_id = &"max_health"
+value = 40.0
+
+[sub_resource type="Resource" id="RewardCard_max_health"]
+script = ExtResource("2_card")
+id = &"max_health_up"
+title = "Vitality +40"
+description = "Increase max health by 40 for this run."
+effects = [SubResource("RewardEffect_max_health")]
+
+[sub_resource type="Resource" id="RewardEffect_move_speed"]
+script = ExtResource("3_effect")
+stat_id = &"move_speed"
+value = 15.0
+
+[sub_resource type="Resource" id="RewardCard_move_speed"]
+script = ExtResource("2_card")
+id = &"move_speed_up"
+title = "Move Speed +15"
+description = "Gain 15 bonus movement speed."
+effects = [SubResource("RewardEffect_move_speed")]
+
+[sub_resource type="Resource" id="RewardEffect_attack_speed"]
+script = ExtResource("3_effect")
+stat_id = &"attack_cooldown"
+value = -0.03
+
+[sub_resource type="Resource" id="RewardCard_attack_speed"]
+script = ExtResource("2_card")
+id = &"attack_speed_up"
+title = "Attack Speed Up"
+description = "Reduce attack cooldown by 0.03 seconds."
+effects = [SubResource("RewardEffect_attack_speed")]
+
+[resource]
+script = ExtResource("1_pool")
+cards = Array[ExtResource("2_card")]([SubResource("RewardCard_attack_up"), SubResource("RewardCard_lifesteal"), SubResource("RewardCard_dash_slash"), SubResource("RewardCard_max_health"), SubResource("RewardCard_move_speed"), SubResource("RewardCard_attack_speed")])

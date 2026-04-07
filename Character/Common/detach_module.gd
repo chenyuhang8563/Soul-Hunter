@@ -107,11 +107,17 @@ func _execute_detach() -> void:
 				soldier.call("set_player_controlled", true)
 			soldier.set("team_id", 0)
 			
-			# Apply Dash velocity
-			soldier.velocity = current_direction * 300.0
-			if "dash_velocity" in soldier:
-				soldier.set("dash_velocity", current_direction * 300.0)
-				soldier.set("dash_time_left", 0.3)
+			# Reuse the common dash pipeline so detach gets the same pass-through rules and visuals.
+			var detach_dash_velocity := current_direction * 300.0
+			if soldier.has_method("start_forced_dash"):
+				soldier.call("start_forced_dash", detach_dash_velocity, 0.3)
+			else:
+				soldier.velocity = detach_dash_velocity
+				if "dash_velocity" in soldier:
+					soldier.set("dash_velocity", detach_dash_velocity)
+					soldier.set("dash_time_left", 0.3)
+					if soldier.has_method("start_afterimage_effect"):
+						soldier.call("start_afterimage_effect")
 				
 			var sprite = soldier.call("_find_self_sprite") if soldier.has_method("_find_self_sprite") else null
 			if sprite != null and current_direction.x != 0:

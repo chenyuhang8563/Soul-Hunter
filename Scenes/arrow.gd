@@ -31,9 +31,12 @@ func _on_body_entered(body: Node2D) -> void:
 	if body is CharacterBody2D:
 		if _is_valid_target(body):
 			if body.has_method("apply_damage"):
+				var final_damage := _get_effective_damage(body)
 				if shooter != null:
 					shooter.set_meta("damage_is_ranged", true)
-				body.apply_damage(_get_effective_damage(body), shooter)
+				body.apply_damage(final_damage, shooter)
+				if shooter != null and shooter.has_signal("damage_dealt"):
+					shooter.emit_signal("damage_dealt", body, final_damage)
 				if shooter != null:
 					shooter.remove_meta("damage_is_ranged")
 			queue_free()
