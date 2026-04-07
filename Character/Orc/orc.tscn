@@ -5,6 +5,12 @@
 [ext_resource type="Script" uid="uid://cm2nsmitdd4ph" path="res://Character/Orc/orc.gd" id="3_script"]
 [ext_resource type="Resource" path="res://Data/CharacterStats/orc_stats.tres" id="4_stats"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(13, 17)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
+radius = 9.873196
+
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_poi7t"]
 animation = &"hard_attack"
 
@@ -198,20 +204,22 @@ _data = {
 &"walk": SubResource("Animation_l33nf")
 }
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(13, 17)
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
-radius = 9.873196
-
 [node name="Orc" unique_id=1350751769 instance=ExtResource("1_tpl")]
 script = ExtResource("3_script")
+attack_cooldown = 0.48
 stats = ExtResource("4_stats")
 
 [node name="Sprite2D" parent="." index="0" unique_id=1966064385]
 texture = ExtResource("2_tex")
 hframes = 8
 vframes = 6
+
+[node name="CollisionShape2D" parent="." index="3" unique_id=749656219]
+position = Vector2(-0.5, -1.5)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="CollisionShape2D" parent="VisualScope" parent_id_path=PackedInt32Array(1332281990) index="0" unique_id=1879561438]
+shape = SubResource("CircleShape2D_visual_scope")
 
 [node name="AnimationTree" parent="." index="9" unique_id=306858432]
 tree_root = SubResource("AnimationNodeStateMachine_t6s8c")
@@ -224,10 +232,3 @@ parameters/locomotion_state_machine/conditions/is_walking = false
 
 [node name="AnimationPlayer" parent="." index="10" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_wqyu1")
-
-[node name="CollisionShape2D" parent="." index="3" unique_id=749656219]
-position = Vector2(-0.5, -1.5)
-shape = SubResource("RectangleShape2D_body")
-
-[node name="CollisionShape2D" parent="VisualScope" parent_id_path=PackedInt32Array(1332281990) index="0" unique_id=1879561438]
-shape = SubResource("CircleShape2D_visual_scope")

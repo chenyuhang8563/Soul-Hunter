@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterStats" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CharacterStats" format=3 uid="uid://df2tmngoqkgw5"]
 
-[ext_resource type="Script" path="res://Character/Common/character_stats.gd" id="1_stats"]
+[ext_resource type="Script" uid="uid://vghfk6t4jw8m" path="res://Character/Common/character_stats.gd" id="1_stats"]
 
 [resource]
 script = ExtResource("1_stats")
-max_health = 300.0
+max_health = 180.0
 move_speed = 125.0
 attack_cooldown = 0.36
 light_attack_damage = 36.0

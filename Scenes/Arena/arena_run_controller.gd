@@ -36,6 +36,7 @@ var _rng := RandomNumberGenerator.new()
 var _enemy_container: Node = null
 var _spawn_points: Array = []
 var _active_enemies: Array = []
+var _reserved_spawn_positions: Array = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -63,6 +64,7 @@ func setup(player: Node, reward_pool: Resource, wave_director: RefCounted, run_m
 	_reward_options.clear()
 	_rest_time_left = 0.0
 	_active_enemies.clear()
+	_reserved_spawn_positions.clear()
 	_set_tree_paused(false)
 	_connect_player_health()
 
@@ -163,6 +165,7 @@ func _set_tree_paused(should_pause: bool) -> void:
 
 func _spawn_current_wave() -> void:
 	_active_enemies.clear()
+	_reserved_spawn_positions.clear()
 	if _enemy_container == null or _spawn_points.is_empty():
 		return
 
@@ -181,13 +184,64 @@ func _spawn_current_wave() -> void:
 			if not (enemy is Node2D):
 				continue
 			var spawn_point: Node2D = _spawn_points[_rng.randi_range(0, _spawn_points.size() - 1)]
-			var local_spawn_position: Vector2 = _enemy_container.to_local(spawn_point.global_position)
+			var spawn_position := _resolve_spawn_position(spawn_point.global_position, enemy)
+			var local_spawn_position: Vector2 = _enemy_container.to_local(spawn_position)
 			(enemy as Node2D).position = local_spawn_position
 			_prepare_enemy_instance(enemy, health_multiplier, attack_multiplier, move_speed_multiplier)
 			_enemy_container.add_child(enemy)
-			(enemy as Node2D).global_position = spawn_point.global_position
-			_sync_spawn_metadata(enemy, spawn_point.global_position)
+			(enemy as Node2D).global_position = spawn_position
+			_reserved_spawn_positions.append(spawn_position)
+			_sync_spawn_metadata(enemy, spawn_position)
 			_track_enemy(enemy)
+
+func _resolve_spawn_position(spawn_origin: Vector2, enemy: Node2D) -> Vector2:
+	var spacing := _estimate_spawn_spacing(enemy)
+	if _is_spawn_position_clear(spawn_origin, spacing):
+		return spawn_origin
+
+	var directions := [
+		Vector2.RIGHT,
+		Vector2.LEFT,
+		Vector2.UP,
+		Vector2.DOWN,
+		Vector2(1.0, 1.0).normalized(),
+		Vector2(-1.0, 1.0).normalized(),
+		Vector2(1.0, -1.0).normalized(),
+		Vector2(-1.0, -1.0).normalized(),
+	]
+	for ring in range(1, 5):
+		var radius := spacing * float(ring)
+		for direction in directions:
+			var candidate: Vector2 = spawn_origin + direction * radius
+			if _is_spawn_position_clear(candidate, spacing):
+				return candidate
+	return spawn_origin
+
+func _estimate_spawn_spacing(enemy: Node2D) -> float:
+	var collision_shape := enemy.find_child("CollisionShape2D", true, false) as CollisionShape2D
+	if collision_shape == null or collision_shape.shape == null:
+		return 24.0
+	var shape := collision_shape.shape
+	if shape is RectangleShape2D:
+		var size := (shape as RectangleShape2D).size
+		return maxf(size.x, size.y) + 6.0
+	if shape is CircleShape2D:
+		return (shape as CircleShape2D).radius * 2.0 + 6.0
+	if shape is CapsuleShape2D:
+		var capsule := shape as CapsuleShape2D
+		return maxf(capsule.radius * 2.0, capsule.height) + 6.0
+	return 24.0
+
+func _is_spawn_position_clear(candidate: Vector2, spacing: float) -> bool:
+	for reserved_position in _reserved_spawn_positions:
+		var reserved_position_vector: Vector2 = reserved_position
+		if reserved_position_vector.distance_to(candidate) < spacing:
+			return false
+	if _player != null and _player is Node2D:
+		var player_node := _player as Node2D
+		if player_node.global_position.distance_to(candidate) < spacing:
+			return false
+	return true
 
 func _prepare_enemy_instance(enemy: Node, health_multiplier: float, attack_multiplier: float, move_speed_multiplier: float) -> void:
 	if enemy.has_method("set"):
