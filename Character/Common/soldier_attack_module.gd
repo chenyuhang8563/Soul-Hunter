@@ -77,7 +77,8 @@ func _handle_damage_event_override(event: Dictionary) -> bool:
 		
 		var spawn_pos = owner.global_position + Vector2(0, 0) + facing_dir * 10
 		arrow_instance.position = spawn_pos
-		arrow_instance.setup(facing_dir, _resolve_damage_event_amount(event), owner)
+		var damage_result := _resolve_damage_event_result(event)
+		arrow_instance.setup(facing_dir, float(damage_result.get("damage", 0.0)), owner, bool(damage_result.get("critical_hit", false)))
 		
 		owner.get_parent().add_child(arrow_instance)
 		return true

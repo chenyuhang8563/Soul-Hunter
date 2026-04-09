@@ -24,18 +24,20 @@ effects = [SubResource("RewardEffect_attack_light"), SubResource("RewardEffect_a
 [sub_resource type="Resource" id="RewardEffect_lifesteal"]
 script = ExtResource("3_effect")
 effect_type = 1
-value = 5.0
+effect_id = &"lifesteal_percent"
+value = 20.0
 
 [sub_resource type="Resource" id="RewardCard_lifesteal"]
 script = ExtResource("2_card")
 id = &"lifesteal"
-title = "Lifesteal +5%"
-description = "Heal for 5% of the final damage you deal."
+title = "Lifesteal +20%"
+description = "Heal for 20% of the final damage you deal."
 effects = [SubResource("RewardEffect_lifesteal")]
 
 [sub_resource type="Resource" id="RewardEffect_dash_damage"]
 script = ExtResource("3_effect")
-effect_type = 2
+effect_type = 1
+effect_id = &"dash_path_damage"
 value = 10.0
 
 [sub_resource type="Resource" id="RewardCard_dash_slash"]
@@ -81,6 +83,59 @@ title = "Attack Speed Up"
 description = "Reduce attack cooldown by 0.03 seconds."
 effects = [SubResource("RewardEffect_attack_speed")]
 
+[sub_resource type="Resource" id="RewardEffect_crit_chance"]
+script = ExtResource("3_effect")
+stat_id = &"crit_chance"
+value = 15.0
+
+[sub_resource type="Resource" id="RewardCard_crit_chance_up"]
+script = ExtResource("2_card")
+id = &"crit_chance_up"
+title = "Crit Chance +15%"
+description = "Increase critical strike chance by 15% for this run."
+effects = [SubResource("RewardEffect_crit_chance")]
+
+[sub_resource type="Resource" id="RewardEffect_defense"]
+script = ExtResource("3_effect")
+stat_id = &"defense"
+value = 10.0
+
+[sub_resource type="Resource" id="RewardCard_defense_up"]
+script = ExtResource("2_card")
+id = &"defense_up"
+title = "Defense +10"
+description = "Increase defense by 10 for this run."
+effects = [SubResource("RewardEffect_defense")]
+
+[sub_resource type="Resource" id="RewardEffect_possession_combo_haste"]
+script = ExtResource("3_effect")
+effect_type = 1
+effect_id = &"possession_combo_haste"
+value = 15.0
+duration = 4.0
+aux_value = 3.0
+
+[sub_resource type="Resource" id="RewardCard_possession_combo_haste"]
+script = ExtResource("2_card")
+id = &"possession_combo_haste"
+title = "Possession Rhythm"
+description = "After 3 possessions within 3 seconds, gain 15% move speed and attack speed for a short time."
+effects = [SubResource("RewardEffect_possession_combo_haste")]
+
+[sub_resource type="Resource" id="RewardEffect_detach_dash_armor_break"]
+script = ExtResource("3_effect")
+effect_type = 1
+effect_id = &"detach_dash_armor_break"
+value = 20.0
+duration = 4.0
+
+[sub_resource type="Resource" id="RewardCard_detach_dash_armor_break"]
+script = ExtResource("2_card")
+id = &"detach_dash_armor_break"
+title = "Breaking Escape"
+description = "Detach dash applies Defense Down for 4 seconds to enemies on the path."
+effects = [SubResource("RewardEffect_detach_dash_armor_break")]
+
 [resource]
 script = ExtResource("1_pool")
-cards = Array[ExtResource("2_card")]([SubResource("RewardCard_attack_up"), SubResource("RewardCard_lifesteal"), SubResource("RewardCard_dash_slash"), SubResource("RewardCard_max_health"), SubResource("RewardCard_move_speed"), SubResource("RewardCard_attack_speed")])
+cards = Array[ExtResource("2_card")]([SubResource("RewardCard_attack_up"), SubResource("RewardCard_lifesteal"), SubResource("RewardCard_dash_slash"), SubResource("RewardCard_max_health"), SubResource("RewardCard_move_speed"), SubResource("RewardCard_attack_speed"), SubResource("RewardCard_crit_chance_up"), SubResource("RewardCard_defense_up"), SubResource("RewardCard_possession_combo_haste"), SubResource("RewardCard_detach_dash_armor_break")])

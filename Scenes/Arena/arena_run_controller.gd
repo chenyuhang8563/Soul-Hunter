@@ -10,6 +10,7 @@ signal run_failed(reached_wave)
 
 const RunModifierControllerScript := preload("res://Character/Common/run_modifier_controller.gd")
 const ARENA_ENEMY_GROUP := &"arena_enemy"
+const ARENA_WAVE_META_KEY := &"arena_wave_index"
 
 enum RunState {
 	PREPARE,
@@ -20,7 +21,7 @@ enum RunState {
 	DEFEAT,
 }
 
-@export var rest_duration := 5.0
+@export var rest_duration := 3.0
 
 var current_state: RunState = RunState.PREPARE
 var current_wave := 0
@@ -42,6 +43,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func _process(delta: float) -> void:
+	_sync_current_player_reference()
 	if current_state == RunState.IN_WAVE:
 		_prune_non_hostile_enemies()
 	if current_state == RunState.REST:
@@ -128,7 +130,7 @@ func fail_run() -> void:
 	if current_state == RunState.VICTORY or current_state == RunState.DEFEAT:
 		return
 	current_state = RunState.DEFEAT
-	_set_tree_paused(false)
+	_set_tree_paused(true)
 	run_failed.emit(current_wave)
 
 func get_reward_options() -> Array:
@@ -162,6 +164,24 @@ func _set_tree_paused(should_pause: bool) -> void:
 	var tree := get_tree()
 	if tree != null:
 		tree.paused = should_pause
+
+func _sync_current_player_reference() -> void:
+	if not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	var current_player: Node = null
+	for node in tree.get_nodes_in_group(&"player_controlled"):
+		current_player = node
+		break
+	if current_player == _player:
+		return
+	_disconnect_player_health()
+	_player = current_player
+	if _run_modifier_controller != null and _player != null:
+		_run_modifier_controller.setup(_player)
+	_connect_player_health()
 
 func _spawn_current_wave() -> void:
 	_active_enemies.clear()
@@ -268,6 +288,7 @@ func _prepare_enemy_instance(enemy: Node, health_multiplier: float, attack_multi
 func _track_enemy(enemy: Node) -> void:
 	_active_enemies.append(enemy)
 	enemy.add_to_group(ARENA_ENEMY_GROUP)
+	enemy.set_meta(ARENA_WAVE_META_KEY, current_wave)
 	if enemy.has_signal("tree_exited"):
 		var tree_exit_callable := Callable(self, "_on_enemy_tree_exited").bind(enemy)
 		if not enemy.tree_exited.is_connected(tree_exit_callable):
@@ -286,7 +307,10 @@ func _on_enemy_tree_exited(enemy: Node) -> void:
 	_remove_active_enemy(enemy)
 
 func _remove_active_enemy(enemy: Node) -> void:
+	var previous_enemy_count := _active_enemies.size()
 	_active_enemies.erase(enemy)
+	if _active_enemies.size() == previous_enemy_count:
+		return
 	if not is_inside_tree():
 		return
 	if current_state == RunState.IN_WAVE and _active_enemies.is_empty():
@@ -308,6 +332,9 @@ func _prune_non_hostile_enemies() -> void:
 func _is_hostile_wave_enemy(enemy: Node) -> bool:
 	if enemy == null or not is_instance_valid(enemy):
 		return false
+	if enemy.has_meta(ARENA_WAVE_META_KEY):
+		if int(enemy.get_meta(ARENA_WAVE_META_KEY, -1)) != current_wave:
+			return false
 	if enemy.has_method("is_alive") and not bool(enemy.call("is_alive")):
 		return false
 	if enemy.has_method("get_team_id") and _player != null and _player.has_method("get_team_id"):

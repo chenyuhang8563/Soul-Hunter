@@ -176,8 +176,8 @@ func _on_force_stop() -> void:
 func _get_ultimate_slash_spec() -> Dictionary:
 	return _create_slash_spec(Vector2(20.0, -6.0), 0.0, Vector2(1.55, 1.0), 0.12, 64.0)
 
-func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
-	var did_apply := super._apply_damage_to_target(target, damage)
+func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false) -> bool:
+	var did_apply := super._apply_damage_to_target(target, damage, critical_hit)
 	if not did_apply:
 		return false
 	if current_attack != "ultimate_attack" or _ultimate_swiftness_granted:

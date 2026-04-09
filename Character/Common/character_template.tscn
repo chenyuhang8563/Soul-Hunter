@@ -32,7 +32,7 @@ corner_radius_bottom_left = 2
 size = Vector2(15, 17)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_visual_scope"]
-radius = 10.2
+radius = 16.999998
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_attack_scope"]
 radius = 8.01561
@@ -193,7 +193,6 @@ color_ramp = SubResource("GradientTexture1D_rnbd5")
 
 [node name="CharacterTemplate" type="CharacterBody2D" unique_id=240269984]
 collision_layer = 2
-collision_mask = 1
 platform_floor_layers = 1
 platform_wall_layers = 1
 script = ExtResource("1_char")

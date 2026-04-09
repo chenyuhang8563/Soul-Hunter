@@ -110,3 +110,18 @@ func _build_cached_modifiers() -> Array:
 		if modifier.has_method("duplicate_modifier"):
 			result.append(modifier.duplicate_modifier())
 	return result
+
+func duplicate_effect():
+	var script_ref = get_script()
+	if script_ref == null or not script_ref.can_instantiate():
+		return null
+	var clone = script_ref.new()
+	for property in get_property_list():
+		var usage: int = int(property.get("usage", 0))
+		if (usage & PROPERTY_USAGE_SCRIPT_VARIABLE) == 0:
+			continue
+		var property_name := StringName(property.get("name", ""))
+		if property_name == &"":
+			continue
+		clone.set(property_name, get(property_name))
+	return clone

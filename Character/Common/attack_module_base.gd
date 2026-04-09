@@ -8,6 +8,8 @@ const PARAM_IS_ANY_ATTACK := "parameters/conditions/is_any_attack"
 const PARAM_ATTACK_FINISHED := "parameters/conditions/attack_finished"
 const PARAM_IS_ATTACK_COMBINED := "parameters/conditions/is_light_attack or is_hard_attack"
 const PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER := 0.8
+const CRIT_DAMAGE_MULTIPLIER := 1.5
+const INCOMING_DAMAGE_IS_CRITICAL_META := "incoming_damage_is_critical"
 
 static var _active_hitstop_requests: Dictionary = {}
 static var _next_hitstop_request_id := 1
@@ -20,6 +22,7 @@ var stats: CharacterStats
 var audio_service: Node = null
 
 var attack_cooldown := 0.30
+var base_attack_cooldown := 0.30
 var attack_cooldown_left := 0.0
 var attack_time_left := 0.0
 var attack_duration := 0.0
@@ -38,6 +41,7 @@ var param_is_attack_combined := ""
 
 var parry_window_start := 0.30
 var parry_window_end := 0.40
+var _forced_critical_hit_result := -1
 
 func setup(
 		host: CharacterBody2D,
@@ -55,13 +59,15 @@ func setup(
 	animation_tree = tree
 	stats = character_stats
 	audio_service = audio_service_node
-	attack_cooldown = maxf(0.0, cooldown)
+	base_attack_cooldown = maxf(0.0, cooldown)
+	attack_cooldown = base_attack_cooldown
 	attack_cooldown_left = 0.0
 	attack_time_left = 0.0
 	attack_duration = 0.0
 	current_attack = ""
 	current_attack_movable = true
 	damage_events.clear()
+	_forced_critical_hit_result = -1
 	_set_attack_conditions(false, false, false)
 	_set_tree_bool(param_attack_finished, true)
 
@@ -107,6 +113,16 @@ func force_stop() -> void:
 	_set_attack_conditions(false, false, false)
 	_set_tree_bool(param_attack_finished, true)
 	_on_force_stop()
+
+func set_attack_cooldown(cooldown: float) -> void:
+	attack_cooldown = maxf(0.0, cooldown)
+	attack_cooldown_left = minf(attack_cooldown_left, attack_cooldown)
+
+func set_forced_critical_hit(is_critical: bool) -> void:
+	_forced_critical_hit_result = 1 if is_critical else 0
+
+func clear_forced_critical_hit() -> void:
+	_forced_critical_hit_result = -1
 
 func _begin_attack(
 		attack_name: String,
@@ -255,12 +271,14 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 			hit_targets.append(hit_target)
 
 	var dealt_damage := false
-	var damage_amount := _resolve_damage_event_amount(event)
+	var damage_result := _resolve_damage_event_result(event)
+	var damage_amount := float(damage_result.get("damage", 0.0))
+	var critical_hit := bool(damage_result.get("critical_hit", false))
 	for hit_target in hit_targets:
 		if _check_clash(hit_target):
 			_handle_clash(hit_target)
 			continue
-		if _apply_damage_to_target(hit_target, damage_amount):
+		if _apply_damage_to_target(hit_target, damage_amount, critical_hit):
 			dealt_damage = true
 	if dealt_damage:
 		_play_slash_vfx_from_event(event)
@@ -357,6 +375,33 @@ func _spawn_particles_from_template(
 	var free_timer = tree.create_timer(cleanup_delay, true, false, true)
 	free_timer.timeout.connect(func(): if is_instance_valid(particle_node): particle_node.queue_free())
 
+func _get_finisher_effect_duration() -> float:
+	return maxf(
+		0.3,
+		maxf(
+			_get_particle_template_duration(owner, "FinisherBurstParticles"),
+			_get_particle_template_duration(owner, "FinisherSlashParticles")
+		)
+	)
+
+func _get_particle_template_duration(source_node: Node, particle_name: String) -> float:
+	if source_node == null or not is_instance_valid(source_node):
+		return 0.0
+	var particle_template := source_node.find_child(particle_name, true, false)
+	if particle_template == null:
+		return 0.0
+	return _collect_particle_duration_recursive(particle_template)
+
+func _collect_particle_duration_recursive(node: Node) -> float:
+	var duration := 0.0
+	if node is GPUParticles2D:
+		duration = maxf(duration, (node as GPUParticles2D).lifetime)
+	elif node is CPUParticles2D:
+		duration = maxf(duration, (node as CPUParticles2D).lifetime)
+	for child in node.get_children():
+		duration = maxf(duration, _collect_particle_duration_recursive(child))
+	return duration
+
 func _restart_particles_recursive(node: Node) -> float:
 	var cleanup_delay := 1.0
 	if node is GPUParticles2D:
@@ -443,7 +488,7 @@ static func _reapply_hitstop_time_scale() -> void:
 func _should_trigger_finisher(target: Node2D, damage: float) -> bool:
 	if not _is_enemy_character_target(target) or not target.has_method("get"):
 		return false
-	if bool(target.get("is_player_controlled")):
+	if target.get("is_player_controlled") == true:
 		return false
 	var target_health = target.get("health")
 	if target_health == null:
@@ -464,6 +509,8 @@ func _play_finisher_effect(target: Node2D) -> void:
 	_spawn_particles_from_template(owner, "FinisherBurstParticles", effect_parent, target.global_position)
 	_spawn_particles_from_template(owner, "FinisherSlashParticles", effect_parent, target.global_position)
 	_apply_hitstop(0.3, 0.0)
+	if owner.has_method("lock_possession_input_for_finisher"):
+		owner.call("lock_possession_input_for_finisher", _get_finisher_effect_duration())
 
 func _find_attack_targets(attack_range: float, require_facing: bool) -> Array:
 	if owner == null or attack_range <= 0.0:
@@ -509,14 +556,27 @@ func _is_valid_damage_target(candidate: Node2D) -> bool:
 			return false
 	return candidate.has_method("apply_damage")
 
-func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
+func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false) -> bool:
 	if not _is_valid_damage_target(target):
 		return false
 	var effective_damage := _get_effective_damage(target, damage)
-	var should_trigger_finisher := _should_trigger_finisher(target, effective_damage)
+	var previous_health := _get_target_health_value(target)
+	var had_critical_meta := target.has_meta(INCOMING_DAMAGE_IS_CRITICAL_META)
+	var previous_critical_meta = null
+	if had_critical_meta:
+		previous_critical_meta = target.get_meta(INCOMING_DAMAGE_IS_CRITICAL_META)
+	target.set_meta(INCOMING_DAMAGE_IS_CRITICAL_META, critical_hit)
 	target.call("apply_damage", effective_damage, owner)
+	if had_critical_meta:
+		target.set_meta(INCOMING_DAMAGE_IS_CRITICAL_META, previous_critical_meta)
+	else:
+		target.remove_meta(INCOMING_DAMAGE_IS_CRITICAL_META)
+	var current_health := _get_target_health_value(target)
+	var final_damage := effective_damage
+	if not is_nan(previous_health) and not is_nan(current_health):
+		final_damage = maxf(0.0, previous_health - current_health)
 	if owner != null and owner.has_signal("damage_dealt"):
-		owner.emit_signal("damage_dealt", target, effective_damage)
+		owner.emit_signal("damage_dealt", target, final_damage)
 	var tree := target.get_tree()
 	if tree != null:
 		var current_scene = tree.current_scene
@@ -528,7 +588,7 @@ func _apply_damage_to_target(target: Node2D, damage: float) -> bool:
 			target.global_position,
 			_get_hit_particle_direction(target, owner)
 		)
-	if should_trigger_finisher and target.has_method("is_alive") and not target.is_alive():
+	if final_damage > 0.0 and _is_enemy_character_target(target) and not _is_player_controlled_target(target) and target.has_method("is_alive") and not target.is_alive():
 		_play_finisher_effect(target)
 	return true
 
@@ -537,12 +597,57 @@ func _get_effective_damage(target: Node2D, base_damage: float) -> float:
 		return _get_lethal_damage(target)
 	return base_damage
 
+func _get_target_health_value(target: Node2D) -> float:
+	if target == null or not target.has_method("get"):
+		return NAN
+	var target_health = target.get("health")
+	if target_health == null:
+		return NAN
+	var current_health_value = target_health.get("current_health")
+	if current_health_value == null:
+		return NAN
+	return float(current_health_value)
+
+func _is_player_controlled_target(target: Node2D) -> bool:
+	if target == null or not target.has_method("get"):
+		return false
+	return target.get("is_player_controlled") == true
+
 func _resolve_damage_event_amount(event: Dictionary) -> float:
+	return float(_resolve_damage_event_result(event).get("damage", 0.0))
+
+func _resolve_damage_event_result(event: Dictionary) -> Dictionary:
 	var stat_id = event.get("stat_id", &"") as StringName
 	var fallback_damage := float(event.get("damage", 0.0))
-	if stat_id == &"":
-		return fallback_damage
-	return _get_stat_value(stat_id, fallback_damage)
+	var base_damage := fallback_damage
+	if stat_id != &"":
+		base_damage = _get_stat_value(stat_id, fallback_damage)
+	return _apply_critical_damage_result(base_damage)
+
+func _apply_critical_damage(base_damage: float) -> float:
+	return float(_apply_critical_damage_result(base_damage).get("damage", 0.0))
+
+func _apply_critical_damage_result(base_damage: float) -> Dictionary:
+	if base_damage <= 0.0:
+		return {
+			"damage": 0.0,
+			"critical_hit": false,
+		}
+	var crit_chance := clampf(_get_stat_value(&"crit_chance", 0.0), 0.0, 100.0)
+	var critical_hit := _roll_critical_hit(crit_chance)
+	return {
+		"damage": base_damage * CRIT_DAMAGE_MULTIPLIER if critical_hit else base_damage,
+		"critical_hit": critical_hit,
+	}
+
+func _roll_critical_hit(crit_chance: float) -> bool:
+	var forced_result := _forced_critical_hit_result
+	if forced_result != -1:
+		_forced_critical_hit_result = -1
+		return forced_result == 1
+	if crit_chance <= 0.0:
+		return false
+	return randf() * 100.0 < crit_chance
 
 func _get_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
 	if owner != null and owner.has_method("get_stat_value"):

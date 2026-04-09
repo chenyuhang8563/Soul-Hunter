@@ -1,6 +1,10 @@
 class_name CharacterMotionDriver
 extends RefCounted
 
+const STACKED_BODY_ESCAPE_X_TOLERANCE := 14.0
+const STACKED_BODY_ESCAPE_Y_OFFSET := 0.5
+const STACKED_BODY_ESCAPE_DISTANCE := 20.0
+
 var owner
 var sprite: Sprite2D
 var air_move_multiplier := 1.0
@@ -68,4 +72,37 @@ func _physics_process_player(delta: float) -> void:
 	else:
 		owner.velocity.x = 0.0
 		owner._set_locomotion_conditions(0.0)
+	move_player_body(input_dir)
+
+func move_player_body(horizontal_intent: float = 0.0) -> void:
+	var temporary_collision_exceptions := _collect_stacked_enemy_exceptions(horizontal_intent)
+	for body in temporary_collision_exceptions:
+		owner.add_collision_exception_with(body)
 	owner.move_and_slide()
+	for body in temporary_collision_exceptions:
+		if is_instance_valid(body):
+			owner.remove_collision_exception_with(body)
+
+func _collect_stacked_enemy_exceptions(input_dir: float) -> Array[PhysicsBody2D]:
+	var exceptions: Array[PhysicsBody2D] = []
+	if is_zero_approx(input_dir) or not owner.is_player_controlled:
+		return exceptions
+	var tree: SceneTree = owner.get_tree()
+	if tree == null:
+		return exceptions
+	for node in tree.get_nodes_in_group("possessable_character"):
+		if node == owner or not (node is PhysicsBody2D):
+			continue
+		var candidate := node as PhysicsBody2D
+		if not is_instance_valid(candidate):
+			continue
+		if candidate.get("team_id") == owner.team_id:
+			continue
+		if candidate.global_position.y >= owner.global_position.y - STACKED_BODY_ESCAPE_Y_OFFSET:
+			continue
+		if absf(candidate.global_position.x - owner.global_position.x) > STACKED_BODY_ESCAPE_X_TOLERANCE:
+			continue
+		if candidate.global_position.distance_to(owner.global_position) > STACKED_BODY_ESCAPE_DISTANCE:
+			continue
+		exceptions.append(candidate)
+	return exceptions

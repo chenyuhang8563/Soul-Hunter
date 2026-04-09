@@ -8,6 +8,7 @@ const SharedLabelSettings := preload("res://Resources/new_label_settings.tres")
 var _panel: PanelContainer = null
 var _title_label: Label = null
 var _detail_label: Label = null
+var _restart_button: Button = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -72,9 +73,12 @@ func _build_ui() -> void:
 	_detail_label.label_settings = SharedLabelSettings
 	layout.add_child(_detail_label)
 
-	var restart_button := Button.new()
-	restart_button.text = "Restart"
-	restart_button.pressed.connect(func() -> void:
+	_restart_button = Button.new()
+	_restart_button.text = "Restart"
+	_restart_button.focus_mode = Control.FOCUS_NONE
+	_restart_button.add_theme_font_override("font", SharedLabelSettings.font)
+	_restart_button.add_theme_font_size_override("font_size", SharedLabelSettings.font_size)
+	_restart_button.pressed.connect(func() -> void:
 		restart_requested.emit()
 	)
-	layout.add_child(restart_button)
+	layout.add_child(_restart_button)

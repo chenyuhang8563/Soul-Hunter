@@ -7,6 +7,8 @@ class_name CharacterStats
 @export var light_attack_damage := 25.0
 @export var hard_attack_damage := 45.0
 @export var ultimate_attack := 20.0
+@export var defense := 0.0
+@export var crit_chance := 5.0
 
 func get_value(stat_id: StringName, fallback: float = 0.0) -> float:
 	match stat_id:
@@ -22,5 +24,9 @@ func get_value(stat_id: StringName, fallback: float = 0.0) -> float:
 			return hard_attack_damage
 		&"ultimate_attack":
 			return ultimate_attack
+		&"defense":
+			return defense
+		&"crit_chance":
+			return crit_chance
 		_:
 			return fallback

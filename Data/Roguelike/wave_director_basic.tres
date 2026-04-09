@@ -31,7 +31,6 @@ unlock_wave = 7
 
 [resource]
 script = ExtResource("1_config")
-health_scale_per_wave = 0.15
-attack_scale_per_wave = 0.08
+health_scale_per_wave = 0.05
 move_speed_scale_per_wave = 0.03
 enemy_entries = [SubResource("EnemySpawnEntry_slime"), SubResource("EnemySpawnEntry_orc"), SubResource("EnemySpawnEntry_swordsman"), SubResource("EnemySpawnEntry_archer")]

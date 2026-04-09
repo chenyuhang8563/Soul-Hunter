@@ -17,7 +17,11 @@ func apply_damage(amount: float, source: CharacterBody2D = null) -> void:
 		return
 	if owner.has_method("is_damage_invincible") and owner.is_damage_invincible():
 		return
-	owner.health.apply_damage(amount, source)
+	var defense := 0.0
+	if owner.has_method("get_stat_value"):
+		defense = float(owner.call("get_stat_value", &"defense", 0.0))
+	var final_damage := maxf(0.0, amount - defense)
+	owner.health.apply_damage(final_damage, source)
 
 func add_posture(amount: float) -> void:
 	if owner.is_dead:
@@ -85,7 +89,7 @@ func on_revive_timeout() -> void:
 		return
 	revive()
 
-func revive() -> void:
+func revive(revive_in_place: bool = false) -> void:
 	if not owner.is_dead:
 		return
 	owner.is_dead = false
@@ -93,7 +97,7 @@ func revive() -> void:
 	owner.is_hurt_playing = false
 	owner._restore_default_collision_state()
 	owner.velocity = Vector2.ZERO
-	if owner.revive_at_spawn:
+	if owner.revive_at_spawn and not revive_in_place:
 		owner.global_position = owner.spawn_position
 	if owner.animation_tree != null:
 		owner.animation_tree.active = true

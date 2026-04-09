@@ -42,6 +42,8 @@ func try_manual_possession() -> void:
 	owner._update_possessed_highlight()
 	if not owner.is_player_controlled or owner.is_dead or DialogueManager.is_dialogue_active():
 		return
+	if owner.has_method("is_possession_input_locked") and bool(owner.call("is_possession_input_locked")):
+		return
 	if not InputMap.has_action("possess") or not Input.is_action_just_pressed("possess"):
 		return
 	var target := _find_nearby_possession_target()
@@ -60,14 +62,24 @@ func receive_possession_from(possessor: CharacterBody2D) -> bool:
 		return false
 	if possessor.has_method("set_player_controlled"):
 		possessor.call("set_player_controlled", false)
+	var runtime_state: Dictionary = {}
+	if possessor.has_method("capture_player_runtime_state"):
+		runtime_state = possessor.call("capture_player_runtime_state")
 	if possessor.has_method("get_team_id"):
 		owner.team_id = int(possessor.call("get_team_id"))
 	if owner.is_dead:
-		owner.revive()
+		owner.revive(true)
+	if owner.has_method("apply_player_runtime_state"):
+		owner.call("apply_player_runtime_state", runtime_state)
+	if owner.has_method("set_force_player_body_collision"):
+		owner.call("set_force_player_body_collision", true)
 	owner.set_player_controlled(true)
 	var target_health: float = float(owner.health.max_health) * 0.75
 	if owner.health.current_health < target_health:
 		owner.health.heal(target_health - owner.health.current_health)
+	var run_modifier = owner.get("run_modifier_controller")
+	if run_modifier != null and run_modifier.has_method("record_possession"):
+		run_modifier.call("record_possession")
 	if possessor.has_method("consume_for_possession"):
 		possessor.call("consume_for_possession")
 	return true

@@ -9,3 +9,4 @@ move_speed = 105.0
 light_attack_damage = 34.0
 hard_attack_damage = 30.0
 ultimate_attack = 34.0
+defense = 8.0

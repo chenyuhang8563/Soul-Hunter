@@ -82,6 +82,10 @@ func _execute_detach() -> void:
 		
 	var parent = owner.get_parent()
 	var spawn_pos = owner.global_position
+	var runtime_state: Dictionary = {}
+	if owner.has_method("capture_player_runtime_state"):
+		runtime_state = owner.call("capture_player_runtime_state")
+	runtime_state["mark_next_dash_as_detach"] = true
 	
 	# 先杀死当前宿主（交出控制权和摄像机等状态）
 	if owner.has_method("consume_for_possession"):
@@ -99,6 +103,10 @@ func _execute_detach() -> void:
 			# 确保在进入场景树（触发 _ready）前，就标记为玩家控制，避免被错误分配到敌人阵营 (team_id = 1)
 			if "start_player_controlled" in soldier:
 				soldier.set("start_player_controlled", true)
+			if soldier.has_method("set_force_player_body_collision"):
+				soldier.call("set_force_player_body_collision", true)
+			if soldier.has_method("queue_player_runtime_state"):
+				soldier.call("queue_player_runtime_state", runtime_state)
 				
 			parent.add_child(soldier)
 			

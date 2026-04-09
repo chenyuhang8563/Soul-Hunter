@@ -2,7 +2,7 @@ extends RefCounted
 class_name BuffController
 
 const BuffEffectScript := preload("res://Character/Common/Buffs/buff_effect.gd")
-const StatModifierScript := preload("res://Character/Common/Buffs/stat_modifier.gd")
+const ModifierScript := preload("res://Character/Common/modifier.gd")
 
 signal buff_added(buff)
 signal buff_removed(buff)
@@ -153,7 +153,7 @@ func _rebuild_modifier_cache() -> void:
 				"mul": 1.0,
 			}
 		var current: Dictionary = _modifier_cache[stat_id]
-		if modifier.mode == StatModifierScript.Mode.ADD:
+		if modifier.mode == ModifierScript.Mode.ADD:
 			current["add"] = float(current.get("add", 0.0)) + modifier.value
 		else:
 			current["mul"] = float(current.get("mul", 1.0)) * (1.0 + modifier.value)

@@ -15,6 +15,8 @@ func set_player_controlled(controlled: bool) -> void:
 	if owner.is_player_controlled == controlled:
 		return
 	owner.is_player_controlled = controlled
+	if not owner.is_dead and owner.has_method("_restore_default_collision_state"):
+		owner._restore_default_collision_state()
 	if not controlled:
 		owner._clear_possessed_highlight()
 		var disabled_camera: Camera2D = get_camera()

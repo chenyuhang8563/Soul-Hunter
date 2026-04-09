@@ -30,7 +30,8 @@ func _handle_damage_event_override(event: Dictionary) -> bool:
 	var facing_dir := Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
 	var spawn_pos := owner.global_position + Vector2(0.0, -2.0) + facing_dir * 10.0
 	arrow_instance.position = spawn_pos
-	arrow_instance.setup(facing_dir, _resolve_damage_event_amount(event), owner)
+	var damage_result := _resolve_damage_event_result(event)
+	arrow_instance.setup(facing_dir, float(damage_result.get("damage", 0.0)), owner, bool(damage_result.get("critical_hit", false)))
 	var spawn_parent := owner.get_parent()
 	if spawn_parent == null:
 		spawn_parent = owner.get_tree().current_scene

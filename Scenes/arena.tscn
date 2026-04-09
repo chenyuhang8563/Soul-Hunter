@@ -1137,6 +1137,8 @@ texture = ExtResource("1_lq7nq")
 
 [sub_resource type="TileSet" id="TileSet_nnts3"]
 physics_layer_0/collision_layer = 1
+custom_data_layer_0/name = "is_spike"
+custom_data_layer_0/type = 1
 sources/0 = SubResource("TileSetAtlasSource_ra5jo")
 
 [node name="arena" type="Node2D" unique_id=1690712276]
@@ -1153,13 +1155,13 @@ platform_floor_layers = 4294967295
 platform_wall_layers = 0
 
 [node name="SpawnPointTop" type="Marker2D" parent="." unique_id=825815503]
-position = Vector2(94, 17)
+position = Vector2(65, 17)
 
 [node name="SpawnPointBottom" type="Marker2D" parent="." unique_id=1067926178]
-position = Vector2(201, 18)
+position = Vector2(257, 18)
 
 [node name="SpawnPointLeft" type="Marker2D" parent="." unique_id=653689501]
-position = Vector2(70, 17)
+position = Vector2(35, 17)
 
 [node name="SpawnPointRight" type="Marker2D" parent="." unique_id=36842112]
-position = Vector2(224, 18)
+position = Vector2(282, 18)

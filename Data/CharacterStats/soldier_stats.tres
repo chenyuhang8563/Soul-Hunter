@@ -10,3 +10,4 @@ attack_cooldown = 0.22
 light_attack_damage = 20.0
 hard_attack_damage = 40.0
 ultimate_attack = 40.0
+defense = 10.0

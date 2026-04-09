@@ -93,6 +93,7 @@ var dialogue_prompt_icon: Node2D
 var possessed_highlight_sprite: Sprite2D
 var possessed_highlight_prev_material: Material
 var possessed_highlight_material: ShaderMaterial
+var possession_combo_overlay_sprite: Sprite2D
 var hit_flash_overlay_sprite: Sprite2D
 var hit_flash_overlay_material: ShaderMaterial
 var hit_flash_tween: Tween
@@ -108,12 +109,15 @@ var _default_collision_layer := 0
 var _default_collision_mask := 0
 var _respawn_scene_path := ""
 var _buff_icon_nodes: Dictionary = {}
+var _force_player_body_collision := false
+var _pending_player_runtime_state: Dictionary = {}
 
 var _is_creating_afterimages: bool = false
 var _afterimage_pool = []
 var dash_cooldown_left := 0.0
 var invincibility_time_left := 0.0
 var _dash_start_position := Vector2.ZERO
+var _possession_input_lock_count := 0
 
 func _ready() -> void:
 	if stats == null:
@@ -129,6 +133,7 @@ func _ready() -> void:
 		animation_player.animation_finished.connect(_on_animation_finished)
 	_setup_helpers()
 	_setup_buff_system()
+	_apply_pending_player_runtime_state()
 	_clear_static_buff_icon_placeholder()
 	_setup_health()
 	add_to_group("possessable_character")
@@ -164,16 +169,13 @@ func _exit_tree() -> void:
 		health.damaged.disconnect(_on_damaged)
 	if health.died.is_connected(_on_died):
 		health.died.disconnect(_on_died)
-	if buff_controller != null and buff_controller.stats_changed.is_connected(_on_buff_stats_changed):
-		buff_controller.stats_changed.disconnect(_on_buff_stats_changed)
-	if buff_controller != null and buff_controller.buff_added.is_connected(_on_buff_added):
-		buff_controller.buff_added.disconnect(_on_buff_added)
-	if buff_controller != null and buff_controller.buff_removed.is_connected(_on_buff_removed):
-		buff_controller.buff_removed.disconnect(_on_buff_removed)
+	_disconnect_buff_controller_signals()
+	_disconnect_run_modifier_controller_signals()
 	if animation_player != null and animation_player.animation_finished.is_connected(_on_animation_finished):
 		animation_player.animation_finished.disconnect(_on_animation_finished)
 	if interaction_state != null:
 		interaction_state._clear_current_interaction_target()
+	_clear_possession_combo_overlay()
 	_clear_hit_flash_overlay()
 	_clear_all_buff_icons()
 
@@ -246,20 +248,57 @@ func _setup_buff_system() -> void:
 	)
 	buff_controller = BuffControllerScript.new()
 	buff_controller.setup(buff_context)
+	_connect_buff_controller_signals()
+
+func _connect_buff_controller_signals() -> void:
+	if buff_controller == null:
+		return
 	buff_controller.stats_changed.connect(_on_buff_stats_changed)
 	buff_controller.buff_added.connect(_on_buff_added)
 	buff_controller.buff_removed.connect(_on_buff_removed)
 
-func _on_buff_stats_changed() -> void:
-	if health == null:
+func _connect_run_modifier_controller_signals() -> void:
+	if run_modifier_controller == null:
 		return
-	health.set_max_health(get_stat_value(&"max_health", stats.max_health))
+	if not run_modifier_controller.stats_changed.is_connected(_on_run_modifier_stats_changed):
+		run_modifier_controller.stats_changed.connect(_on_run_modifier_stats_changed)
+
+func _disconnect_buff_controller_signals() -> void:
+	if buff_controller == null:
+		return
+	if buff_controller.stats_changed.is_connected(_on_buff_stats_changed):
+		buff_controller.stats_changed.disconnect(_on_buff_stats_changed)
+	if buff_controller.buff_added.is_connected(_on_buff_added):
+		buff_controller.buff_added.disconnect(_on_buff_added)
+	if buff_controller.buff_removed.is_connected(_on_buff_removed):
+		buff_controller.buff_removed.disconnect(_on_buff_removed)
+
+func _disconnect_run_modifier_controller_signals() -> void:
+	if run_modifier_controller == null:
+		return
+	if run_modifier_controller.stats_changed.is_connected(_on_run_modifier_stats_changed):
+		run_modifier_controller.stats_changed.disconnect(_on_run_modifier_stats_changed)
+
+func _on_buff_stats_changed() -> void:
+	_refresh_cached_stat_state()
+
+func _on_run_modifier_stats_changed() -> void:
+	_refresh_cached_stat_state()
+
+func _refresh_cached_stat_state() -> void:
+	if health != null:
+		health.set_max_health(get_stat_value(&"max_health", stats.max_health))
+	if attack_module != null and attack_module.has_method("set_attack_cooldown"):
+		var base_cooldown: float = float(attack_module.base_attack_cooldown)
+		attack_module.call("set_attack_cooldown", get_attack_cooldown(base_cooldown))
 
 func _on_buff_added(buff) -> void:
 	if buff == null or not buff.has_method("create_icon_instance"):
+		_sync_possession_combo_overlay()
 		return
 	var icon = buff.create_icon_instance()
 	if icon == null:
+		_sync_possession_combo_overlay()
 		return
 	if icon.has_method("bind_buff"):
 		icon.bind_buff(buff)
@@ -269,19 +308,23 @@ func _on_buff_added(buff) -> void:
 		"node": icon,
 	}
 	_refresh_buff_icon_positions()
+	_sync_possession_combo_overlay()
 
 func _on_buff_removed(buff) -> void:
 	if buff == null:
+		_sync_possession_combo_overlay()
 		return
 	var buff_id = int(buff.get_instance_id())
 	if not _buff_icon_nodes.has(buff_id):
+		_sync_possession_combo_overlay()
 		return
 	var entry: Dictionary = _buff_icon_nodes[buff_id]
-	var icon = entry.get("node") as Node2D
+	var icon = entry.get("node")
 	if icon != null and is_instance_valid(icon):
-		icon.queue_free()
+		(icon as Node2D).queue_free()
 	_buff_icon_nodes.erase(buff_id)
 	_refresh_buff_icon_positions()
+	_sync_possession_combo_overlay()
 
 func _clear_static_buff_icon_placeholder() -> void:
 	var placeholder = get_node_or_null("Buff Icon") as Node2D
@@ -290,15 +333,25 @@ func _clear_static_buff_icon_placeholder() -> void:
 
 func _clear_all_buff_icons() -> void:
 	for entry in _buff_icon_nodes.values():
-		var icon = entry.get("node") as Node2D
+		var icon = entry.get("node")
 		if icon != null and is_instance_valid(icon):
-			icon.queue_free()
+			(icon as Node2D).queue_free()
 	_buff_icon_nodes.clear()
 
 func _refresh_buff_icon_positions() -> void:
 	var entries: Array[Dictionary] = []
-	for entry in _buff_icon_nodes.values():
+	var stale_buff_ids: Array[int] = []
+	for buff_id_variant in _buff_icon_nodes.keys():
+		var buff_id := int(buff_id_variant)
+		var entry: Dictionary = _buff_icon_nodes[buff_id]
+		var buff = entry.get("buff")
+		var icon = entry.get("node")
+		if buff == null or not is_instance_valid(buff) or icon == null or not is_instance_valid(icon):
+			stale_buff_ids.append(buff_id)
+			continue
 		entries.append(entry)
+	for buff_id in stale_buff_ids:
+		_buff_icon_nodes.erase(buff_id)
 	entries.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
 		var left_buff = left.get("buff")
 		var right_buff = right.get("buff")
@@ -311,11 +364,14 @@ func _refresh_buff_icon_positions() -> void:
 	var anchor: Vector2 = _get_buff_icon_anchor_position()
 	var current_x: float = anchor.x
 	for entry in entries:
-		var icon = entry.get("node") as Node2D
+		var icon = entry.get("node")
 		if icon == null or not is_instance_valid(icon):
 			continue
-		var half_width: float = _get_buff_icon_half_width(icon)
-		icon.position = Vector2(current_x + half_width, anchor.y)
+		var icon_node := icon as Node2D
+		if icon_node == null:
+			continue
+		var half_width: float = _get_buff_icon_half_width(icon_node)
+		icon_node.position = Vector2(current_x + half_width, anchor.y)
 		current_x += half_width * 2.0 + BUFF_ICON_SPACING
 
 func _get_buff_icon_anchor_position() -> Vector2:
@@ -363,8 +419,55 @@ func get_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
 func ensure_run_modifier_controller() -> RunModifierController:
 	if run_modifier_controller == null:
 		run_modifier_controller = RunModifierControllerScript.new()
+		_connect_run_modifier_controller_signals()
 		run_modifier_controller.setup(self)
 	return run_modifier_controller
+
+func capture_player_runtime_state() -> Dictionary:
+	var state := {}
+	if run_modifier_controller != null and run_modifier_controller.has_active_effects():
+		state["run_modifier_controller"] = run_modifier_controller
+	var buff_snapshot := _duplicate_active_buffs()
+	if not buff_snapshot.is_empty():
+		state["buffs"] = buff_snapshot
+	return state
+
+func queue_player_runtime_state(runtime_state: Dictionary) -> void:
+	_pending_player_runtime_state = runtime_state.duplicate(true)
+
+func apply_player_runtime_state(runtime_state: Dictionary) -> void:
+	if runtime_state.is_empty():
+		return
+	var transferred_run_modifier = runtime_state.get("run_modifier_controller")
+	if transferred_run_modifier != null:
+		_disconnect_run_modifier_controller_signals()
+		run_modifier_controller = transferred_run_modifier
+		_connect_run_modifier_controller_signals()
+		run_modifier_controller.setup(self)
+	var buff_snapshot: Array = runtime_state.get("buffs", [])
+	for buff in buff_snapshot:
+		add_buff(buff)
+	if bool(runtime_state.get("mark_next_dash_as_detach", false)) and run_modifier_controller != null and run_modifier_controller.has_method("mark_next_dash_as_detach"):
+		run_modifier_controller.call("mark_next_dash_as_detach")
+
+func _apply_pending_player_runtime_state() -> void:
+	if _pending_player_runtime_state.is_empty():
+		return
+	var runtime_state := _pending_player_runtime_state
+	_pending_player_runtime_state = {}
+	apply_player_runtime_state(runtime_state)
+
+func _duplicate_active_buffs() -> Array:
+	var snapshot: Array = []
+	if buff_controller == null:
+		return snapshot
+	for buff in buff_controller.get_active_buffs():
+		if buff == null or not buff.has_method("duplicate_effect"):
+			continue
+		var duplicated = buff.duplicate_effect()
+		if duplicated != null:
+			snapshot.append(duplicated)
+	return snapshot
 
 func add_buff(buff):
 	if buff_controller == null:
@@ -409,7 +512,8 @@ func get_hp_ratio() -> float:
 
 func _on_damaged(_amount: float, _current_health: float, _max_health: float, source: CharacterBody2D) -> void:
 	if _amount > 0.0 and damage_number_spawner != null and damage_number_spawner.has_method("spawn_label"):
-		damage_number_spawner.call("spawn_label", _amount, false)
+		var is_critical_hit := has_meta("incoming_damage_is_critical") and bool(get_meta("incoming_damage_is_critical"))
+		damage_number_spawner.call("spawn_label", _amount, is_critical_hit)
 	if _amount > 0.0:
 		_play_hit_flash()
 		_trigger_hit_camera_shake(source)
@@ -496,6 +600,54 @@ func _clear_hit_flash_overlay() -> void:
 		hit_flash_overlay_sprite.queue_free()
 	hit_flash_overlay_sprite = null
 
+func _ensure_possession_combo_overlay() -> Sprite2D:
+	var sprite := _find_self_sprite()
+	if sprite == null:
+		return null
+	if possession_combo_overlay_sprite != null and is_instance_valid(possession_combo_overlay_sprite):
+		if possession_combo_overlay_sprite.get_parent() == self:
+			return possession_combo_overlay_sprite
+		possession_combo_overlay_sprite.queue_free()
+	possession_combo_overlay_sprite = Sprite2D.new()
+	possession_combo_overlay_sprite.name = "PossessionComboOverlay"
+	possession_combo_overlay_sprite.visible = false
+	possession_combo_overlay_sprite.self_modulate = Color(1.0, 0.45, 0.45, 0.28)
+	possession_combo_overlay_sprite.z_as_relative = sprite.z_as_relative
+	possession_combo_overlay_sprite.z_index = sprite.z_index + 1
+	add_child(possession_combo_overlay_sprite)
+	return possession_combo_overlay_sprite
+
+func _sync_possession_combo_overlay() -> void:
+	var sprite := _find_self_sprite()
+	if sprite == null or buff_controller == null or not buff_controller.has_buff(&"possession_combo_haste"):
+		_clear_possession_combo_overlay()
+		return
+	var overlay := _ensure_possession_combo_overlay()
+	if overlay == null:
+		return
+	overlay.texture = sprite.texture
+	overlay.hframes = sprite.hframes
+	overlay.vframes = sprite.vframes
+	overlay.frame = sprite.frame
+	overlay.frame_coords = sprite.frame_coords
+	overlay.flip_h = sprite.flip_h
+	overlay.flip_v = sprite.flip_v
+	overlay.position = sprite.position
+	overlay.rotation = sprite.rotation
+	overlay.scale = sprite.scale
+	overlay.skew = sprite.skew
+	overlay.offset = sprite.offset
+	overlay.centered = sprite.centered
+	overlay.region_enabled = sprite.region_enabled
+	overlay.region_rect = sprite.region_rect
+	overlay.region_filter_clip_enabled = sprite.region_filter_clip_enabled
+	overlay.visible = true
+
+func _clear_possession_combo_overlay() -> void:
+	if possession_combo_overlay_sprite != null and is_instance_valid(possession_combo_overlay_sprite):
+		possession_combo_overlay_sprite.queue_free()
+	possession_combo_overlay_sprite = null
+
 func _on_died(_killer: CharacterBody2D) -> void:
 	if lifecycle_state != null:
 		lifecycle_state.on_died(_killer)
@@ -504,9 +656,9 @@ func _on_revive_timeout() -> void:
 	if lifecycle_state != null:
 		lifecycle_state.on_revive_timeout()
 
-func revive() -> void:
+func revive(revive_in_place: bool = false) -> void:
 	if lifecycle_state != null:
-		lifecycle_state.revive()
+		lifecycle_state.revive(revive_in_place)
 
 func set_player_controlled(controlled: bool) -> void:
 	if control_state != null:
@@ -540,6 +692,30 @@ func can_be_possessed_now() -> bool:
 		return false
 	return interaction_state.can_be_possessed_now()
 
+func lock_possession_input_for_finisher(duration: float) -> void:
+	var lock_duration := maxf(0.0, duration)
+	if lock_duration <= 0.0:
+		return
+	_possession_input_lock_count += 1
+	var tree := get_tree()
+	if tree == null:
+		return
+	var self_ref: WeakRef = weakref(self)
+	var timer: SceneTreeTimer = tree.create_timer(lock_duration, true, false, true)
+	timer.timeout.connect(func() -> void:
+		var character: Node = self_ref.get_ref() as Node
+		if character == null:
+			return
+		if character.has_method("_release_possession_input_lock"):
+			character.call("_release_possession_input_lock")
+	)
+
+func is_possession_input_locked() -> bool:
+	return _possession_input_lock_count > 0
+
+func _release_possession_input_lock() -> void:
+	_possession_input_lock_count = max(0, _possession_input_lock_count - 1)
+
 func is_player_character() -> bool:
 	return is_player_controlled
 
@@ -561,6 +737,7 @@ func set_interaction_prompt_visible(show_prompt: bool) -> void:
 
 func _process(delta: float) -> void:
 	_sync_hit_flash_overlay()
+	_sync_possession_combo_overlay()
 	if dash_cooldown_left > 0.0:
 		dash_cooldown_left = maxf(0.0, dash_cooldown_left - delta)
 	if invincibility_time_left > 0.0:
@@ -785,6 +962,14 @@ func _set_corpse_collision_state() -> void:
 func _restore_default_collision_state() -> void:
 	collision_layer = _default_collision_layer
 	collision_mask = _default_collision_mask
+	if _should_collide_with_character_bodies():
+		collision_mask |= _default_collision_layer
+
+func _should_collide_with_character_bodies() -> bool:
+	return is_player_controlled and (_force_player_body_collision or not start_player_controlled)
+
+func set_force_player_body_collision(enabled: bool) -> void:
+	_force_player_body_collision = enabled
 
 func _on_corpse_cleanup_timeout() -> void:
 	if lifecycle_state != null:

@@ -8,3 +8,7 @@ godot-mcp/
 tests/
 addons/gut
 .gutconfig.json
+docs/
+.sisyphus
+.gut_results/
+.godot_user/

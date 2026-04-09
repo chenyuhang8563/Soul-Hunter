@@ -2,7 +2,7 @@ extends Node2D
 class_name DamageNumberSpawner
 
 @export var label_settings : LabelSettings
-@export var critical_hit_color : Color = Color.RED
+@export var critical_hit_color : Color = Color.YELLOW
 
 func spawn_label(number: float, critical_hit: bool = false) -> void:
 	var new_label : Label = Label.new()
