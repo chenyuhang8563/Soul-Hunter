@@ -22,7 +22,7 @@ func present_cards(cards: Array) -> void:
 
 	for card in cards:
 		var button := Button.new()
-		button.custom_minimum_size = Vector2(88.0, 88.0)
+		button.custom_minimum_size = Vector2(88.0, 128.0)
 		button.focus_mode = Control.FOCUS_NONE
 		button.clip_contents = true
 		button.add_theme_font_override("font", SharedLabelSettings.font)
