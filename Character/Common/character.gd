@@ -85,7 +85,6 @@ var buff_controller = null
 var run_modifier_controller: RunModifierController = null
 var is_dead := false
 var is_hurt_playing := false
-var is_stunned := false
 var ui_presenter = null
 var _ui_presenter_initialized := false
 var spawn_position := Vector2.ZERO
@@ -495,13 +494,7 @@ func apply_damage(amount: float, source: CharacterBody2D = null) -> void:
 
 func add_posture(amount: float) -> void:
 	if lifecycle_state != null:
-		var resolved_amount := amount
-		if attack_module != null:
-			if is_equal_approx(amount, 20.0):
-				resolved_amount = max_posture * float(attack_module.get("clash_attacker_posture_ratio"))
-			elif is_equal_approx(amount, 40.0):
-				resolved_amount = max_posture * float(attack_module.get("clash_defender_posture_ratio"))
-		lifecycle_state.add_posture(resolved_amount)
+		lifecycle_state.add_posture(amount)
 
 func is_posture_broken() -> bool:
 	return current_posture >= max_posture
@@ -758,8 +751,6 @@ func _process(delta: float) -> void:
 		buff_controller.update(delta)
 	if is_dead:
 		return
-	if animation_tree != null and not animation_tree.active and not is_action_locked():
-		_restore_animation_tree()
 	if lifecycle_state != null:
 		lifecycle_state.process(delta)
 
@@ -773,7 +764,7 @@ func apply_dash_physics(delta: float) -> bool:
 	return control_state.apply_dash_physics(delta)
 
 func can_start_dash() -> bool:
-	if not dash_enabled or not is_player_controlled or is_dead or is_action_locked():
+	if not dash_enabled or not is_player_controlled or is_dead or is_hurt_playing:
 		return false
 	if dash_time_left > 0.0 or dash_cooldown_left > 0.0:
 		return false
@@ -878,49 +869,6 @@ func is_player_input_blocked() -> bool:
 	if control_state == null:
 		return false
 	return control_state.is_player_input_blocked()
-
-func is_action_locked() -> bool:
-	return is_hurt_playing or is_stunned
-
-func set_stunned(active: bool) -> void:
-	if active:
-		if dash_time_left > 0.0 or dash_velocity != Vector2.ZERO:
-			finish_dash()
-		if attack_module != null and attack_module.has_method("force_stop"):
-			attack_module.force_stop()
-		if ai_module != null:
-			if ai_module.has_method("interrupt_attack"):
-				ai_module.interrupt_attack()
-			elif ai_module.has_method("force_stop"):
-				ai_module.force_stop()
-		is_stunned = true
-		_set_locomotion_conditions(0.0)
-		velocity.x = 0.0
-		knockback_velocity = 0.0
-		_apply_stunned_pose()
-		return
-	if not is_stunned:
-		return
-	is_stunned = false
-	_restore_animation_tree()
-	call_deferred("_restore_animation_tree")
-	_set_locomotion_conditions(0.0)
-
-func _apply_stunned_pose() -> void:
-	if animation_tree != null:
-		animation_tree.active = false
-	if animation_player == null or not animation_player.has_animation(ANIM_HURT):
-		return
-	animation_player.play(ANIM_HURT)
-	animation_player.seek(0.0, true)
-	animation_player.pause()
-
-func _restore_animation_tree() -> void:
-	if animation_tree == null or is_dead:
-		return
-	animation_tree.active = false
-	animation_tree.active = true
-	animation_tree.advance(0.0)
 
 func _ensure_hint_icon(current_icon: Node2D, texture: Texture2D) -> Node2D:
 	if current_icon == null:

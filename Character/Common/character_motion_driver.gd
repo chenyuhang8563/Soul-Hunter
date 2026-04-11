@@ -23,11 +23,8 @@ func physics_process(delta: float) -> void:
 		owner.move_and_slide()
 		return
 	owner.apply_common_gravity(delta)
-	if owner.is_action_locked():
-		if owner.is_hurt_playing:
-			owner.apply_knockback_physics(delta)
-		else:
-			owner.velocity.x = 0.0
+	if owner.is_hurt_playing:
+		owner.apply_knockback_physics(delta)
 		owner.move_and_slide()
 		return
 	if owner.is_player_controlled:

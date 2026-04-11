@@ -1,8 +1,6 @@
 class_name CharacterLifecycle
 extends RefCounted
 
-const StunnedBuffScript := preload("res://Character/Common/Buffs/stunned_buff.gd")
-
 var owner
 var _hazard_check_timer := 0.0
 
@@ -31,14 +29,6 @@ func add_posture(amount: float) -> void:
 	owner.current_posture = minf(owner.max_posture, owner.current_posture + amount)
 	owner.time_since_last_posture_increase = 0.0
 	owner._get_ui_presenter().update_posture(owner.current_posture, owner.max_posture)
-	if owner.current_posture < owner.max_posture:
-		return
-	if owner.buff_controller == null or owner.is_stunned:
-		return
-	if owner.buff_controller.has_buff(&"stunned"):
-		return
-	if owner.has_method("add_buff"):
-		owner.add_buff(StunnedBuffScript.new())
 
 func heal(amount: float) -> void:
 	owner.health.heal(amount)
@@ -59,9 +49,6 @@ func on_damaged(_amount: float, _current_health: float, _max_health: float, sour
 		owner.knockback_velocity = direction * owner.KNOCKBACK_VELOCITY
 	else:
 		owner.knockback_velocity = 0.0
-	if owner.is_stunned:
-		owner.set_stunned(true)
-		return
 	if owner.animation_player == null or not owner.animation_player.has_animation(owner.ANIM_HURT):
 		return
 	owner.is_hurt_playing = true

@@ -42,8 +42,6 @@ var param_is_attack_combined := ""
 
 var parry_window_start := 0.30
 var parry_window_end := 0.40
-var clash_attacker_posture_ratio := 0.2
-var clash_defender_posture_ratio := 0.4
 var _forced_critical_hit_result := -1
 
 func setup(
