@@ -11,6 +11,7 @@ signal run_failed(reached_wave)
 const RunModifierControllerScript := preload("res://Character/Common/run_modifier_controller.gd")
 const ARENA_ENEMY_GROUP := &"arena_enemy"
 const ARENA_WAVE_META_KEY := &"arena_wave_index"
+const WAVE_CLEAR_REWARD_BUFFER_SECONDS := 1.5
 
 enum RunState {
 	PREPARE,
@@ -38,6 +39,8 @@ var _enemy_container: Node = null
 var _spawn_points: Array = []
 var _active_enemies: Array = []
 var _reserved_spawn_positions: Array = []
+var _wave_clear_buffer_pending := false
+var _wave_clear_buffer_token := 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -50,6 +53,7 @@ func _process(delta: float) -> void:
 		advance_rest_time(delta)
 
 func setup(player: Node, reward_pool: Resource, wave_director: RefCounted, run_modifier_controller: RunModifierController = null) -> void:
+	_reset_wave_clear_buffer()
 	_disconnect_player_health()
 	_player = player
 	_reward_pool = reward_pool
@@ -87,6 +91,7 @@ func complete_current_wave() -> void:
 	if current_state != RunState.IN_WAVE:
 		return
 
+	_reset_wave_clear_buffer()
 	wave_cleared.emit(current_wave)
 	if current_wave >= _get_total_waves():
 		current_state = RunState.VICTORY
@@ -129,6 +134,7 @@ func advance_rest_time(delta: float) -> void:
 func fail_run() -> void:
 	if current_state == RunState.VICTORY or current_state == RunState.DEFEAT:
 		return
+	_reset_wave_clear_buffer()
 	current_state = RunState.DEFEAT
 	_set_tree_paused(true)
 	run_failed.emit(current_wave)
@@ -143,6 +149,7 @@ func get_rest_time_left() -> float:
 	return _rest_time_left
 
 func _start_wave(wave_index: int) -> void:
+	_reset_wave_clear_buffer()
 	current_state = RunState.IN_WAVE
 	current_wave_plan = _wave_director.build_wave_plan(wave_index, _rng)
 	_spawn_current_wave()
@@ -350,7 +357,32 @@ func _complete_current_wave_if_no_hostiles_remain() -> void:
 		return
 	_rebuild_active_enemy_snapshot()
 	if _active_enemies.is_empty():
-		complete_current_wave()
+		_begin_wave_clear_buffer()
+
+func _begin_wave_clear_buffer() -> void:
+	if _wave_clear_buffer_pending or not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	_wave_clear_buffer_pending = true
+	var scheduled_wave := current_wave
+	var scheduled_token := _wave_clear_buffer_token
+	var timer := tree.create_timer(WAVE_CLEAR_REWARD_BUFFER_SECONDS, true, false, true)
+	timer.timeout.connect(func() -> void:
+		if scheduled_token != _wave_clear_buffer_token:
+			return
+		_wave_clear_buffer_pending = false
+		if current_state != RunState.IN_WAVE or current_wave != scheduled_wave:
+			return
+		_rebuild_active_enemy_snapshot()
+		if _active_enemies.is_empty():
+			complete_current_wave()
+	)
+
+func _reset_wave_clear_buffer() -> void:
+	_wave_clear_buffer_pending = false
+	_wave_clear_buffer_token += 1
 
 func _rebuild_active_enemy_snapshot() -> void:
 	if not is_inside_tree():

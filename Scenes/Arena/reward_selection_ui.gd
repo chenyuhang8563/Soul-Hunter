@@ -18,6 +18,7 @@ func _ready() -> void:
 func present_cards(cards: Array) -> void:
 	_build_ui()
 	for child in _cards_box.get_children():
+		_cards_box.remove_child(child)
 		child.queue_free()
 
 	for card in cards:
