@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cphj2pyxk8qao"
-path="res://.godot/imported/Background Castle .png-c1421ad712ef431276668cc508a2c711.ctex"
+uid="uid://deryw3qvw64ty"
+path="res://.godot/imported/archer_portrait.png-ad8d5516d1c86c4bea101a75c2947ba4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Archer/Background Castle .png"
-dest_files=["res://.godot/imported/Background Castle .png-c1421ad712ef431276668cc508a2c711.ctex"]
+source_file="res://Assets/Sprites/Archer/archer_portrait.png"
+dest_files=["res://.godot/imported/archer_portrait.png-ad8d5516d1c86c4bea101a75c2947ba4.ctex"]
 
 [params]
 
