@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://tests/roguelike/gut_single_test_runner_local.gd" id="1_runner"]
-
-[node name="GutSingleTestRunnerLocal" type="Node"]
-script = ExtResource("1_runner")
-selected_script = "test_pause_ui.gd"
