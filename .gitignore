@@ -6,9 +6,10 @@
 # Submodules (have their own git repos)
 godot-mcp/
 tests/
-addons/gut
+addons
 .gutconfig.json
 docs/
 .sisyphus
 .gut_results/
 .godot_user/
+.superpowers/

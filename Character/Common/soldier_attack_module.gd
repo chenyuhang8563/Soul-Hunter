@@ -57,11 +57,11 @@ func _action_just_pressed(action_name: StringName) -> bool:
 
 func _start_light_attack() -> void:
 	_begin_attack("light_attack", _get_light_attack_duration(LIGHT_ATTACK_DURATION), true, true, false, false)
-	_queue_stat_damage_event(LIGHT_ATTACK_HIT_DELAY, &"light_attack_damage", stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true, _get_light_slash_spec())
+	_queue_melee_stat_damage_event(LIGHT_ATTACK_HIT_DELAY, &"light_attack_damage", stats.light_attack_damage, MELEE_ATTACK_RANGE, true, true, _get_light_slash_spec())
 
 func _start_hard_attack() -> void:
 	_begin_attack("hard_attack", HARD_ATTACK_DURATION, false, false, true, false)
-	_queue_stat_damage_event(HARD_ATTACK_HIT_DELAY, &"hard_attack_damage", stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true, _get_hard_slash_spec())
+	_queue_melee_stat_damage_event(HARD_ATTACK_HIT_DELAY, &"hard_attack_damage", stats.hard_attack_damage, MELEE_ATTACK_RANGE, true, true, _get_hard_slash_spec())
 
 func _start_ultimate_attack() -> void:
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)

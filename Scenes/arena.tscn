@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://de35260wfg6fo" path="res://Assets/Tiles/Floor Tiles1.png" id="1_lq7nq"]
 [ext_resource type="PackedScene" uid="uid://bktv8jcuya3k7" path="res://Character/Soldier/soldier.tscn" id="2_ra5jo"]
 [ext_resource type="Script" uid="uid://dg6bjry18vore" path="res://Scenes/Arena/arena_scene.gd" id="3_arena"]
+[ext_resource type="PackedScene" path="res://Global/audio_manager.tscn" id="4_1v1nj"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ra5jo"]
 texture = ExtResource("1_lq7nq")
@@ -1165,3 +1166,5 @@ position = Vector2(35, 17)
 
 [node name="SpawnPointRight" type="Marker2D" parent="." unique_id=36842112]
 position = Vector2(282, 18)
+
+[node name="AudioManager" parent="." unique_id=376390685 instance=ExtResource("4_1v1nj")]

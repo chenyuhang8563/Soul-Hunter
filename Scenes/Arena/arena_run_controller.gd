@@ -314,10 +314,11 @@ func _remove_active_enemy(enemy: Node) -> void:
 	if not is_inside_tree():
 		return
 	if current_state == RunState.IN_WAVE and _active_enemies.is_empty():
-		complete_current_wave()
+		_complete_current_wave_if_no_hostiles_remain()
 
 func _prune_non_hostile_enemies() -> void:
 	if _active_enemies.is_empty():
+		_complete_current_wave_if_no_hostiles_remain()
 		return
 
 	var filtered_enemies: Array = []
@@ -327,7 +328,7 @@ func _prune_non_hostile_enemies() -> void:
 	_active_enemies = filtered_enemies
 
 	if _active_enemies.is_empty():
-		complete_current_wave()
+		_complete_current_wave_if_no_hostiles_remain()
 
 func _is_hostile_wave_enemy(enemy: Node) -> bool:
 	if enemy == null or not is_instance_valid(enemy):
@@ -343,6 +344,25 @@ func _is_hostile_wave_enemy(enemy: Node) -> bool:
 	if enemy.get("is_player_controlled") != null and bool(enemy.get("is_player_controlled")):
 		return false
 	return true
+
+func _complete_current_wave_if_no_hostiles_remain() -> void:
+	if current_state != RunState.IN_WAVE:
+		return
+	_rebuild_active_enemy_snapshot()
+	if _active_enemies.is_empty():
+		complete_current_wave()
+
+func _rebuild_active_enemy_snapshot() -> void:
+	if not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	var rebuilt_enemies: Array = []
+	for enemy in tree.get_nodes_in_group(ARENA_ENEMY_GROUP):
+		if _is_hostile_wave_enemy(enemy):
+			rebuilt_enemies.append(enemy)
+	_active_enemies = rebuilt_enemies
 
 func _sync_spawn_metadata(enemy: Node, spawn_position: Vector2) -> void:
 	if enemy.get("spawn_position") != null:

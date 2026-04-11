@@ -10,6 +10,7 @@ const ANIM_DEATH := "death"
 const HintIconScene := preload("res://Scenes/icon.tscn")
 const PossessionOutlineShader := preload("res://Shaders/possession_outline.gdshader")
 const HitFlashOverlayShader := preload("res://Shaders/hit_flash_overlay.gdshader")
+const AudioManagerScript := preload("res://Global/audio_manager.gd")
 const CharacterUIPresenterScript := preload("res://Character/Common/character_ui_presenter.gd")
 const CharacterLifecycleScript := preload("res://Character/Common/character_lifecycle.gd")
 const CharacterInteractionScript := preload("res://Character/Common/character_interaction.gd")
@@ -934,6 +935,21 @@ func _find_self_sprite() -> Sprite2D:
 		if child is Sprite2D:
 			return child as Sprite2D
 	return null
+
+func _resolve_audio_manager() -> Node:
+	var tree := get_tree()
+	if tree == null:
+		return null
+	var group_name := AudioManagerScript.AUDIO_MANAGER_GROUP
+	var audio_manager := tree.get_first_node_in_group(group_name)
+	if audio_manager != null:
+		return audio_manager
+	var current_scene := tree.current_scene
+	if current_scene != null:
+		audio_manager = current_scene.get_node_or_null("AudioManager")
+		if audio_manager != null:
+			return audio_manager
+	return tree.root.get_node_or_null("AudioManager")
 
 func _on_animation_finished(anim_name: StringName) -> void:
 	if lifecycle_state != null:

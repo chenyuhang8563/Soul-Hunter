@@ -10,6 +10,7 @@ const PARAM_IS_ATTACK_COMBINED := "parameters/conditions/is_light_attack or is_h
 const PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER := 0.8
 const CRIT_DAMAGE_MULTIPLIER := 1.5
 const INCOMING_DAMAGE_IS_CRITICAL_META := "incoming_damage_is_critical"
+const ENEMY_MELEE_TRIGGER_EXTRA_RATIO := 0.10
 
 static var _active_hitstop_requests: Dictionary = {}
 static var _next_hitstop_request_id := 1
@@ -165,6 +166,23 @@ func _queue_damage_event(
 		"triggered": false
 	})
 
+func _queue_melee_damage_event(
+		trigger_time: float,
+		damage: float,
+		attack_range: float,
+		require_facing: bool,
+		prefer_context_target: bool,
+		slash_spec: Dictionary = {}
+) -> void:
+	_queue_damage_event(
+		_get_effective_melee_trigger_time(trigger_time),
+		damage,
+		attack_range,
+		require_facing,
+		prefer_context_target,
+		slash_spec
+	)
+
 func _queue_stat_damage_event(
 		trigger_time: float,
 		stat_id: StringName,
@@ -184,6 +202,39 @@ func _queue_stat_damage_event(
 		"slash_spec": slash_spec.duplicate(true),
 		"triggered": false
 	})
+
+func _queue_melee_stat_damage_event(
+		trigger_time: float,
+		stat_id: StringName,
+		fallback_damage: float,
+		attack_range: float,
+		require_facing: bool,
+		prefer_context_target: bool,
+		slash_spec: Dictionary = {}
+) -> void:
+	_queue_stat_damage_event(
+		_get_effective_melee_trigger_time(trigger_time),
+		stat_id,
+		fallback_damage,
+		attack_range,
+		require_facing,
+		prefer_context_target,
+		slash_spec
+	)
+
+func _get_effective_melee_trigger_time(trigger_time: float) -> float:
+	var duration := maxf(0.0, attack_duration)
+	var clamped_trigger := clampf(trigger_time, 0.0, duration)
+	if duration <= 0.0:
+		return clamped_trigger
+	if _uses_player_attack_timing():
+		return clamped_trigger
+	return clampf(clamped_trigger + duration * ENEMY_MELEE_TRIGGER_EXTRA_RATIO, 0.0, duration)
+
+func _uses_player_attack_timing() -> bool:
+	if owner == null:
+		return true
+	return bool(owner.get("is_player_controlled"))
 
 func _on_attack_started(_attack_name: String) -> void:
 	pass
@@ -344,8 +395,12 @@ func _play_clash_effects(target: Node2D) -> void:
 	_spawn_particles_from_template(owner, "ParryParticles", effect_parent, mid_pos)
 	
 	# 播放打铁音效
-	if tree.root.has_node("AudioManager"):
-		var audio_manager = tree.root.get_node("AudioManager")
+	var audio_manager = tree.get_first_node_in_group(&"audio_manager_service")
+	if audio_manager == null and current_scene != null:
+		audio_manager = current_scene.get_node_or_null("AudioManager")
+	if audio_manager == null:
+		audio_manager = tree.root.get_node_or_null("AudioManager")
+	if audio_manager != null and audio_manager.has_method("play_sfx_2d"):
 		audio_manager.play_sfx_2d("sword_clash", mid_pos)
 
 func _spawn_particles_from_template(
@@ -556,6 +611,17 @@ func _is_valid_damage_target(candidate: Node2D) -> bool:
 			return false
 	return candidate.has_method("apply_damage")
 
+func _should_play_player_hit_flesh_sfx(target: Node2D, final_damage: float) -> bool:
+	if final_damage <= 0.0:
+		return false
+	if audio_service == null or not audio_service.has_method("play_sfx_2d"):
+		return false
+	if owner == null or not bool(owner.get("is_player_controlled")):
+		return false
+	if not _is_enemy_character_target(target):
+		return false
+	return not _is_player_controlled_target(target)
+
 func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false) -> bool:
 	if not _is_valid_damage_target(target):
 		return false
@@ -577,6 +643,8 @@ func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool =
 		final_damage = maxf(0.0, previous_health - current_health)
 	if owner != null and owner.has_signal("damage_dealt"):
 		owner.emit_signal("damage_dealt", target, final_damage)
+	if _should_play_player_hit_flesh_sfx(target, final_damage):
+		audio_service.play_sfx_2d("hit_flesh", target.global_position)
 	var tree := target.get_tree()
 	if tree != null:
 		var current_scene = tree.current_scene

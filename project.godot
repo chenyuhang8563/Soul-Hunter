@@ -11,13 +11,16 @@ config_version=5
 [application]
 
 config/name="Role"
-run/main_scene="uid://dmivh1m7cmlqd"
+run/main_scene="uid://dldsmiyd7foxp"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+buses/default_bus_layout="res://Resources/default_bus_layout.tres"
+
 [autoload]
 
-AudioManager="*res://Global/audio_manager.gd"
 DeveloperMode="*res://Global/developer_mode.gd"
 DialogueManager="*res://Global/dialogue_manager.gd"
 MeleeSlashVfxManager="*res://Global/melee_slash_vfx_manager.gd"
@@ -36,7 +39,7 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+enabled=PackedStringArray("res://addons/AS2P/plugin.cfg", "res://addons/gut/plugin.cfg")
 
 [input]
 

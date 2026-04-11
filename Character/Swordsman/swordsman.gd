@@ -30,7 +30,7 @@ func _on_character_ready() -> void:
 	_set_locomotion_conditions(0.0)
 	visual_scope.monitoring = true
 	attack_scope.monitoring = true
-	attack_module.setup(self, sprite, animation_tree, animation_player, melee_hitbox, melee_hitbox_shape, stats, get_attack_cooldown(DEFAULT_ATTACK_COOLDOWN), AudioManager)
+	attack_module.setup(self, sprite, animation_tree, animation_player, melee_hitbox, melee_hitbox_shape, stats, get_attack_cooldown(DEFAULT_ATTACK_COOLDOWN), _resolve_audio_manager())
 	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, get_player_move_speed() * AI_WALK_SPEED_RATIO, RETURN_TOLERANCE)
 	ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)

@@ -5,6 +5,7 @@ const HintIconScene := preload("res://Scenes/icon.tscn")
 const F_IconTexture := preload("res://Assets/Sprites/UI/F.png")
 const E_IconTexture := preload("res://Assets/Sprites/UI/E.png")
 const InteractionTargetScript := preload("res://Character/Common/interaction_target.gd")
+const POSSESSION_INPUT_FRAME_META := &"_possession_input_frame"
 
 var owner
 var _prompt_icon_update_timer := 0.0
@@ -44,12 +45,15 @@ func try_manual_possession() -> void:
 		return
 	if owner.has_method("is_possession_input_locked") and bool(owner.call("is_possession_input_locked")):
 		return
+	if _is_possession_input_consumed_this_frame():
+		return
 	if not InputMap.has_action("possess") or not Input.is_action_just_pressed("possess"):
 		return
 	var target := _find_nearby_possession_target()
 	if target == null:
 		return
-	target.call("receive_possession_from", owner)
+	if bool(target.call("receive_possession_from", owner)):
+		_mark_possession_input_consumed_for_current_frame()
 
 func receive_possession_from(possessor: CharacterBody2D) -> bool:
 	if possessor == null or possessor == owner:
@@ -186,3 +190,19 @@ func _try_interact_with_current_target() -> void:
 		return
 	if _current_interaction_target.has_method("interact"):
 		_current_interaction_target.call("interact", owner)
+
+func _is_possession_input_consumed_this_frame() -> bool:
+	if owner == null or not owner.is_inside_tree():
+		return false
+	var tree: SceneTree = owner.get_tree()
+	if tree == null:
+		return false
+	return int(tree.get_meta(POSSESSION_INPUT_FRAME_META, -1)) == Engine.get_physics_frames()
+
+func _mark_possession_input_consumed_for_current_frame() -> void:
+	if owner == null or not owner.is_inside_tree():
+		return
+	var tree: SceneTree = owner.get_tree()
+	if tree == null:
+		return
+	tree.set_meta(POSSESSION_INPUT_FRAME_META, Engine.get_physics_frames())
