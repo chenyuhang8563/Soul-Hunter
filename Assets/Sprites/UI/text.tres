@@ -3,6 +3,8 @@
 [ext_resource type="FontFile" uid="uid://bmo6inr1t3epg" path="res://Assets/Fonts/quaver.ttf" id="1_eq37k"]
 
 [resource]
+Button/font_sizes/font_size = 10
+Button/fonts/font = ExtResource("1_eq37k")
 Label/colors/font_color = Color(0, 0, 0, 1)
 Label/colors/font_outline_color = Color(0, 0, 0, 1)
 Label/colors/font_shadow_color = Color(0, 0, 0, 1)

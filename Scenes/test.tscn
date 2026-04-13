@@ -1,11 +1,18 @@
 [gd_scene format=4 uid="uid://cj53v2os1nt1l"]
 
 [ext_resource type="Texture2D" uid="uid://de35260wfg6fo" path="res://Assets/Tiles/Floor Tiles1.png" id="1_lc1oi"]
+[ext_resource type="Texture2D" uid="uid://drrdlxcvg8onx" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 5.png" id="1_qpfo2"]
 [ext_resource type="PackedScene" uid="uid://bktv8jcuya3k7" path="res://Character/Soldier/soldier.tscn" id="2_8od7v"]
+[ext_resource type="Texture2D" uid="uid://bous1xsly5rly" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 4.png" id="2_yb21e"]
+[ext_resource type="Texture2D" uid="uid://m27f2dr2s1um" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 3.png" id="3_aees8"]
 [ext_resource type="PackedScene" uid="uid://b7torsllpb85n" path="res://Character/Orc/orc.tscn" id="4_35xla"]
+[ext_resource type="Texture2D" uid="uid://dcjapwn62bn6p" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 2.png" id="4_mie3u"]
 [ext_resource type="PackedScene" uid="uid://ehwbvthv2sps" path="res://Character/Swordsman/swordsman.tscn" id="4_ys1qc"]
+[ext_resource type="Texture2D" uid="uid://downal3kdnp8f" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 1.png" id="5_0qy5o"]
 [ext_resource type="PackedScene" uid="uid://dlll1sp3vdsb2" path="res://Character/Archer/archer.tscn" id="5_35xla"]
 [ext_resource type="PackedScene" uid="uid://ys25otk3sp5k" path="res://Character/Slime/slime.tscn" id="6_i3aeo"]
+[ext_resource type="PackedScene" uid="uid://c5hja74ptp5kd" path="res://Scenes/UI/pause_ui.tscn" id="12_yb21e"]
+[ext_resource type="PackedScene" uid="uid://ce4x6ryhyyir0" path="res://Global/audio_manager.tscn" id="13_aees8"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("1_lc1oi")
@@ -1144,6 +1151,53 @@ sources/0 = SubResource("TileSetAtlasSource_8od7v")
 
 [node name="test" type="Node2D" unique_id=1561943249]
 
+[node name="ParallaxBackground" type="ParallaxBackground" parent="." unique_id=566819381]
+scroll_offset = Vector2(160, 90)
+
+[node name="Parallax1" type="Parallax2D" parent="ParallaxBackground" unique_id=769036944]
+repeat_size = Vector2(320, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Parallax1" unique_id=1587686945]
+texture = ExtResource("1_qpfo2")
+centered = false
+
+[node name="Parallax2" type="Parallax2D" parent="ParallaxBackground" unique_id=789260929]
+scroll_scale = Vector2(1.1, 1)
+repeat_size = Vector2(320, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Parallax2" unique_id=1902110681]
+texture = ExtResource("2_yb21e")
+centered = false
+
+[node name="Parallax3" type="Parallax2D" parent="ParallaxBackground" unique_id=2064690993]
+scroll_scale = Vector2(1.3, 1)
+repeat_size = Vector2(320, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Parallax3" unique_id=1110412025]
+texture = ExtResource("3_aees8")
+centered = false
+
+[node name="Parallax4" type="Parallax2D" parent="ParallaxBackground" unique_id=114263641]
+scroll_scale = Vector2(1.5, 1)
+repeat_size = Vector2(320, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Parallax4" unique_id=1531316984]
+texture = ExtResource("4_mie3u")
+centered = false
+
+[node name="Parallax5" type="Parallax2D" parent="ParallaxBackground" unique_id=25931137]
+scroll_scale = Vector2(1.7, 1)
+repeat_size = Vector2(320, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Parallax5" unique_id=753370301]
+texture = ExtResource("5_0qy5o")
+centered = false
+
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1619883683]
 tile_map_data = PackedByteArray("AAAAAAgAAAAAAAIAAAAAAAkAAAAAAAMAAAAAAAoAAAAAAAUAAAABAAgAAAACAAMAAAABAAkAAAACAAMAAAABAAoAAAABAAUAAAACAAgAAAACAAMAAAACAAkAAAACAAMAAAACAAoAAAACAAUAAAADAAgAAAACAAMAAAADAAkAAAACAAMAAAADAAoAAAADAAUAAAAEAAgAAAACAAMAAAAEAAkAAAACAAMAAAAEAAoAAAAEAAUAAAAFAAgAAAACAAMAAAAFAAkAAAACAAMAAAAFAAoAAAABAAUAAAAGAAgAAAACAAMAAAAGAAkAAAACAAMAAAAGAAoAAAACAAUAAAAHAAgAAAACAAMAAAAHAAkAAAACAAMAAAAHAAoAAAADAAUAAAAIAAgAAAACAAMAAAAIAAkAAAACAAMAAAAIAAoAAAAEAAUAAAAJAAgAAAACAAMAAAAJAAkAAAACAAMAAAAJAAoAAAABAAUAAAAKAAgAAAACAAMAAAAKAAkAAAACAAMAAAAKAAoAAAACAAUAAAALAAgAAAACAAMAAAALAAkAAAACAAMAAAALAAoAAAADAAUAAAAMAAgAAAACAAMAAAAMAAkAAAACAAMAAAAMAAoAAAAEAAUAAAANAAgAAAACAAMAAAANAAkAAAACAAMAAAANAAoAAAABAAUAAAAOAAgAAAACAAMAAAAOAAkAAAACAAMAAAAOAAoAAAACAAUAAAAPAAgAAAACAAIAAAAPAAkAAAACAAIAAAAPAAoAAAACAAUAAAAQAAgAAAACAAIAAAAQAAkAAAACAAIAAAAQAAoAAAADAAUAAAARAAgAAAACAAIAAAARAAkAAAACAAIAAAARAAoAAAAEAAUAAAASAAgAAAACAAMAAAASAAkAAAACAAMAAAASAAoAAAADAAUAAAATAAgAAAABAAIAAAATAAkAAAABAAMAAAATAAoAAAABAAUAAAAAAAYAAAAAAAAAAAAAAAcAAAAAAAEAAAABAAYAAAABAAAAAAABAAcAAAACAAMAAAACAAYAAAACAAAAAAACAAcAAAACAAMAAAADAAYAAAADAAAAAAADAAcAAAACAAMAAAAEAAYAAAAEAAAAAAAEAAcAAAACAAMAAAAFAAYAAAABAAAAAAAFAAcAAAACAAMAAAAGAAYAAAACAAAAAAAGAAcAAAACAAMAAAAHAAYAAAADAAAAAAAHAAcAAAACAAMAAAAIAAYAAAAEAAAAAAAIAAcAAAACAAMAAAAJAAYAAAABAAAAAAAJAAcAAAACAAMAAAAKAAYAAAACAAAAAAAKAAcAAAACAAMAAAALAAYAAAADAAAAAAALAAcAAAACAAMAAAAMAAYAAAAEAAAAAAAMAAcAAAACAAMAAAANAAYAAAABAAAAAAANAAcAAAACAAMAAAAOAAYAAAACAAAAAAAOAAcAAAACAAMAAAAPAAYAAAACAAAAAAAPAAcAAAACAAIAAAAQAAYAAAADAAAAAAAQAAcAAAACAAIAAAARAAYAAAAEAAAAAAARAAcAAAACAAIAAAASAAYAAAADAAAAAAASAAcAAAACAAMAAAATAAYAAAABAAAAAAATAAcAAAABAAEAAAAUAAYAAAACAAAAAAAVAAYAAAADAAAAAAAWAAYAAAAEAAAAAAAXAAYAAAABAAAAAAAYAAYAAAACAAAAAAAZAAYAAAADAAAAAAAaAAYAAAAEAAAAAAAUAAoAAAACAAUAAAAVAAoAAAADAAUAAAAWAAoAAAAEAAUAAAAXAAoAAAABAAUAAAAYAAoAAAACAAUAAAAZAAoAAAADAAUAAAAaAAoAAAAEAAUAAAAUAAcAAAACAAEAAAAVAAcAAAADAAEAAAAWAAcAAAAEAAEAAAAUAAgAAAACAAIAAAAUAAkAAAACAAMAAAAVAAgAAAADAAIAAAAVAAkAAAADAAMAAAAWAAgAAAAEAAIAAAAWAAkAAAAEAAMAAAAXAAcAAAABAAEAAAAXAAgAAAABAAIAAAAXAAkAAAABAAMAAAAYAAcAAAACAAEAAAAYAAgAAAACAAIAAAAYAAkAAAACAAMAAAAZAAcAAAADAAEAAAAZAAgAAAADAAIAAAAZAAkAAAADAAMAAAAaAAcAAAAEAAEAAAAaAAgAAAAEAAIAAAAaAAkAAAAEAAMAAAA=")
 tile_set = SubResource("TileSet_qc4db")
@@ -1162,12 +1216,13 @@ position = Vector2(218, 47)
 
 [node name="Orc" parent="." unique_id=1350751769 instance=ExtResource("4_35xla")]
 position = Vector2(368, 43)
-attack_cooldown = 0.48
 
 [node name="Archer" parent="." unique_id=1710627706 instance=ExtResource("5_35xla")]
 position = Vector2(298, 35)
-ai_enabled = true
-is_interactable_npc = false
 
 [node name="Slime" parent="." unique_id=1231243137 instance=ExtResource("6_i3aeo")]
 position = Vector2(137, 55)
+
+[node name="PauseUI" parent="." unique_id=96758534 instance=ExtResource("12_yb21e")]
+
+[node name="AudioManager" parent="." unique_id=1583249533 instance=ExtResource("13_aees8")]
