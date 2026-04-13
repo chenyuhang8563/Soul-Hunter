@@ -89,6 +89,12 @@ window/stretch/mode="canvas_items"
 
 enabled=PackedStringArray("res://addons/AS2P/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/gut/plugin.cfg")
 
+[importer_defaults]
+
+mp3={
+&"loop": true
+}
+
 [input]
 
 light_attack={
