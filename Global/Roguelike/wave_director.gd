@@ -21,6 +21,8 @@ func build_wave_plan(wave_index: int, rng: RandomNumberGenerator) -> Dictionary:
 	var wave_offset := clamped_wave - 1
 	var generator := rng if rng != null else RandomNumberGenerator.new()
 	var target_enemy_count: int = maxi(1, _config.base_enemy_count + wave_offset * _config.enemy_count_per_wave)
+	if _config.max_enemy_count > 0:
+		target_enemy_count = mini(target_enemy_count, _config.max_enemy_count)
 	var eligible_entries := _get_eligible_entries(clamped_wave)
 	var spawned_entries := _build_spawn_entries(eligible_entries, target_enemy_count, generator)
 
