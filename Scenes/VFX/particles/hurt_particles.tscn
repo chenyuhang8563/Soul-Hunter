@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[sub_resource type="Gradient" id="Gradient_hopkf"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_rnbd5"]
+gradient = SubResource("Gradient_hopkf")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_wvhfk"]
+lifetime_randomness = 1.0
+particle_flag_disable_z = true
+emission_shape_scale = Vector3(0.5, -0.5, 1)
+emission_shape = 1
+emission_sphere_radius = 25.0
+initial_velocity_min = 200.0
+initial_velocity_max = 400.0
+gravity = Vector3(0, 700, 0)
+damping_min = 100.00001
+damping_max = 800.00006
+scale_max = 3.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[node name="HurtParticles" type="GPUParticles2D" unique_id=1874550799]
+emitting = false
+amount = 20
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_wvhfk")

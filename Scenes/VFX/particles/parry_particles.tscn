@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[sub_resource type="Curve" id="Curve_hopkf"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_rnbd5"]
+curve = SubResource("Curve_hopkf")
+
+[sub_resource type="Gradient" id="Gradient_rnbd5"]
+colors = PackedColorArray(1, 1, 0, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_wvhfk"]
+gradient = SubResource("Gradient_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_gam5e"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 100.0
+initial_velocity_max = 100.0
+gravity = Vector3(0, 0, 0)
+damping_min = 100.00001
+damping_max = 100.00001
+scale_max = 2.0
+color_initial_ramp = SubResource("GradientTexture1D_wvhfk")
+alpha_curve = SubResource("CurveTexture_rnbd5")
+
+[node name="ParryParticles" type="GPUParticles2D" unique_id=788524524]
+emitting = false
+amount = 10
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+randomness = 1.0
+process_material = SubResource("ParticleProcessMaterial_gam5e")

@@ -231,6 +231,35 @@ func test_attack_module_base_maps_finisher_particle_names_to_pool_keys() -> void
 	scene.queue_free()
 
 
+func test_particle_template_scenes_exist_and_load() -> void:
+	var hurt_scene := load("res://Scenes/VFX/particles/hurt_particles.tscn") as PackedScene
+	var parry_scene := load("res://Scenes/VFX/particles/parry_particles.tscn") as PackedScene
+	var finisher_burst_scene := load("res://Scenes/VFX/particles/finisher_burst_particles.tscn") as PackedScene
+	var finisher_slash_scene := load("res://Scenes/VFX/particles/finisher_slash_particles.tscn") as PackedScene
+
+	assert_ne(hurt_scene, null)
+	assert_ne(parry_scene, null)
+	assert_ne(finisher_burst_scene, null)
+	assert_ne(finisher_slash_scene, null)
+
+
+func test_finisher_burst_scene_preserves_nested_particle_children() -> void:
+	var scene := load("res://Scenes/VFX/particles/finisher_burst_particles.tscn") as PackedScene
+	assert_ne(scene, null)
+	if scene == null:
+		return
+	var root := add_child_autofree(scene.instantiate()) as Node2D
+
+	assert_ne(root.get_node_or_null("Burst0"), null)
+	assert_ne(root.get_node_or_null("Burst45"), null)
+	assert_ne(root.get_node_or_null("Burst90"), null)
+	assert_ne(root.get_node_or_null("Burst135"), null)
+	assert_ne(root.get_node_or_null("Burst180"), null)
+	assert_ne(root.get_node_or_null("Burst225"), null)
+	assert_ne(root.get_node_or_null("Burst270"), null)
+	assert_ne(root.get_node_or_null("Burst315"), null)
+
+
 func _make_gpu_particle(name: String, lifetime: float, direction_x: float) -> GPUParticles2D:
 	var particle := GPUParticles2D.new()
 	particle.name = name

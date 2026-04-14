@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://bcge2lbm2r2b" path="res://Assets/Sprites/VFX/finisher_slash_pixel.png" id="1_finisher_slash"]
+
+[sub_resource type="Gradient" id="Gradient_hopkf"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_rnbd5"]
+gradient = SubResource("Gradient_hopkf")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_slash"]
+particle_flag_disable_z = true
+spread = 0.0
+initial_velocity_min = 140.0
+initial_velocity_max = 200.0
+gravity = Vector3(0, 0, 0)
+damping_min = 70.0
+damping_max = 110.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[node name="FinisherSlashParticles" type="GPUParticles2D" unique_id=796372441]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_slash")
+lifetime = 0.2
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_slash")

@@ -1,0 +1,178 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://yjld6q51lbj1" path="res://Assets/Sprites/VFX/finisher_burst_pixel.png" id="1_finisher_burst"]
+
+[sub_resource type="Gradient" id="Gradient_hopkf"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_rnbd5"]
+gradient = SubResource("Gradient_hopkf")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_45"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(0.7071068, 0.7071068, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_90"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(0, 1, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_135"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(-0.7071068, 0.7071068, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_180"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(-1, 0, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_225"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(-0.7071068, -0.7071068, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_270"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(0, -1, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_finisher_burst_315"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+direction = Vector3(0.7071068, -0.7071068, 0)
+spread = 0.0
+initial_velocity_min = 420.0
+initial_velocity_max = 620.0
+gravity = Vector3(0, 0, 0)
+damping_min = 25.0
+damping_max = 50.0
+color_ramp = SubResource("GradientTexture1D_rnbd5")
+
+[node name="FinisherBurstParticles" type="Node2D" unique_id=1305179261]
+
+[node name="Burst0" type="GPUParticles2D" parent="." unique_id=1360000001]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst")
+
+[node name="Burst45" type="GPUParticles2D" parent="." unique_id=1360000002]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_45")
+
+[node name="Burst90" type="GPUParticles2D" parent="." unique_id=1360000003]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_90")
+
+[node name="Burst135" type="GPUParticles2D" parent="." unique_id=1360000004]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_135")
+
+[node name="Burst180" type="GPUParticles2D" parent="." unique_id=1360000005]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_180")
+
+[node name="Burst225" type="GPUParticles2D" parent="." unique_id=1360000006]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_225")
+
+[node name="Burst270" type="GPUParticles2D" parent="." unique_id=1360000007]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_270")
+
+[node name="Burst315" type="GPUParticles2D" parent="." unique_id=1360000008]
+emitting = false
+amount = 1
+texture = ExtResource("1_finisher_burst")
+lifetime = 0.3
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_finisher_burst_315")
