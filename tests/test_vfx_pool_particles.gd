@@ -28,7 +28,7 @@ class FakeParticlePool:
 		last_horizontal_direction = horizontal_direction
 
 
-func test_play_particle_template_reuses_pooled_instance_and_resets_direction() -> void:
+func test_play_particle_effect_reuses_pooled_scene_instance_and_resets_direction() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
 	var scene := Node2D.new()
@@ -36,34 +36,27 @@ func test_play_particle_template_reuses_pooled_instance_and_resets_direction() -
 	tree.root.add_child(scene)
 	tree.current_scene = scene
 
-	var source := Node2D.new()
-	scene.add_child(source)
-	var template := _make_gpu_particle("HurtParticles", 0.01, 2.5)
-	source.add_child(template)
-
 	var pool: Node = add_child_autofree(_new_vfx_pool())
-	pool.play_particle_template(&"hurt_particles", source, Vector2(12.0, 18.0), -1.0)
+	pool.play_particle_effect(&"hurt_particles", Vector2(12.0, 18.0), -1.0)
 
 	assert_eq(pool._active[&"hurt_particles"].size(), 1, "Hurt particle effect should be tracked as active after playback")
 	var first_effect := pool._active[&"hurt_particles"][0] as GPUParticles2D
 	assert_ne(first_effect, null, "Pooled hurt particle effect should use a GPUParticles2D instance")
+	assert_eq(first_effect.amount, 20, "Scene-backed hurt particles should come from the registered hurt particle scene")
+	assert_eq(first_effect.lifetime, 0.5, "Scene-backed hurt particles should preserve the hurt scene lifetime")
 	assert_eq(first_effect.global_position, Vector2(12.0, 18.0), "Pooled hurt particles should use the requested world position")
 	assert_true(first_effect.emitting, "Pooled hurt particles should restart emission when played")
 
 	var first_material := first_effect.process_material as ParticleProcessMaterial
 	assert_ne(first_material, null, "Pooled hurt particles should preserve a process material")
-	assert_eq(first_material.direction.x, -2.5, "Playback should flip particle direction to match the requested horizontal direction")
-
-	var template_material := template.process_material as ParticleProcessMaterial
-	assert_ne(template_material, null, "Template should keep its original process material")
-	assert_eq(template_material.direction.x, 2.5, "Template process material should not be mutated by pooled playback")
+	assert_eq(first_material.direction.x, -1.0, "Playback should flip particle direction to match the requested horizontal direction")
 
 	await tree.create_timer(1.05).timeout
 
 	assert_eq(pool._active[&"hurt_particles"].size(), 0, "Finished hurt particles should be removed from the active pool")
 	assert_eq(pool._available[&"hurt_particles"].size(), 4, "Finished hurt particles should return to the prewarmed pool")
 
-	pool.play_particle_template(&"hurt_particles", source, Vector2(-6.0, 5.0), 1.0)
+	pool.play_particle_effect(&"hurt_particles", Vector2(-6.0, 5.0), 1.0)
 
 	assert_eq(pool._active[&"hurt_particles"].size(), 1, "Replayed hurt particles should be tracked as active")
 	var second_effect := pool._active[&"hurt_particles"][0] as GPUParticles2D
@@ -72,13 +65,13 @@ func test_play_particle_template_reuses_pooled_instance_and_resets_direction() -
 
 	var second_material := second_effect.process_material as ParticleProcessMaterial
 	assert_ne(second_material, null, "Reused hurt particles should still have a process material")
-	assert_eq(second_material.direction.x, 2.5, "Reused hurt particles should reset direction before applying the next play direction")
+	assert_eq(second_material.direction.x, 1.0, "Reused hurt particles should reset direction before applying the next play direction")
 
 	tree.current_scene = previous_scene
 	scene.queue_free()
 
 
-func test_play_particle_template_supports_nested_finisher_templates() -> void:
+func test_play_particle_effect_supports_nested_finisher_scenes() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
 	var scene := Node2D.new()
@@ -86,16 +79,8 @@ func test_play_particle_template_supports_nested_finisher_templates() -> void:
 	tree.root.add_child(scene)
 	tree.current_scene = scene
 
-	var source := Node2D.new()
-	scene.add_child(source)
-	var template_root := Node2D.new()
-	template_root.name = "FinisherBurstParticles"
-	var burst := _make_gpu_particle("Burst0", 0.01, 1.0)
-	template_root.add_child(burst)
-	source.add_child(template_root)
-
 	var pool: Node = add_child_autofree(_new_vfx_pool())
-	pool.play_particle_template(&"finisher_burst", source, Vector2(7.0, -3.0))
+	pool.play_particle_effect(&"finisher_burst", Vector2(7.0, -3.0))
 
 	assert_eq(pool._active[&"finisher_burst"].size(), 1, "Nested finisher burst should be tracked as active after playback")
 	var effect_root := pool._active[&"finisher_burst"][0] as Node2D
@@ -104,6 +89,7 @@ func test_play_particle_template_supports_nested_finisher_templates() -> void:
 
 	var effect_burst := effect_root.get_node_or_null("Burst0") as GPUParticles2D
 	assert_ne(effect_burst, null, "Nested finisher burst should preserve child particle nodes")
+	assert_ne(effect_root.get_node_or_null("Burst315"), null, "Nested finisher burst should preserve the full registered child structure")
 	assert_true(effect_burst.emitting, "Nested finisher burst child particles should restart emission")
 
 	await tree.create_timer(1.05).timeout
@@ -115,45 +101,41 @@ func test_play_particle_template_supports_nested_finisher_templates() -> void:
 	scene.queue_free()
 
 
-func test_play_particle_template_refreshes_cross_source_variant_for_same_effect_key() -> void:
+func test_play_particle_template_uses_registry_scene_without_source_template() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
 	var scene := Node2D.new()
-	scene.name = "TempVfxFinisherVariantScene"
+	scene.name = "TempVfxParticleCompatScene"
 	tree.root.add_child(scene)
 	tree.current_scene = scene
 
-	var source_a := Node2D.new()
-	scene.add_child(source_a)
-	var template_root_a := Node2D.new()
-	template_root_a.name = "FinisherBurstParticles"
-	template_root_a.add_child(_make_gpu_particle("BurstA", 0.01, 1.0))
-	source_a.add_child(template_root_a)
-
-	var source_b := Node2D.new()
-	scene.add_child(source_b)
-	var template_root_b := Node2D.new()
-	template_root_b.name = "FinisherBurstParticles"
-	template_root_b.add_child(_make_gpu_particle("BurstB", 0.01, -1.0))
-	source_b.add_child(template_root_b)
+	var source := Node2D.new()
+	scene.add_child(source)
 
 	var pool: Node = add_child_autofree(_new_vfx_pool())
-	pool.play_particle_template(&"finisher_burst", source_a, Vector2.ZERO)
+	pool.play_particle_template(&"parry_particles", source, Vector2(8.0, 9.0), -1.0)
 
-	var first_effect := pool._active[&"finisher_burst"][0] as Node2D
-	assert_ne(first_effect.get_node_or_null("BurstA"), null, "First finisher burst should duplicate source A's template structure")
-
-	await tree.create_timer(1.05).timeout
-
-	pool.play_particle_template(&"finisher_burst", source_b, Vector2(2.0, 3.0))
-
-	var second_effect := pool._active[&"finisher_burst"][0] as Node2D
-	assert_ne(second_effect, null, "Second finisher burst should still produce an active pooled effect")
-	assert_ne(second_effect.get_node_or_null("BurstB"), null, "Cross-source reuse should refresh the pooled effect to source B's template structure")
-	assert_eq(second_effect.get_node_or_null("BurstA"), null, "Cross-source reuse should not keep stale source A child nodes")
+	assert_eq(pool._active[&"parry_particles"].size(), 1, "Legacy particle playback should no longer require a source template node")
+	var effect := pool._active[&"parry_particles"][0] as GPUParticles2D
+	assert_ne(effect, null, "Legacy particle playback should still create a pooled particle instance")
+	assert_eq(effect.randomness, 1.0, "Legacy playback should use the registered parry particle scene")
+	var effect_material := effect.process_material as ParticleProcessMaterial
+	assert_ne(effect_material, null, "Legacy playback should preserve the particle process material")
+	assert_eq(effect_material.spread, 180.0, "Legacy playback should preserve the registered parry particle spread")
+	assert_eq(effect_material.direction.x, -1.0, "Legacy playback should still apply directional overrides to the scene-backed effect")
 
 	tree.current_scene = previous_scene
 	scene.queue_free()
+
+
+func test_vfx_pool_reports_finisher_particle_duration_from_registry() -> void:
+	var pool: Node = add_child_autofree(_new_vfx_pool())
+
+	assert_eq(pool.get_effect_duration(&"hurt_particles"), 0.5, "Hurt particle duration should come from the registered particle scene lifetime")
+	assert_eq(pool.get_effect_duration(&"parry_particles"), 0.3, "Parry particle duration should come from the registered particle scene lifetime")
+	assert_eq(pool.get_effect_duration(&"finisher_burst"), 0.3, "Finisher burst duration should come from the nested registered particle scene lifetime")
+	assert_eq(pool.get_effect_duration(&"finisher_slash"), 0.2, "Finisher slash duration should come from the registered particle scene lifetime")
+	assert_eq(pool.get_effect_duration(&"missing_effect"), 0.0, "Unknown particle keys should report zero duration")
 
 
 func test_attack_module_base_forwards_world_particles_to_vfx_pool() -> void:

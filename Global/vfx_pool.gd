@@ -11,6 +11,10 @@ const PARTICLE_TEMPLATE_SIGNATURE_META := "_vfx_pool_particle_template_signature
 const CutScene := preload("res://Scenes/VFX/cut.tscn")
 const AfterimageScene := preload("res://Scenes/VFX/afterimage.tscn")
 const ExplosionScene := preload("res://Scenes/VFX/explosion.tscn")
+const HurtParticlesScene := preload("res://Scenes/VFX/particles/hurt_particles.tscn")
+const ParryParticlesScene := preload("res://Scenes/VFX/particles/parry_particles.tscn")
+const FinisherBurstParticlesScene := preload("res://Scenes/VFX/particles/finisher_burst_particles.tscn")
+const FinisherSlashParticlesScene := preload("res://Scenes/VFX/particles/finisher_slash_particles.tscn")
 
 var _scene_root: Node2D = null
 var _registry: Dictionary = {}
@@ -32,10 +36,10 @@ func _build_default_registry() -> Dictionary:
 		"cut": {"scene": CutScene, "prewarm": 8},
 		"afterimage": {"scene": AfterimageScene, "prewarm": 15},
 		"explosion": {"scene": ExplosionScene, "prewarm": 6},
-		"hurt_particles": {"scene": null, "template_name": "HurtParticles", "prewarm": 4},
-		"parry_particles": {"scene": null, "template_name": "ParryParticles", "prewarm": 4},
-		"finisher_burst": {"scene": null, "template_name": "FinisherBurstParticles", "prewarm": 2},
-		"finisher_slash": {"scene": null, "template_name": "FinisherSlashParticles", "prewarm": 2},
+		"hurt_particles": {"scene": HurtParticlesScene, "prewarm": 4},
+		"parry_particles": {"scene": ParryParticlesScene, "prewarm": 4},
+		"finisher_burst": {"scene": FinisherBurstParticlesScene, "prewarm": 2},
+		"finisher_slash": {"scene": FinisherSlashParticlesScene, "prewarm": 2},
 	}
 
 
@@ -123,18 +127,8 @@ func play_explosion(world_position: Vector2) -> void:
 	effect.play(&"default")
 
 
-func play_particle_template(
-		effect_key: StringName,
-		source_node: Node,
-		world_position: Vector2,
-		horizontal_direction: float = 0.0
-) -> void:
-	if source_node == null or not is_instance_valid(source_node):
-		return
-	var template := _find_particle_template(effect_key, source_node)
-	if template == null:
-		return
-	var effect_node := _acquire_particle_effect(effect_key, template)
+func play_particle_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0) -> void:
+	var effect_node := _acquire_scene_particle_effect(effect_key)
 	if effect_node == null:
 		return
 	var effect := effect_node as Node2D
@@ -149,6 +143,34 @@ func play_particle_template(
 	active_for_key.append(effect)
 	var cleanup_delay := _restart_particles_recursive(effect)
 	_schedule_particle_release(effect_key, effect, cleanup_delay)
+
+
+func play_particle_template(
+		effect_key: StringName,
+		_source_node: Node,
+		world_position: Vector2,
+		horizontal_direction: float = 0.0
+) -> void:
+	play_particle_effect(effect_key, world_position, horizontal_direction)
+
+
+func get_effect_duration(effect_key: StringName) -> float:
+	if not _registry.has(effect_key):
+		return 0.0
+	var entry: Dictionary = _registry[effect_key]
+	if entry.has("duration"):
+		return float(entry["duration"])
+	var packed_scene := entry.get("scene") as PackedScene
+	if packed_scene == null:
+		return 0.0
+	var instance := packed_scene.instantiate()
+	if not (instance is Node):
+		return 0.0
+	var duration := _collect_particle_duration_recursive(instance)
+	instance.free()
+	entry["duration"] = duration
+	_registry[effect_key] = entry
+	return duration
 
 
 func _on_explosion_animation_finished(effect: AnimatedSprite2D) -> void:
@@ -185,6 +207,34 @@ func _acquire_scene_effect(effect_key: StringName) -> Node:
 	return effect
 
 
+func _acquire_scene_particle_effect(effect_key: StringName) -> Node2D:
+	var root := _ensure_scene_root()
+	if root == null or not _registry.has(effect_key):
+		return null
+	if not _available.has(effect_key):
+		_available[effect_key] = []
+	if not _active.has(effect_key):
+		_active[effect_key] = []
+	_prune_effect_list(effect_key, _available)
+	_prune_effect_list(effect_key, _active)
+	var available_for_key: Array = _available[effect_key]
+	if available_for_key.is_empty():
+		var entry: Dictionary = _registry[effect_key]
+		var prewarm_count := int(entry.get("prewarm", 1))
+		_prewarm_scene_particle_effect(effect_key, maxi(prewarm_count, 1))
+	if available_for_key.is_empty():
+		return null
+	var effect := available_for_key.pop_back() as Node2D
+	if effect == null or not is_instance_valid(effect):
+		return null
+	if effect.get_parent() != root:
+		if effect.get_parent() != null:
+			effect.reparent(root)
+		else:
+			root.add_child(effect)
+	return effect
+
+
 func _prewarm_scene_effect(effect_key: StringName, count: int) -> void:
 	if count <= 0 or not _registry.has(effect_key):
 		return
@@ -208,6 +258,33 @@ func _prewarm_scene_effect(effect_key: StringName, count: int) -> void:
 		else:
 			effect.visible = false
 		available_for_key.append(effect)
+
+
+func _prewarm_scene_particle_effect(effect_key: StringName, count: int) -> void:
+	if count <= 0 or not _registry.has(effect_key):
+		return
+	var root := _ensure_scene_root()
+	if root == null:
+		return
+	var entry: Dictionary = _registry[effect_key]
+	var packed_scene := entry.get("scene") as PackedScene
+	if packed_scene == null:
+		return
+	if not _available.has(effect_key):
+		_available[effect_key] = []
+	var available_for_key: Array = _available[effect_key]
+	for i in count:
+		var effect := packed_scene.instantiate()
+		if not (effect is Node2D):
+			if effect is Node:
+				(effect as Node).free()
+			continue
+		var effect_node := effect as Node2D
+		effect_node.set_meta(PARTICLE_EFFECT_META, true)
+		root.add_child(effect_node)
+		_capture_particle_defaults_recursive(effect_node)
+		_reset_particle_effect(effect_node)
+		available_for_key.append(effect_node)
 
 
 func _find_particle_template(effect_key: StringName, source_node: Node) -> Node:
@@ -371,6 +448,17 @@ func _schedule_particle_release(effect_key: StringName, effect: Node2D, cleanup_
 			return
 		_release_effect(effect_key, effect)
 	)
+
+
+func _collect_particle_duration_recursive(node: Node) -> float:
+	var duration := 0.0
+	if node is GPUParticles2D:
+		duration = maxf(duration, (node as GPUParticles2D).lifetime)
+	elif node is CPUParticles2D:
+		duration = maxf(duration, (node as CPUParticles2D).lifetime)
+	for child in node.get_children():
+		duration = maxf(duration, _collect_particle_duration_recursive(child))
+	return duration
 
 
 func _build_particle_template_signature(template: Node) -> String:
