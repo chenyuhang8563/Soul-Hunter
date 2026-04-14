@@ -6,6 +6,7 @@ const PARTICLE_EFFECT_META := "_vfx_pool_particle_effect"
 const PARTICLE_BASE_PROCESS_MATERIAL_META := "_vfx_pool_base_process_material"
 const PARTICLE_BASE_DIRECTION_META := "_vfx_pool_base_direction"
 const PARTICLE_PLAY_SERIAL_META := "_vfx_pool_play_serial"
+const PARTICLE_TEMPLATE_SIGNATURE_META := "_vfx_pool_particle_template_signature"
 
 const CutScene := preload("res://Scenes/VFX/cut.tscn")
 const AfterimageScene := preload("res://Scenes/VFX/afterimage.tscn")
@@ -235,14 +236,14 @@ func _acquire_particle_effect(effect_key: StringName, template: Node) -> Node2D:
 	_prune_effect_list(effect_key, _available)
 	_prune_effect_list(effect_key, _active)
 	var available_for_key: Array = _available[effect_key]
-	if available_for_key.is_empty():
+	var template_signature := _build_particle_template_signature(template)
+	var effect := _take_matching_particle_effect(available_for_key, template_signature)
+	if effect == null:
 		var entry: Dictionary = _registry[effect_key]
 		var prewarm_count := int(entry.get("prewarm", 1))
-		_prewarm_particle_effect(effect_key, template, maxi(prewarm_count, 1))
-	if available_for_key.is_empty():
-		return null
-	var effect := available_for_key.pop_back() as Node2D
-	if effect == null or not is_instance_valid(effect):
+		_prewarm_particle_effect(effect_key, template, maxi(prewarm_count, 1), template_signature)
+		effect = _take_matching_particle_effect(available_for_key, template_signature)
+	if effect == null:
 		return null
 	if effect.get_parent() != root:
 		if effect.get_parent() != null:
@@ -252,7 +253,7 @@ func _acquire_particle_effect(effect_key: StringName, template: Node) -> Node2D:
 	return effect
 
 
-func _prewarm_particle_effect(effect_key: StringName, template: Node, count: int) -> void:
+func _prewarm_particle_effect(effect_key: StringName, template: Node, count: int, template_signature: String) -> void:
 	if count <= 0 or template == null or not (template is Node2D):
 		return
 	var root := _ensure_scene_root()
@@ -267,10 +268,24 @@ func _prewarm_particle_effect(effect_key: StringName, template: Node, count: int
 			continue
 		var effect_node := effect as Node2D
 		effect_node.set_meta(PARTICLE_EFFECT_META, true)
+		effect_node.set_meta(PARTICLE_TEMPLATE_SIGNATURE_META, template_signature)
 		root.add_child(effect_node)
 		_capture_particle_defaults_recursive(effect_node)
 		_reset_particle_effect(effect_node)
 		available_for_key.append(effect_node)
+
+
+func _take_matching_particle_effect(available_for_key: Array, template_signature: String) -> Node2D:
+	for i in range(available_for_key.size() - 1, -1, -1):
+		var effect := available_for_key[i] as Node2D
+		if effect == null or not is_instance_valid(effect):
+			available_for_key.remove_at(i)
+			continue
+		if String(effect.get_meta(PARTICLE_TEMPLATE_SIGNATURE_META, "")) != template_signature:
+			continue
+		available_for_key.remove_at(i)
+		return effect
+	return null
 
 
 func _release_effect(effect_key: StringName, effect: Node) -> void:
@@ -356,6 +371,59 @@ func _schedule_particle_release(effect_key: StringName, effect: Node2D, cleanup_
 			return
 		_release_effect(effect_key, effect)
 	)
+
+
+func _build_particle_template_signature(template: Node) -> String:
+	var parts: Array[String] = []
+	_append_particle_template_signature(template, parts)
+	return "|".join(parts)
+
+
+func _append_particle_template_signature(node: Node, parts: Array[String]) -> void:
+	var node_parts: Array[String] = [node.get_class(), String(node.name)]
+	if node is Node2D:
+		var node_2d := node as Node2D
+		node_parts.append("pos=%s" % var_to_str(node_2d.position))
+		node_parts.append("rot=%s" % var_to_str(node_2d.rotation))
+		node_parts.append("scale=%s" % var_to_str(node_2d.scale))
+	if node is GPUParticles2D:
+		var gpu_particles := node as GPUParticles2D
+		node_parts.append("amount=%d" % gpu_particles.amount)
+		node_parts.append("lifetime=%s" % var_to_str(gpu_particles.lifetime))
+		node_parts.append("one_shot=%s" % var_to_str(gpu_particles.one_shot))
+		node_parts.append("explosiveness=%s" % var_to_str(gpu_particles.explosiveness))
+		node_parts.append("randomness=%s" % var_to_str(gpu_particles.randomness))
+		node_parts.append("material=%s" % _get_particle_material_signature(gpu_particles.process_material))
+	elif node is CPUParticles2D:
+		var cpu_particles := node as CPUParticles2D
+		node_parts.append("amount=%d" % cpu_particles.amount)
+		node_parts.append("lifetime=%s" % var_to_str(cpu_particles.lifetime))
+		node_parts.append("one_shot=%s" % var_to_str(cpu_particles.one_shot))
+		node_parts.append("direction=%s" % var_to_str(cpu_particles.direction))
+	parts.append(";".join(node_parts))
+	for child in node.get_children():
+		_append_particle_template_signature(child, parts)
+	parts.append("end")
+
+
+func _get_particle_material_signature(material: Material) -> String:
+	if material == null:
+		return "null"
+	if material is ParticleProcessMaterial:
+		var particle_material := material as ParticleProcessMaterial
+		return str({
+			"class": particle_material.get_class(),
+			"direction": particle_material.direction,
+			"spread": particle_material.spread,
+			"initial_velocity_min": particle_material.initial_velocity_min,
+			"initial_velocity_max": particle_material.initial_velocity_max,
+			"gravity": particle_material.gravity,
+			"damping_min": particle_material.damping_min,
+			"damping_max": particle_material.damping_max,
+			"scale_min": particle_material.scale_min,
+			"scale_max": particle_material.scale_max,
+		})
+	return material.get_class()
 
 
 func _prune_effect_list(effect_key: StringName, bucket: Dictionary) -> void:

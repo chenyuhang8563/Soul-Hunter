@@ -115,6 +115,47 @@ func test_play_particle_template_supports_nested_finisher_templates() -> void:
 	scene.queue_free()
 
 
+func test_play_particle_template_refreshes_cross_source_variant_for_same_effect_key() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
+	var scene := Node2D.new()
+	scene.name = "TempVfxFinisherVariantScene"
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var source_a := Node2D.new()
+	scene.add_child(source_a)
+	var template_root_a := Node2D.new()
+	template_root_a.name = "FinisherBurstParticles"
+	template_root_a.add_child(_make_gpu_particle("BurstA", 0.01, 1.0))
+	source_a.add_child(template_root_a)
+
+	var source_b := Node2D.new()
+	scene.add_child(source_b)
+	var template_root_b := Node2D.new()
+	template_root_b.name = "FinisherBurstParticles"
+	template_root_b.add_child(_make_gpu_particle("BurstB", 0.01, -1.0))
+	source_b.add_child(template_root_b)
+
+	var pool: Node = add_child_autofree(_new_vfx_pool())
+	pool.play_particle_template(&"finisher_burst", source_a, Vector2.ZERO)
+
+	var first_effect := pool._active[&"finisher_burst"][0] as Node2D
+	assert_ne(first_effect.get_node_or_null("BurstA"), null, "First finisher burst should duplicate source A's template structure")
+
+	await tree.create_timer(1.05).timeout
+
+	pool.play_particle_template(&"finisher_burst", source_b, Vector2(2.0, 3.0))
+
+	var second_effect := pool._active[&"finisher_burst"][0] as Node2D
+	assert_ne(second_effect, null, "Second finisher burst should still produce an active pooled effect")
+	assert_ne(second_effect.get_node_or_null("BurstB"), null, "Cross-source reuse should refresh the pooled effect to source B's template structure")
+	assert_eq(second_effect.get_node_or_null("BurstA"), null, "Cross-source reuse should not keep stale source A child nodes")
+
+	tree.current_scene = previous_scene
+	scene.queue_free()
+
+
 func test_attack_module_base_forwards_world_particles_to_vfx_pool() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
