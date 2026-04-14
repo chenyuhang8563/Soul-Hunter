@@ -3,7 +3,7 @@ extends Node
 const SwordClashStream := preload("res://Assets/SFX/sword-clash.wav")
 const SwordSwingStream := preload("res://Assets/SFX/swosh-sword-swing.wav")
 const HitFleshStream := preload("res://Assets/SFX/hit_flesh.wav")
-const DefaultBgmStream := preload("res://Assets/SFX/2. Power Synth.wav")
+const DefaultBgmStream := preload("res://Assets/SFX/battle.wav")
 const AUDIO_MANAGER_GROUP := &"audio_manager_service"
 const BGM_BUS := &"BGM"
 const BGM_LOW_PASS_CUTOFF_HZ := 900.0
