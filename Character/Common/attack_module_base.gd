@@ -11,6 +11,12 @@ const PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER := 0.8
 const CRIT_DAMAGE_MULTIPLIER := 1.5
 const INCOMING_DAMAGE_IS_CRITICAL_META := "incoming_damage_is_critical"
 const ENEMY_MELEE_TRIGGER_EXTRA_RATIO := 0.10
+const PARTICLE_EFFECT_KEYS := {
+	"HurtParticles": &"hurt_particles",
+	"ParryParticles": &"parry_particles",
+	"FinisherBurstParticles": &"finisher_burst",
+	"FinisherSlashParticles": &"finisher_slash",
+}
 
 static var _active_hitstop_requests: Dictionary = {}
 static var _next_hitstop_request_id := 1
@@ -415,7 +421,7 @@ func _spawn_particles_from_template(
 	var vfx_pool := _get_vfx_pool()
 	if vfx_pool == null or not vfx_pool.has_method("play_particle_template"):
 		return
-	var effect_key := StringName(particle_name.to_snake_case())
+	var effect_key = PARTICLE_EFFECT_KEYS.get(particle_name, &"") as StringName
 	if effect_key == &"":
 		return
 	vfx_pool.call("play_particle_template", effect_key, source_node, world_position, horizontal_direction)

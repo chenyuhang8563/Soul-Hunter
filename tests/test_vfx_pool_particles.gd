@@ -8,6 +8,7 @@ class FakeParticlePool:
 	extends Node
 
 	var call_count := 0
+	var calls: Array[Dictionary] = []
 	var last_effect_key: StringName = &""
 	var last_source_node: Node = null
 	var last_world_position := Vector2.ZERO
@@ -15,6 +16,12 @@ class FakeParticlePool:
 
 	func play_particle_template(effect_key: StringName, source_node: Node, world_position: Vector2, horizontal_direction: float = 0.0) -> void:
 		call_count += 1
+		calls.append({
+			"effect_key": effect_key,
+			"source_node": source_node,
+			"world_position": world_position,
+			"horizontal_direction": horizontal_direction,
+		})
 		last_effect_key = effect_key
 		last_source_node = source_node
 		last_world_position = world_position
@@ -138,6 +145,42 @@ func test_attack_module_base_forwards_world_particles_to_vfx_pool() -> void:
 	assert_eq(fake_pool.last_source_node, owner, "Particle forwarding should preserve the source node for template lookup")
 	assert_eq(fake_pool.last_world_position, Vector2(4.0, 9.0), "Particle forwarding should preserve the requested world position")
 	assert_eq(fake_pool.last_horizontal_direction, -1.0, "Particle forwarding should preserve the requested particle direction")
+
+	tree.root.remove_child(fake_pool)
+	fake_pool.queue_free()
+	if existing_pool != null:
+		tree.root.add_child(existing_pool)
+	tree.current_scene = previous_scene
+	scene.queue_free()
+
+
+func test_attack_module_base_maps_finisher_particle_names_to_pool_keys() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
+	var scene := Node2D.new()
+	scene.name = "TempAttackModuleFinisherParticleScene"
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var existing_pool := tree.root.get_node_or_null("VfxPool")
+	if existing_pool != null:
+		tree.root.remove_child(existing_pool)
+
+	var fake_pool := FakeParticlePool.new()
+	fake_pool.name = "VfxPool"
+	tree.root.add_child(fake_pool)
+
+	var owner := CharacterBody2D.new()
+	scene.add_child(owner)
+
+	var module = _new_attack_module()
+	module.owner = owner
+	module._spawn_particles_from_template(owner, "FinisherBurstParticles", scene, Vector2(10.0, 20.0))
+	module._spawn_particles_from_template(owner, "FinisherSlashParticles", scene, Vector2(-3.0, 6.0))
+
+	assert_eq(fake_pool.call_count, 2, "AttackModuleBase should forward both finisher particle requests to VfxPool")
+	assert_eq(fake_pool.calls[0].get("effect_key"), &"finisher_burst", "FinisherBurstParticles should map to the finisher_burst pool key")
+	assert_eq(fake_pool.calls[1].get("effect_key"), &"finisher_slash", "FinisherSlashParticles should map to the finisher_slash pool key")
 
 	tree.root.remove_child(fake_pool)
 	fake_pool.queue_free()
