@@ -108,8 +108,11 @@ func play_explosion(world_position: Vector2) -> void:
 	effect.animation = &"default"
 	var active_for_key: Array = _active[&"explosion"]
 	active_for_key.append(effect)
+	var release_cb := Callable(self, "_on_explosion_animation_finished").bind(effect)
+	if effect.animation_finished.is_connected(release_cb):
+		effect.animation_finished.disconnect(release_cb)
 	effect.animation_finished.connect(
-		Callable(self, "_on_explosion_animation_finished").bind(effect),
+		release_cb,
 		CONNECT_ONE_SHOT
 	)
 	effect.play(&"default")
