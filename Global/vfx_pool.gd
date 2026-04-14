@@ -1,6 +1,7 @@
 extends Node
 
 const ROOT_NAME := "WorldVfxRoot"
+const CUT_Z_INDEX := 10
 
 const CutScene := preload("res://Scenes/VFX/cut.tscn")
 const AfterimageScene := preload("res://Scenes/VFX/afterimage.tscn")
@@ -62,6 +63,8 @@ func play_cut(source: Node2D, spec: Dictionary, _attack_range: float) -> void:
 	var effect := _acquire_scene_effect(&"cut")
 	if effect == null:
 		return
+	effect.z_as_relative = false
+	effect.z_index = CUT_Z_INDEX
 	var active_for_key: Array = _active[&"cut"]
 	active_for_key.append(effect)
 	var release_cb := Callable(self, "_release_effect").bind(&"cut", effect)
