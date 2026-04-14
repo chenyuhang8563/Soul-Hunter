@@ -13,19 +13,25 @@ class FakeParticlePool:
 	var last_source_node: Node = null
 	var last_world_position := Vector2.ZERO
 	var last_horizontal_direction := 0.0
+	var duration_call_count := 0
+	var duration_calls: Array[StringName] = []
+	var effect_durations: Dictionary = {}
 
-	func play_particle_template(effect_key: StringName, source_node: Node, world_position: Vector2, horizontal_direction: float = 0.0) -> void:
+	func play_particle_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0) -> void:
 		call_count += 1
 		calls.append({
 			"effect_key": effect_key,
-			"source_node": source_node,
 			"world_position": world_position,
 			"horizontal_direction": horizontal_direction,
 		})
 		last_effect_key = effect_key
-		last_source_node = source_node
 		last_world_position = world_position
 		last_horizontal_direction = horizontal_direction
+
+	func get_effect_duration(effect_key: StringName) -> float:
+		duration_call_count += 1
+		duration_calls.append(effect_key)
+		return float(effect_durations.get(effect_key, 0.0))
 
 
 func test_play_particle_effect_reuses_pooled_scene_instance_and_resets_direction() -> void:
@@ -138,7 +144,7 @@ func test_vfx_pool_reports_finisher_particle_duration_from_registry() -> void:
 	assert_eq(pool.get_effect_duration(&"missing_effect"), 0.0, "Unknown particle keys should report zero duration")
 
 
-func test_attack_module_base_forwards_world_particles_to_vfx_pool() -> void:
+func test_attack_module_base_forwards_world_particles_without_source_template_lookup() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
 	var scene := Node2D.new()
@@ -156,8 +162,6 @@ func test_attack_module_base_forwards_world_particles_to_vfx_pool() -> void:
 
 	var owner := CharacterBody2D.new()
 	scene.add_child(owner)
-	var template := _make_gpu_particle("ParryParticles", 0.01, 1.0)
-	owner.add_child(template)
 
 	var module = _new_attack_module()
 	module.owner = owner
@@ -165,7 +169,7 @@ func test_attack_module_base_forwards_world_particles_to_vfx_pool() -> void:
 
 	assert_eq(fake_pool.call_count, 1, "AttackModuleBase should route world-space particle playback through VfxPool")
 	assert_eq(fake_pool.last_effect_key, &"parry_particles", "Particle forwarding should map the template name to the pool registry key")
-	assert_eq(fake_pool.last_source_node, owner, "Particle forwarding should preserve the source node for template lookup")
+	assert_eq(fake_pool.last_source_node, null, "Particle forwarding should not depend on passing a source template node")
 	assert_eq(fake_pool.last_world_position, Vector2(4.0, 9.0), "Particle forwarding should preserve the requested world position")
 	assert_eq(fake_pool.last_horizontal_direction, -1.0, "Particle forwarding should preserve the requested particle direction")
 
@@ -202,6 +206,14 @@ func test_attack_module_base_maps_finisher_particle_names_to_pool_keys() -> void
 	module._spawn_particles_from_template(owner, "FinisherSlashParticles", scene, Vector2(-3.0, 6.0))
 
 	assert_eq(fake_pool.call_count, 2, "AttackModuleBase should forward both finisher particle requests to VfxPool")
+	if fake_pool.call_count < 2:
+		tree.root.remove_child(fake_pool)
+		fake_pool.queue_free()
+		if existing_pool != null:
+			tree.root.add_child(existing_pool)
+		tree.current_scene = previous_scene
+		scene.queue_free()
+		return
 	assert_eq(fake_pool.calls[0].get("effect_key"), &"finisher_burst", "FinisherBurstParticles should map to the finisher_burst pool key")
 	assert_eq(fake_pool.calls[1].get("effect_key"), &"finisher_slash", "FinisherSlashParticles should map to the finisher_slash pool key")
 
@@ -211,6 +223,57 @@ func test_attack_module_base_maps_finisher_particle_names_to_pool_keys() -> void
 		tree.root.add_child(existing_pool)
 	tree.current_scene = previous_scene
 	scene.queue_free()
+
+
+func test_attack_module_base_gets_finisher_duration_from_vfx_pool() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
+	var scene := Node2D.new()
+	scene.name = "TempAttackModuleFinisherDurationScene"
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var existing_pool := tree.root.get_node_or_null("VfxPool")
+	if existing_pool != null:
+		tree.root.remove_child(existing_pool)
+
+	var fake_pool := FakeParticlePool.new()
+	fake_pool.name = "VfxPool"
+	fake_pool.effect_durations[&"finisher_burst"] = 0.6
+	fake_pool.effect_durations[&"finisher_slash"] = 0.45
+	tree.root.add_child(fake_pool)
+
+	var owner := CharacterBody2D.new()
+	scene.add_child(owner)
+
+	var module = _new_attack_module()
+	module.owner = owner
+
+	assert_eq(fake_pool.duration_call_count, 0)
+	assert_eq(module._get_finisher_effect_duration(), 0.6, "Finisher duration should come from VfxPool-owned particle timings")
+	assert_eq(fake_pool.duration_call_count, 2, "AttackModuleBase should query both finisher particle durations from VfxPool")
+	assert_eq(fake_pool.duration_calls, [&"finisher_burst", &"finisher_slash"])
+
+	tree.root.remove_child(fake_pool)
+	fake_pool.queue_free()
+	if existing_pool != null:
+		tree.root.add_child(existing_pool)
+	tree.current_scene = previous_scene
+	scene.queue_free()
+
+
+func test_attack_module_base_finisher_duration_falls_back_without_vfx_pool() -> void:
+	var scene := Node2D.new()
+	scene.name = "TempAttackModuleFinisherFallbackScene"
+	add_child_autofree(scene)
+
+	var owner := CharacterBody2D.new()
+	scene.add_child(owner)
+
+	var module = _new_attack_module()
+	module.owner = owner
+
+	assert_eq(module._get_finisher_effect_duration(), 0.3, "Finisher duration should keep the safe fallback when VfxPool is unavailable")
 
 
 func test_particle_template_scenes_exist_and_load() -> void:

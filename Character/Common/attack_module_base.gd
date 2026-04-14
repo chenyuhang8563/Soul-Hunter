@@ -410,21 +410,19 @@ func _play_clash_effects(target: Node2D) -> void:
 		audio_manager.play_sfx_2d("sword_clash", mid_pos)
 
 func _spawn_particles_from_template(
-		source_node: Node,
+		_source_node: Node,
 		particle_name: String,
 		_effect_parent: Node,
 		world_position: Vector2,
 		horizontal_direction: float = 0.0
 ) -> void:
-	if source_node == null or not is_instance_valid(source_node):
-		return
 	var vfx_pool := _get_vfx_pool()
-	if vfx_pool == null or not vfx_pool.has_method("play_particle_template"):
+	if vfx_pool == null or not vfx_pool.has_method("play_particle_effect"):
 		return
 	var effect_key = PARTICLE_EFFECT_KEYS.get(particle_name, &"") as StringName
 	if effect_key == &"":
 		return
-	vfx_pool.call("play_particle_template", effect_key, source_node, world_position, horizontal_direction)
+	vfx_pool.call("play_particle_effect", effect_key, world_position, horizontal_direction)
 
 
 func _get_vfx_pool() -> Node:
@@ -436,31 +434,16 @@ func _get_vfx_pool() -> Node:
 	return tree.root.get_node_or_null("VfxPool")
 
 func _get_finisher_effect_duration() -> float:
+	var vfx_pool := _get_vfx_pool()
+	if vfx_pool == null or not vfx_pool.has_method("get_effect_duration"):
+		return 0.3
 	return maxf(
 		0.3,
 		maxf(
-			_get_particle_template_duration(owner, "FinisherBurstParticles"),
-			_get_particle_template_duration(owner, "FinisherSlashParticles")
+			float(vfx_pool.call("get_effect_duration", &"finisher_burst")),
+			float(vfx_pool.call("get_effect_duration", &"finisher_slash"))
 		)
 	)
-
-func _get_particle_template_duration(source_node: Node, particle_name: String) -> float:
-	if source_node == null or not is_instance_valid(source_node):
-		return 0.0
-	var particle_template := source_node.find_child(particle_name, true, false)
-	if particle_template == null:
-		return 0.0
-	return _collect_particle_duration_recursive(particle_template)
-
-func _collect_particle_duration_recursive(node: Node) -> float:
-	var duration := 0.0
-	if node is GPUParticles2D:
-		duration = maxf(duration, (node as GPUParticles2D).lifetime)
-	elif node is CPUParticles2D:
-		duration = maxf(duration, (node as CPUParticles2D).lifetime)
-	for child in node.get_children():
-		duration = maxf(duration, _collect_particle_duration_recursive(child))
-	return duration
 
 func _restart_particles_recursive(node: Node) -> float:
 	var cleanup_delay := 1.0
