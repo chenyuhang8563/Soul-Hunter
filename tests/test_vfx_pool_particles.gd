@@ -241,6 +241,32 @@ func test_particle_template_scenes_exist_and_load() -> void:
 	assert_ne(parry_scene, null)
 	assert_ne(finisher_burst_scene, null)
 	assert_ne(finisher_slash_scene, null)
+	if hurt_scene == null or parry_scene == null or finisher_burst_scene == null or finisher_slash_scene == null:
+		return
+
+	var hurt := add_child_autofree(hurt_scene.instantiate()) as GPUParticles2D
+	assert_ne(hurt, null)
+	assert_eq(hurt.name, "HurtParticles")
+	assert_eq(hurt.amount, 20)
+	assert_eq(hurt.lifetime, 0.5)
+	assert_true(hurt.one_shot)
+	assert_eq(hurt.explosiveness, 1.0)
+	assert_ne(hurt.process_material as ParticleProcessMaterial, null)
+
+	var parry := add_child_autofree(parry_scene.instantiate()) as GPUParticles2D
+	assert_ne(parry, null)
+	assert_eq(parry.name, "ParryParticles")
+	assert_eq(parry.randomness, 1.0)
+	var parry_material := parry.process_material as ParticleProcessMaterial
+	assert_ne(parry_material, null)
+	assert_eq(parry_material.spread, 180.0)
+
+	var finisher_slash := add_child_autofree(finisher_slash_scene.instantiate()) as GPUParticles2D
+	assert_ne(finisher_slash, null)
+	assert_eq(finisher_slash.name, "FinisherSlashParticles")
+	assert_ne(finisher_slash.texture, null)
+	assert_eq(finisher_slash.lifetime, 0.2)
+	assert_ne(finisher_slash.process_material as ParticleProcessMaterial, null)
 
 
 func test_finisher_burst_scene_preserves_nested_particle_children() -> void:
@@ -249,6 +275,8 @@ func test_finisher_burst_scene_preserves_nested_particle_children() -> void:
 	if scene == null:
 		return
 	var root := add_child_autofree(scene.instantiate()) as Node2D
+	assert_eq(root.name, "FinisherBurstParticles")
+	assert_eq(root.get_child_count(), 8)
 
 	assert_ne(root.get_node_or_null("Burst0"), null)
 	assert_ne(root.get_node_or_null("Burst45"), null)
@@ -258,6 +286,18 @@ func test_finisher_burst_scene_preserves_nested_particle_children() -> void:
 	assert_ne(root.get_node_or_null("Burst225"), null)
 	assert_ne(root.get_node_or_null("Burst270"), null)
 	assert_ne(root.get_node_or_null("Burst315"), null)
+
+	var burst_90 := root.get_node_or_null("Burst90") as GPUParticles2D
+	assert_ne(burst_90, null)
+	if burst_90 == null:
+		return
+	assert_ne(burst_90.texture, null)
+	assert_eq(burst_90.lifetime, 0.3)
+	var burst_90_material := burst_90.process_material as ParticleProcessMaterial
+	assert_ne(burst_90_material, null)
+	if burst_90_material == null:
+		return
+	assert_eq(burst_90_material.direction, Vector3(0, 1, 0))
 
 
 func _make_gpu_particle(name: String, lifetime: float, direction_x: float) -> GPUParticles2D:
