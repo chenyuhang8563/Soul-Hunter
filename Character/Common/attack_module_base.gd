@@ -406,29 +406,28 @@ func _play_clash_effects(target: Node2D) -> void:
 func _spawn_particles_from_template(
 		source_node: Node,
 		particle_name: String,
-		effect_parent: Node,
+		_effect_parent: Node,
 		world_position: Vector2,
 		horizontal_direction: float = 0.0
 ) -> void:
-	if effect_parent == null or source_node == null or not is_instance_valid(source_node):
+	if source_node == null or not is_instance_valid(source_node):
 		return
-	var particle_template := source_node.find_child(particle_name, true, false)
-	if particle_template == null:
-		push_warning("%s node not found on %s" % [particle_name, source_node.name])
+	var vfx_pool := _get_vfx_pool()
+	if vfx_pool == null or not vfx_pool.has_method("play_particle_template"):
 		return
-	var particle_instance := particle_template.duplicate()
-	if not (particle_instance is Node2D):
+	var effect_key := StringName(particle_name.to_snake_case())
+	if effect_key == &"":
 		return
-	var particle_node := particle_instance as Node2D
-	effect_parent.add_child(particle_node)
-	particle_node.global_position = world_position
-	_configure_particle_direction_recursive(particle_node, horizontal_direction)
-	var cleanup_delay := _restart_particles_recursive(particle_node)
-	var tree := source_node.get_tree()
+	vfx_pool.call("play_particle_template", effect_key, source_node, world_position, horizontal_direction)
+
+
+func _get_vfx_pool() -> Node:
+	if owner == null or not is_instance_valid(owner) or not owner.is_inside_tree():
+		return null
+	var tree := owner.get_tree()
 	if tree == null:
-		return
-	var free_timer = tree.create_timer(cleanup_delay, true, false, true)
-	free_timer.timeout.connect(func(): if is_instance_valid(particle_node): particle_node.queue_free())
+		return null
+	return tree.root.get_node_or_null("VfxPool")
 
 func _get_finisher_effect_duration() -> float:
 	return maxf(
