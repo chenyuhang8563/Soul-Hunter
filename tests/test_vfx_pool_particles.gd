@@ -34,6 +34,17 @@ class FakeParticlePool:
 		return float(effect_durations.get(effect_key, 0.0))
 
 
+class FakeDamageTarget:
+	extends Node2D
+
+	var total_damage := 0.0
+	var last_damage_source: Node = null
+
+	func apply_damage(amount: float, source: Node) -> void:
+		total_damage += amount
+		last_damage_source = source
+
+
 func test_play_particle_effect_reuses_pooled_scene_instance_and_resets_direction() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
@@ -225,6 +236,47 @@ func test_attack_module_base_maps_finisher_particle_names_to_pool_keys() -> void
 	scene.queue_free()
 
 
+func test_attack_module_base_routes_hurt_particles_with_hit_direction() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
+	var scene := Node2D.new()
+	scene.name = "TempAttackModuleHurtParticleScene"
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var existing_pool := tree.root.get_node_or_null("VfxPool")
+	if existing_pool != null:
+		tree.root.remove_child(existing_pool)
+
+	var fake_pool := FakeParticlePool.new()
+	fake_pool.name = "VfxPool"
+	tree.root.add_child(fake_pool)
+
+	var owner := CharacterBody2D.new()
+	owner.position = Vector2(4.0, 0.0)
+	scene.add_child(owner)
+
+	var target := FakeDamageTarget.new()
+	target.position = Vector2(18.0, 9.0)
+	scene.add_child(target)
+
+	var module = _new_attack_module()
+	module.owner = owner
+
+	assert_true(module._apply_damage_to_target(target, 5.0), "Damage application should succeed for a valid hurt-particle target")
+	assert_eq(fake_pool.call_count, 1, "Hurt particle playback should route through VfxPool")
+	assert_eq(fake_pool.last_effect_key, &"hurt_particles", "HurtParticles should map to the hurt_particles pool key")
+	assert_eq(fake_pool.last_world_position, target.global_position, "Hurt particle playback should use the target world position")
+	assert_eq(fake_pool.last_horizontal_direction, 1.0, "Hurt particle playback should preserve the computed hit direction")
+
+	tree.root.remove_child(fake_pool)
+	fake_pool.queue_free()
+	if existing_pool != null:
+		tree.root.add_child(existing_pool)
+	tree.current_scene = previous_scene
+	scene.queue_free()
+
+
 func test_attack_module_base_gets_finisher_duration_from_vfx_pool() -> void:
 	var tree := get_tree()
 	var previous_scene: Node = tree.current_scene
@@ -263,9 +315,17 @@ func test_attack_module_base_gets_finisher_duration_from_vfx_pool() -> void:
 
 
 func test_attack_module_base_finisher_duration_falls_back_without_vfx_pool() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
 	var scene := Node2D.new()
 	scene.name = "TempAttackModuleFinisherFallbackScene"
-	add_child_autofree(scene)
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var existing_pool := tree.root.get_node_or_null("VfxPool")
+	if existing_pool != null:
+		tree.root.remove_child(existing_pool)
+	assert_eq(tree.root.get_node_or_null("VfxPool"), null, "Fallback coverage must remove any root VfxPool before exercising the no-pool path")
 
 	var owner := CharacterBody2D.new()
 	scene.add_child(owner)
@@ -274,6 +334,11 @@ func test_attack_module_base_finisher_duration_falls_back_without_vfx_pool() -> 
 	module.owner = owner
 
 	assert_eq(module._get_finisher_effect_duration(), 0.3, "Finisher duration should keep the safe fallback when VfxPool is unavailable")
+
+	if existing_pool != null:
+		tree.root.add_child(existing_pool)
+	tree.current_scene = previous_scene
+	scene.queue_free()
 
 
 func test_particle_template_scenes_exist_and_load() -> void:

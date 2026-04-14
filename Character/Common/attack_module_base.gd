@@ -17,6 +17,10 @@ const PARTICLE_EFFECT_KEYS := {
 	"FinisherBurstParticles": &"finisher_burst",
 	"FinisherSlashParticles": &"finisher_slash",
 }
+const FINISHER_PARTICLE_NAMES := [
+	"FinisherBurstParticles",
+	"FinisherSlashParticles",
+]
 
 static var _active_hitstop_requests: Dictionary = {}
 static var _next_hitstop_request_id := 1
@@ -419,7 +423,7 @@ func _spawn_particles_from_template(
 	var vfx_pool := _get_vfx_pool()
 	if vfx_pool == null or not vfx_pool.has_method("play_particle_effect"):
 		return
-	var effect_key = PARTICLE_EFFECT_KEYS.get(particle_name, &"") as StringName
+	var effect_key := _get_particle_effect_key(particle_name)
 	if effect_key == &"":
 		return
 	vfx_pool.call("play_particle_effect", effect_key, world_position, horizontal_direction)
@@ -433,17 +437,20 @@ func _get_vfx_pool() -> Node:
 		return null
 	return tree.root.get_node_or_null("VfxPool")
 
+func _get_particle_effect_key(particle_name: String) -> StringName:
+	return PARTICLE_EFFECT_KEYS.get(particle_name, &"") as StringName
+
 func _get_finisher_effect_duration() -> float:
 	var vfx_pool := _get_vfx_pool()
 	if vfx_pool == null or not vfx_pool.has_method("get_effect_duration"):
 		return 0.3
-	return maxf(
-		0.3,
-		maxf(
-			float(vfx_pool.call("get_effect_duration", &"finisher_burst")),
-			float(vfx_pool.call("get_effect_duration", &"finisher_slash"))
-		)
-	)
+	var max_duration := 0.3
+	for particle_name in FINISHER_PARTICLE_NAMES:
+		var effect_key := _get_particle_effect_key(particle_name)
+		if effect_key == &"":
+			continue
+		max_duration = maxf(max_duration, float(vfx_pool.call("get_effect_duration", effect_key)))
+	return max_duration
 
 func _restart_particles_recursive(node: Node) -> float:
 	var cleanup_delay := 1.0
