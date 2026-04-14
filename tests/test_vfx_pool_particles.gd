@@ -410,6 +410,19 @@ func test_finisher_burst_scene_preserves_nested_particle_children() -> void:
 	assert_eq(burst_90_material.direction, Vector3(0, 1, 0))
 
 
+func test_character_template_no_longer_contains_world_particle_nodes() -> void:
+	var scene := load("res://Character/Common/character_template.tscn") as PackedScene
+	assert_ne(scene, null)
+	if scene == null:
+		return
+	var instance: Node = add_child_autofree(scene.instantiate())
+
+	assert_eq(instance.get_node_or_null("HurtParticles"), null)
+	assert_eq(instance.get_node_or_null("ParryParticles"), null)
+	assert_eq(instance.get_node_or_null("FinisherBurstParticles"), null)
+	assert_eq(instance.get_node_or_null("FinisherSlashParticles"), null)
+
+
 func _make_gpu_particle(name: String, lifetime: float, direction_x: float) -> GPUParticles2D:
 	var particle := GPUParticles2D.new()
 	particle.name = name
