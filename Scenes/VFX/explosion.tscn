@@ -1,0 +1,77 @@
+[gd_scene format=3 uid="uid://burnavwfq1lci"]
+
+[ext_resource type="Texture2D" uid="uid://c1ny3dgfejkv1" path="res://Assets/Sprites/VFX/explosion.png" id="1_elejt"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dh65u"]
+atlas = ExtResource("1_elejt")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8x60m"]
+atlas = ExtResource("1_elejt")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8vjme"]
+atlas = ExtResource("1_elejt")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hlxwj"]
+atlas = ExtResource("1_elejt")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mom7d"]
+atlas = ExtResource("1_elejt")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6ymm5"]
+atlas = ExtResource("1_elejt")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3j57g"]
+atlas = ExtResource("1_elejt")
+region = Rect2(288, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pnvuu"]
+atlas = ExtResource("1_elejt")
+region = Rect2(336, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f0e5x"]
+atlas = ExtResource("1_elejt")
+region = Rect2(384, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_3vrhq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dh65u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8x60m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8vjme")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hlxwj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mom7d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6ymm5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3j57g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pnvuu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f0e5x")
+}],
+"loop": false,
+"name": &"default",
+"speed": 12.0
+}]
+
+[node name="Explosion" type="AnimatedSprite2D" unique_id=1824777791]
+sprite_frames = SubResource("SpriteFrames_3vrhq")
