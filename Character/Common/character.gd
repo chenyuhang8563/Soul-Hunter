@@ -139,9 +139,6 @@ func _ready() -> void:
 		interaction_state.on_ready()
 	_on_character_ready()
 
-	# 初始化对象池
-	_setup_afterimage_pool()
-
 	# 应用自定义时间间隔并连接信号
 	if afterimage_timer != null:
 		afterimage_timer.wait_time = afterimage_interval
@@ -986,13 +983,6 @@ func set_force_player_body_collision(enabled: bool) -> void:
 func _on_corpse_cleanup_timeout() -> void:
 	if lifecycle_state != null:
 		lifecycle_state.on_corpse_cleanup_timeout()
-
-func _setup_afterimage_pool() -> void:
-	pass
-
-# 当拖影完成生命周期时，将其回收到池中
-func _on_afterimage_repooled(_afterimage_instance: Afterimage) -> void:
-	pass
 
 func start_afterimage_effect() -> void:
 	if not afterimage_enabled or _is_creating_afterimages or sprite_2d == null:
