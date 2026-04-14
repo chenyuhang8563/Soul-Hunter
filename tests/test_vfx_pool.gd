@@ -63,6 +63,36 @@ func test_ensure_scene_root_reuses_existing_world_vfx_root_from_scene() -> void:
 	scene.queue_free()
 
 
+func test_play_cut_reuses_a_pooled_cut_instance() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
+	var scene := Node2D.new()
+	scene.name = "TempVfxCutPoolScene"
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var source := Node2D.new()
+	scene.add_child(source)
+	var sprite := Sprite2D.new()
+	var image := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	sprite.texture = ImageTexture.create_from_image(image)
+	source.add_child(sprite)
+
+	var pool: Node = add_child_autofree(_new_vfx_pool())
+	pool.play_cut(source, {"duration": 0.1, "base_scale": Vector2.ONE}, 42.0)
+
+	assert_eq(pool._active[&"cut"].size(), 1, "Cut effect should be tracked as active")
+
+	var effect: Node = pool._active[&"cut"][0]
+	pool._release_effect(&"cut", effect)
+
+	assert_eq(pool._available[&"cut"].size(), 8, "Released cut should return to the prewarmed pool")
+	assert_eq(pool._active[&"cut"].size(), 0, "Released cut should no longer be active")
+
+	tree.current_scene = previous_scene
+	scene.queue_free()
+
+
 func _new_vfx_pool() -> Node:
 	var pool_script := load(VFX_POOL_SCRIPT_PATH)
 	assert_ne(pool_script, null, "VfxPool script should exist at %s" % VFX_POOL_SCRIPT_PATH)
