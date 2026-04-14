@@ -9,6 +9,7 @@ tests/*
 !tests/test_vfx_pool.gd
 !tests/test_afterimage_vfx_pool.gd
 !tests/test_vfx_pool_particles.gd
+!tests/test_pause_ui.gd
 addons
 .gutconfig.json
 docs/

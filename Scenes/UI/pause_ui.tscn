@@ -11,6 +11,7 @@ bg_color = Color(0, 0, 0, 0.49019608)
 Panel/styles/panel = SubResource("StyleBoxFlat_qpfo2")
 
 [node name="PauseUI" type="CanvasLayer" unique_id=96758534 node_paths=PackedStringArray("pause_panel")]
+layer = 30
 process_mode = 3
 script = ExtResource("1_baubf")
 pause_panel = NodePath("Control/PausePanel")
