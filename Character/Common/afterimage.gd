@@ -2,7 +2,7 @@ extends Sprite2D
 class_name Afterimage
 
 # 当拖影完成生命周期时，发出信号，通知character脚本回收自己
-signal repool_me(afterimage_instance)
+var _release_cb: Callable = Callable()
 
 # 接受所有必要的参数来初始化自己
 func initialize(
@@ -16,8 +16,10 @@ func initialize(
 	p_centered: bool,
 	p_color: Color,
 	p_duration: float,
-	p_final_scale: float
+	p_final_scale: float,
+	release_cb: Callable = Callable()
 ) -> void:
+	_release_cb = release_cb
 	# 1.立即启用所有视觉状态
 	texture = p_texture
 	hframes = max(1, p_hframes)
@@ -41,6 +43,15 @@ func initialize(
 	# 4.动画完成后，隐藏自己并发出回收信号
 	tween.finished.connect(_on_fade_out_finished)
 
-func _on_fade_out_finished() -> void:
+func reset_state() -> void:
 	visible = false
-	repool_me.emit(self)
+	texture = null
+	modulate = Color(1, 1, 1, 1)
+	scale = Vector2.ONE
+	_release_cb = Callable()
+
+func _on_fade_out_finished() -> void:
+	var release_cb := _release_cb
+	reset_state()
+	if release_cb.is_valid():
+		release_cb.call()

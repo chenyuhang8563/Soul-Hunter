@@ -18,8 +18,6 @@ const CharacterControlStateScript := preload("res://Character/Common/character_c
 const BuffContextScript := preload("res://Character/Common/Buffs/buff_context.gd")
 const BuffControllerScript := preload("res://Character/Common/Buffs/buff_controller.gd")
 const RunModifierControllerScript := preload("res://Character/Common/run_modifier_controller.gd")
-const AfterimageScene = preload("res://Scenes/VFX/afterimage.tscn")
-const AFTERIMAGE_POOL_SIZE = 15
 const BUFF_ICON_MARGIN := Vector2(6.0, 6.0)
 const BUFF_ICON_SPACING := 2.0
 
@@ -38,7 +36,6 @@ const WORLD_COLLISION_MASK := 1
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer")
 @onready var damage_number_spawner: Node2D = get_node_or_null("DamageNumberSpawner")
 @onready var sprite_2d: Sprite2D = get_node_or_null("Sprite2D")
-@onready var afterimage_container: Node2D = _resolve_afterimage_container()
 @onready var afterimage_timer: Timer = get_node_or_null("AfterimageTimer")
 
 @export var stats: CharacterStats
@@ -114,7 +111,6 @@ var _force_player_body_collision := false
 var _pending_player_runtime_state: Dictionary = {}
 
 var _is_creating_afterimages: bool = false
-var _afterimage_pool = []
 var dash_cooldown_left := 0.0
 var invincibility_time_left := 0.0
 var _dash_start_position := Vector2.ZERO
@@ -991,39 +987,12 @@ func _on_corpse_cleanup_timeout() -> void:
 	if lifecycle_state != null:
 		lifecycle_state.on_corpse_cleanup_timeout()
 
-func _resolve_afterimage_container() -> Node2D:
-	var tree := get_tree()
-	if tree == null:
-		return self
-	var current_scene := tree.current_scene
-	if current_scene != null:
-		var existing := current_scene.get_node_or_null("AfterimageContainer") as Node2D
-		if existing != null:
-			return existing
-		var created := Node2D.new()
-		created.name = "AfterimageContainer"
-		current_scene.call_deferred("add_child", created)
-		return created
-	return self
-
 func _setup_afterimage_pool() -> void:
-	if not afterimage_container:
-		push_warning("Afterimage container is not assigned. Afterimage effect will be disabled.")
-		return
-	for i in range(AFTERIMAGE_POOL_SIZE):
-		var afterimage = AfterimageScene.instantiate() as Afterimage
-		afterimage.visible = false
-		afterimage.repool_me.connect(_on_afterimage_repooled)
-		afterimage_container.add_child(afterimage)
-		_afterimage_pool.append(afterimage)
+	pass
 
 # 当拖影完成生命周期时，将其回收到池中
-func _on_afterimage_repooled(afterimage_instance: Afterimage) -> void:
-	if afterimage_instance == null or not is_instance_valid(afterimage_instance):
-		return
-	if _afterimage_pool.has(afterimage_instance):
-		return
-	_afterimage_pool.append(afterimage_instance)
+func _on_afterimage_repooled(_afterimage_instance: Afterimage) -> void:
+	pass
 
 func start_afterimage_effect() -> void:
 	if not afterimage_enabled or _is_creating_afterimages or sprite_2d == null:
@@ -1041,27 +1010,25 @@ func stop_afterimage_effect() -> void:
 func _create_afterimage() -> void:
 	if not _is_creating_afterimages or sprite_2d == null:
 		return
-	
-	# 1.从池中获取一个可用的拖影实例
-	if _afterimage_pool.is_empty():
-		return # 池中没有可用的实例，跳过这次创建
-
-	var afterimage: Afterimage = _afterimage_pool.pop_front()
-
-	# 2.收集当前状态并调用拖影的初始化方法
-	afterimage.initialize(
-		sprite_2d.texture,
-		sprite_2d.hframes,
-		sprite_2d.vframes,
-		sprite_2d.frame,
-		self.global_transform,
-		sprite_2d.flip_h,
-		sprite_2d.offset,
-		sprite_2d.centered,
-		afterimage_color,
-		afterimage_duration,
-		afterimage_final_scale
-	)
+	var tree := get_tree()
+	if tree == null:
+		return
+	var pool := tree.root.get_node_or_null("VfxPool")
+	if pool == null or not pool.has_method("play_afterimage"):
+		return
+	pool.call("play_afterimage", {
+		"texture": sprite_2d.texture,
+		"hframes": sprite_2d.hframes,
+		"vframes": sprite_2d.vframes,
+		"frame": sprite_2d.frame,
+		"transform": self.global_transform,
+		"flip_h": sprite_2d.flip_h,
+		"offset": sprite_2d.offset,
+		"centered": sprite_2d.centered,
+		"color": afterimage_color,
+		"duration": afterimage_duration,
+		"final_scale": afterimage_final_scale,
+	})
 
 	# 如果效果仍在持续，再次启动计时器
 	if _is_creating_afterimages and afterimage_timer != null:

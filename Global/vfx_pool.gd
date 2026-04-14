@@ -71,6 +71,30 @@ func play_cut(source: Node2D, spec: Dictionary, _attack_range: float) -> void:
 	effect.call("play_once", _get_model_edge_anchor(source), _is_facing_left(source), spec.duplicate(true), release_cb)
 
 
+func play_afterimage(request: Dictionary) -> void:
+	var effect := _acquire_scene_effect(&"afterimage")
+	if effect == null:
+		return
+	var active_for_key: Array = _active[&"afterimage"]
+	active_for_key.append(effect)
+	var release_cb := Callable(self, "_release_effect").bind(&"afterimage", effect)
+	effect.call(
+		"initialize",
+		request.get("texture"),
+		int(request.get("hframes", 1)),
+		int(request.get("vframes", 1)),
+		int(request.get("frame", 0)),
+		request.get("transform", Transform2D.IDENTITY),
+		bool(request.get("flip_h", false)),
+		request.get("offset", Vector2.ZERO),
+		bool(request.get("centered", true)),
+		request.get("color", Color(1, 1, 1, 0.7)),
+		float(request.get("duration", 0.4)),
+		float(request.get("final_scale", 0.8)),
+		release_cb
+	)
+
+
 func _acquire_scene_effect(effect_key: StringName) -> Node:
 	var root := _ensure_scene_root()
 	if root == null:
