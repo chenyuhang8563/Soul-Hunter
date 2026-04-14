@@ -176,6 +176,30 @@ func test_play_cut_sets_layering_and_wires_play_once_and_release() -> void:
 	scene.queue_free()
 
 
+func test_play_explosion_starts_animation_and_marks_release_on_finish() -> void:
+	var tree := get_tree()
+	var previous_scene: Node = tree.current_scene
+	var scene := Node2D.new()
+	scene.name = "TempVfxExplosionScene"
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+
+	var pool: Node = add_child_autofree(_new_vfx_pool())
+	pool.play_explosion(Vector2(12, 18))
+
+	assert_eq(pool._active[&"explosion"].size(), 1, "Explosion should be tracked as active after play")
+	var explosion := pool._active[&"explosion"][0] as AnimatedSprite2D
+	assert_ne(explosion, null, "Explosion effect should be an AnimatedSprite2D")
+	assert_eq(explosion.animation, &"default", "Explosion should use default animation")
+	assert_true(explosion.is_playing(), "Explosion animation should start playing")
+
+	explosion.emit_signal("animation_finished")
+	assert_eq(pool._active[&"explosion"].size(), 0, "Explosion should release back to pool when animation finishes")
+
+	tree.current_scene = previous_scene
+	scene.queue_free()
+
+
 func test_melee_slash_manager_forwards_to_vfx_pool_cut() -> void:
 	var tree := get_tree()
 	var fake_pool := FakeVfxPool.new()

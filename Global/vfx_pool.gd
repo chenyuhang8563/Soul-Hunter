@@ -95,6 +95,30 @@ func play_afterimage(request: Dictionary) -> void:
 	)
 
 
+func play_explosion(world_position: Vector2) -> void:
+	var effect_node := _acquire_scene_effect(&"explosion")
+	if effect_node == null:
+		return
+	var effect := effect_node as AnimatedSprite2D
+	if effect == null:
+		_release_effect(&"explosion", effect_node)
+		return
+	effect.global_position = world_position
+	effect.visible = true
+	effect.animation = &"default"
+	var active_for_key: Array = _active[&"explosion"]
+	active_for_key.append(effect)
+	effect.animation_finished.connect(
+		Callable(self, "_on_explosion_animation_finished").bind(effect),
+		CONNECT_ONE_SHOT
+	)
+	effect.play(&"default")
+
+
+func _on_explosion_animation_finished(effect: AnimatedSprite2D) -> void:
+	_release_effect(&"explosion", effect)
+
+
 func _acquire_scene_effect(effect_key: StringName) -> Node:
 	var root := _ensure_scene_root()
 	if root == null:
@@ -159,6 +183,10 @@ func _release_effect(effect_key: StringName, effect: Node) -> void:
 		_available[effect_key] = []
 	var active_for_key: Array = _active[effect_key]
 	active_for_key.erase(effect)
+	if effect_key == &"explosion" and effect is AnimatedSprite2D:
+		var animated := effect as AnimatedSprite2D
+		animated.stop()
+		animated.frame = 0
 	if effect.has_method("reset_state"):
 		effect.call("reset_state")
 	else:
