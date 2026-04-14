@@ -5,7 +5,8 @@
 
 # Submodules (have their own git repos)
 godot-mcp/
-tests/
+tests/*
+!tests/test_vfx_pool.gd
 addons
 .gutconfig.json
 docs/
