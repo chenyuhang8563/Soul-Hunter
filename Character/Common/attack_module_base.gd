@@ -29,12 +29,14 @@ static var _hitstop_restore_time_scale := 1.0
 var owner: CharacterBody2D
 var sprite: Sprite2D
 var animation_tree: AnimationTree
+var animation_player: AnimationPlayer = null
 var stats: CharacterStats
 var audio_service: Node = null
 
 var attack_cooldown := 0.30
 var base_attack_cooldown := 0.30
 var attack_cooldown_left := 0.0
+var attack_speed_multiplier := 1.0
 var attack_time_left := 0.0
 var attack_duration := 0.0
 var current_attack := ""
@@ -50,8 +52,8 @@ var param_is_any_attack := PARAM_IS_ANY_ATTACK
 var param_attack_finished := PARAM_ATTACK_FINISHED
 var param_is_attack_combined := ""
 
-var parry_window_start := 0.30
-var parry_window_end := 0.40
+var parry_window_start := 0.12
+var parry_window_end := 0.20
 var _forced_critical_hit_result := -1
 
 func setup(
@@ -68,11 +70,13 @@ func setup(
 	owner = host
 	sprite = sprite_node
 	animation_tree = tree
+	animation_player = _resolve_animation_player(_player)
 	stats = character_stats
 	audio_service = audio_service_node
 	base_attack_cooldown = maxf(0.0, cooldown)
 	attack_cooldown = base_attack_cooldown
 	attack_cooldown_left = 0.0
+	attack_speed_multiplier = _get_initial_attack_speed_multiplier(character_stats)
 	attack_time_left = 0.0
 	attack_duration = 0.0
 	current_attack = ""
@@ -81,6 +85,7 @@ func setup(
 	_forced_critical_hit_result = -1
 	_set_attack_conditions(false, false, false)
 	_set_tree_bool(param_attack_finished, true)
+	_sync_attack_animation_speed()
 
 func update(delta: float, target: Node2D = null, in_scope: bool = false) -> void:
 	current_target = target
@@ -88,10 +93,11 @@ func update(delta: float, target: Node2D = null, in_scope: bool = false) -> void
 	if attack_cooldown_left > 0.0:
 		attack_cooldown_left = maxf(0.0, attack_cooldown_left - delta)
 	if attack_time_left > 0.0:
-		attack_time_left = maxf(0.0, attack_time_left - delta)
+		var scaled_delta := delta * attack_speed_multiplier
+		attack_time_left = maxf(0.0, attack_time_left - scaled_delta)
 		var elapsed := attack_duration - attack_time_left
 		_process_damage_events(elapsed)
-		_on_attack_updated(delta, elapsed)
+		_on_attack_updated(scaled_delta, elapsed)
 		if attack_time_left == 0.0:
 			_finish_attack()
 	else:
@@ -123,11 +129,16 @@ func force_stop() -> void:
 	damage_events.clear()
 	_set_attack_conditions(false, false, false)
 	_set_tree_bool(param_attack_finished, true)
+	_sync_attack_animation_speed()
 	_on_force_stop()
 
 func set_attack_cooldown(cooldown: float) -> void:
 	attack_cooldown = maxf(0.0, cooldown)
 	attack_cooldown_left = minf(attack_cooldown_left, attack_cooldown)
+
+func set_attack_speed_multiplier(multiplier: float) -> void:
+	attack_speed_multiplier = maxf(0.05, multiplier)
+	_sync_attack_animation_speed()
 
 func set_forced_critical_hit(is_critical: bool) -> void:
 	_forced_critical_hit_result = 1 if is_critical else 0
@@ -152,6 +163,7 @@ func _begin_attack(
 	damage_events.clear()
 	_set_attack_conditions(light_attack, hard_attack, bow_attack)
 	_set_tree_bool(param_attack_finished, false)
+	_sync_attack_animation_speed()
 	
 	if audio_service != null and audio_service.has_method("play_sfx_2d") and not bow_attack:
 		audio_service.play_sfx_2d("sword_swing", owner.global_position)
@@ -289,6 +301,31 @@ func _set_tree_bool(path: String, value: bool) -> void:
 	if animation_tree == null or path == "":
 		return
 	animation_tree.set(path, value)
+
+func _get_initial_attack_speed_multiplier(character_stats: CharacterStats) -> float:
+	if character_stats == null:
+		return 1.0
+	return maxf(0.05, float(character_stats.attack_speed_multiplier))
+
+func _resolve_animation_player(explicit_player: AnimationPlayer = null) -> AnimationPlayer:
+	if explicit_player != null and is_instance_valid(explicit_player):
+		return explicit_player
+	if owner == null or not is_instance_valid(owner):
+		return null
+	var owner_player = owner.get("animation_player")
+	if owner_player is AnimationPlayer and is_instance_valid(owner_player):
+		return owner_player as AnimationPlayer
+	var animation_player_node := owner.get_node_or_null("AnimationPlayer")
+	if animation_player_node is AnimationPlayer:
+		return animation_player_node as AnimationPlayer
+	return null
+
+func _sync_attack_animation_speed() -> void:
+	if animation_player == null or not is_instance_valid(animation_player):
+		animation_player = _resolve_animation_player()
+	if animation_player == null or not is_instance_valid(animation_player):
+		return
+	animation_player.speed_scale = attack_speed_multiplier if is_attacking() else 1.0
 
 func _process_damage_events(elapsed: float) -> void:
 	for i in range(damage_events.size()):
@@ -748,4 +785,5 @@ func _finish_attack() -> void:
 	_set_attack_conditions(false, false, false)
 	_set_tree_bool(param_attack_finished, true)
 	attack_cooldown_left = attack_cooldown
+	_sync_attack_animation_speed()
 	_on_attack_finished(ended_attack)

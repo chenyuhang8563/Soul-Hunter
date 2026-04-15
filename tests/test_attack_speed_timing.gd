@@ -25,6 +25,9 @@ func _apply_attack_speed_multiplier(character: Node, multiplier: float) -> bool:
 	if character == null:
 		return false
 	var attack_module = character.get("attack_module")
+	if attack_module != null and attack_module.has_method("set_attack_speed_multiplier"):
+		attack_module.call("set_attack_speed_multiplier", multiplier)
+		return true
 	if _has_property(attack_module, "attack_speed_multiplier"):
 		attack_module.set("attack_speed_multiplier", multiplier)
 		return true
@@ -77,6 +80,86 @@ func test_attack_speed_multiplier_scales_real_attack_runtime() -> void:
 	assert_false(
 		soldier.attack_module.is_attacking(),
 		"Soldier light attack should finish just after the 0.24s player-controlled boundary at 2.0x attack speed."
+	)
+
+func test_attack_cooldown_still_gates_immediate_reattack() -> void:
+	var soldier = await _spawn_character(SoldierScene, true)
+
+	soldier.attack_module._start_light_attack()
+	soldier.attack_module.update(0.5, null, false)
+
+	assert_false(soldier.attack_module.is_attacking(), "Soldier light attack should have finished before cooldown gating is checked.")
+	assert_gt(
+		soldier.attack_module.attack_cooldown_left,
+		0.0,
+		"Finishing an attack should still leave cooldown time for current setup callers."
+	)
+	assert_false(
+		soldier.attack_module.can_start_attack(),
+		"Base attack modules should still respect attack_cooldown_left until later migration tasks remove cooldown compatibility."
+	)
+
+	soldier.attack_module._start_light_attack()
+
+	assert_false(
+		soldier.attack_module.is_attacking(),
+		"Immediate reattack should stay blocked while cooldown compatibility is still required."
+	)
+
+func test_attack_speed_multiplier_syncs_attack_animation_speed_from_owner_animation_player() -> void:
+	var soldier = await _spawn_character(SoldierScene, true)
+
+	assert_not_null(
+		soldier.animation_player,
+		"Soldier scene should expose an animation_player for the base-module fallback path."
+	)
+	if soldier.animation_player == null:
+		return
+
+	assert_true(
+		soldier.attack_module.has_method("set_attack_speed_multiplier"),
+		"Attack modules should expose set_attack_speed_multiplier() for live attack-speed updates."
+	)
+	if not soldier.attack_module.has_method("set_attack_speed_multiplier"):
+		return
+
+	soldier.attack_module.set_attack_cooldown(0.0)
+	soldier.attack_module.call("set_attack_speed_multiplier", 1.5)
+	soldier.attack_module._start_light_attack()
+
+	assert_eq(
+		soldier.animation_player.speed_scale,
+		1.5,
+		"Starting an attack should sync playback speed even when the module resolved its AnimationPlayer from the owner."
+	)
+
+	soldier.attack_module.call("set_attack_speed_multiplier", 2.0)
+
+	assert_eq(
+		soldier.animation_player.speed_scale,
+		2.0,
+		"Changing the attack-speed multiplier mid-attack should update playback speed immediately."
+	)
+
+	soldier.attack_module.update(0.25, null, false)
+
+	assert_false(
+		soldier.attack_module.is_attacking(),
+		"Soldier light attack should finish once its runtime is scaled by the attack-speed multiplier."
+	)
+	assert_eq(
+		soldier.animation_player.speed_scale,
+		1.0,
+		"Finishing an attack should restore normal animation playback speed."
+	)
+
+	soldier.attack_module._start_light_attack()
+	soldier.attack_module.force_stop()
+
+	assert_eq(
+		soldier.animation_player.speed_scale,
+		1.0,
+		"Force-stopping an attack should also restore normal animation playback speed."
 	)
 
 func test_character_attack_speed_stat_defaults_to_one() -> void:
