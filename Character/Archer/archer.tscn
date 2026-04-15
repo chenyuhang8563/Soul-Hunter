@@ -204,7 +204,6 @@ _data = {
 [node name="Archer" unique_id=1710627706 instance=ExtResource("1_p8bq2")]
 script = ExtResource("3_v5vcy")
 ai_enabled = true
-attack_cooldown = 0.36
 stats = ExtResource("4_stats")
 
 [node name="Sprite2D" parent="." index="0" unique_id=1966064385]
