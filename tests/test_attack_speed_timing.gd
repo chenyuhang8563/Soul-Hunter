@@ -265,10 +265,71 @@ func test_archer_light_projectile_release_uses_shared_windup() -> void:
 		"Archer light release should follow the shared 0.2s windup contract."
 	)
 
-func test_swordsman_combo_wait_freezes_animation_between_segments() -> void:
+func test_swordsman_first_hits_use_shared_windup() -> void:
 	var swordsman = await _spawn_character(SwordsmanScene, true)
 
+	swordsman.attack_module._start_light_attack()
+
+	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman light attack should queue damage.")
+	if swordsman.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(swordsman.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Swordsman light attack should start from the shared 0.2s windup."
+	)
+
+	swordsman.attack_module.force_stop()
+	swordsman.attack_module.set_attack_cooldown(0.0)
 	swordsman.attack_module._start_hard_segment(1)
+
+	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman heavy combo opener should queue damage.")
+	if swordsman.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(swordsman.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Swordsman heavy combo opener should start from the shared 0.2s windup."
+	)
+
+	swordsman.attack_module.force_stop()
+	swordsman.attack_module.set_attack_cooldown(0.0)
+	swordsman.attack_module._start_ultimate_attack()
+
+	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman ultimate attack should queue damage.")
+	if swordsman.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(swordsman.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Swordsman ultimate opener should start from the shared 0.2s windup."
+	)
+
+func test_swordsman_combo_wait_freezes_animation_between_segments() -> void:
+	var swordsman = await _spawn_character(SwordsmanScene, true)
+	var speed_applied := _apply_attack_speed_multiplier(swordsman, 2.0)
+
+	assert_true(
+		speed_applied,
+		"Swordsman timing regression needs a configurable attack_speed_multiplier state."
+	)
+	if not speed_applied:
+		return
+
+	swordsman.attack_module._start_hard_segment(1)
+
+	assert_eq(
+		swordsman.animation_player.speed_scale,
+		2.0,
+		"Active swordsman heavy playback should scale with attack_speed_multiplier."
+	)
+
 	swordsman.attack_module.update(0.5, null, false)
 
 	assert_true(swordsman.attack_module.hard_waiting_next, "First heavy segment should enter combo wait after finishing.")
