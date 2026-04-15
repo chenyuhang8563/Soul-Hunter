@@ -72,7 +72,6 @@ func test_ai_soldier_light_attack_first_hit_uses_shared_windup() -> void:
 	)
 
 	soldier.attack_module.force_stop()
-	soldier.attack_module.set_attack_cooldown(0.0)
 	soldier.attack_module._start_hard_attack()
 
 	assert_false(soldier.attack_module.damage_events.is_empty(), "AI soldier hard attack should queue damage.")
@@ -103,7 +102,6 @@ func test_soldier_hard_and_ultimate_first_hit_use_shared_windup() -> void:
 	)
 
 	soldier.attack_module.force_stop()
-	soldier.attack_module.set_attack_cooldown(0.0)
 	soldier.attack_module._start_ultimate_attack()
 
 	assert_false(soldier.attack_module.damage_events.is_empty(), "Soldier ultimate attack should queue damage.")
@@ -144,28 +142,23 @@ func test_attack_speed_multiplier_scales_real_attack_runtime() -> void:
 		"Soldier light attack should finish just after the 0.24s player-controlled boundary at 2.0x attack speed."
 	)
 
-func test_attack_cooldown_still_gates_immediate_reattack() -> void:
+func test_attack_flow_no_longer_requires_cooldown_gate_for_reattack() -> void:
 	var soldier = await _spawn_character(SoldierScene, true)
 
 	soldier.attack_module._start_light_attack()
 	soldier.attack_module.update(0.5, null, false)
 
-	assert_false(soldier.attack_module.is_attacking(), "Soldier light attack should have finished before cooldown gating is checked.")
-	assert_gt(
-		soldier.attack_module.attack_cooldown_left,
-		0.0,
-		"Finishing an attack should still leave cooldown time for current setup callers."
-	)
-	assert_false(
+	assert_false(soldier.attack_module.is_attacking(), "Soldier light attack should have finished before reattack checks.")
+	assert_true(
 		soldier.attack_module.can_start_attack(),
-		"Base attack modules should still respect attack_cooldown_left until later migration tasks remove cooldown compatibility."
+		"After Task 6 migration, finishing an attack should immediately allow a new attack without cooldown gating."
 	)
 
 	soldier.attack_module._start_light_attack()
 
-	assert_false(
+	assert_true(
 		soldier.attack_module.is_attacking(),
-		"Immediate reattack should stay blocked while cooldown compatibility is still required."
+		"Immediate reattack should begin once attack animation runtime has finished."
 	)
 
 func test_attack_speed_multiplier_syncs_attack_animation_speed_from_owner_animation_player() -> void:
@@ -185,7 +178,6 @@ func test_attack_speed_multiplier_syncs_attack_animation_speed_from_owner_animat
 	if not soldier.attack_module.has_method("set_attack_speed_multiplier"):
 		return
 
-	soldier.attack_module.set_attack_cooldown(0.0)
 	soldier.attack_module.call("set_attack_speed_multiplier", 1.5)
 	soldier.attack_module._start_light_attack()
 
@@ -231,6 +223,18 @@ func test_character_attack_speed_stat_defaults_to_one() -> void:
 		soldier.get_attack_speed_multiplier(),
 		1.0,
 		"Character should resolve attack_speed_multiplier to 1.0 when no override is configured."
+	)
+
+func test_possession_combo_haste_buff_raises_attack_speed_multiplier() -> void:
+	var soldier = await _spawn_character(SoldierScene)
+	var buff = load("res://Character/Common/Buffs/possession_combo_haste_buff.gd").new()
+
+	soldier.add_buff(buff)
+
+	assert_gt(
+		soldier.get_attack_speed_multiplier(),
+		1.0,
+		"Possession combo haste should now increase attack speed instead of reducing cooldown."
 	)
 
 func test_archer_projectile_release_uses_shared_windup() -> void:
@@ -283,7 +287,6 @@ func test_swordsman_first_hits_use_shared_windup() -> void:
 	)
 
 	swordsman.attack_module.force_stop()
-	swordsman.attack_module.set_attack_cooldown(0.0)
 	swordsman.attack_module._start_hard_segment(1)
 
 	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman heavy combo opener should queue damage.")
@@ -298,7 +301,6 @@ func test_swordsman_first_hits_use_shared_windup() -> void:
 	)
 
 	swordsman.attack_module.force_stop()
-	swordsman.attack_module.set_attack_cooldown(0.0)
 	swordsman.attack_module._start_hard_segment(2)
 
 	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman heavy combo segment 2 should queue damage.")
@@ -313,7 +315,6 @@ func test_swordsman_first_hits_use_shared_windup() -> void:
 	)
 
 	swordsman.attack_module.force_stop()
-	swordsman.attack_module.set_attack_cooldown(0.0)
 	swordsman.attack_module._start_hard_segment(3)
 
 	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman heavy combo segment 3 should queue damage.")
@@ -328,7 +329,6 @@ func test_swordsman_first_hits_use_shared_windup() -> void:
 	)
 
 	swordsman.attack_module.force_stop()
-	swordsman.attack_module.set_attack_cooldown(0.0)
 	swordsman.attack_module._start_ultimate_attack()
 
 	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman ultimate attack should queue damage.")

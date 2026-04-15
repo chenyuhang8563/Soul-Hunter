@@ -149,7 +149,7 @@ func record_possession(now_seconds: float = -1.0) -> void:
 		return
 	var buff = PossessionComboHasteBuffScript.new()
 	buff.move_speed_bonus = _possession_combo_buff_bonus / 100.0
-	buff.attack_cooldown_bonus = -_possession_combo_buff_bonus / 100.0
+	buff.attack_speed_bonus = _possession_combo_buff_bonus / 100.0
 	buff.setup_duration(_possession_combo_buff_duration)
 	_host.call("add_buff", buff)
 

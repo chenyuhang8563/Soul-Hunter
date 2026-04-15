@@ -26,7 +26,7 @@ func _on_character_ready() -> void:
 	_set_locomotion_conditions(0.0)
 	visual_scope.monitoring = true
 	attack_scope.monitoring = true
-	attack_module.setup(self, sprite, animation_tree, null, null, null, stats, get_attack_cooldown(attack_cooldown), _resolve_audio_manager())
+	attack_module.setup(self, sprite, animation_tree, null, null, null, stats, get_attack_speed_multiplier(), _resolve_audio_manager())
 	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, get_player_move_speed() * AI_WALK_SPEED_RATIO, RETURN_TOLERANCE)
 	ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, 1.0, true)

@@ -6,7 +6,7 @@
 script = ExtResource("1_stats")
 max_health = 180.0
 move_speed = 90.0
-attack_cooldown = 0.62
+attack_speed_multiplier = 1.0
 light_attack_damage = 35.0
 hard_attack_damage = 50.0
 ultimate_attack = 10.0

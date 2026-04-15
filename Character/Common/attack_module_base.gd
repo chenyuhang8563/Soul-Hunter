@@ -63,7 +63,7 @@ func setup(
 		_hitbox: Area2D = null,
 		_hitbox_shape: CollisionShape2D = null,
 		character_stats: CharacterStats = null,
-		cooldown: float = 0.30,
+		setup_attack_speed_multiplier: float = 1.0,
 		audio_service_node: Node = null
 ) -> void:
 	owner = host
@@ -72,10 +72,13 @@ func setup(
 	animation_player = _resolve_animation_player(_player)
 	stats = character_stats
 	audio_service = audio_service_node
-	base_attack_cooldown = maxf(0.0, cooldown)
-	attack_cooldown = base_attack_cooldown
+	base_attack_cooldown = 0.0
+	attack_cooldown = 0.0
 	attack_cooldown_left = 0.0
-	attack_speed_multiplier = _get_initial_attack_speed_multiplier(character_stats)
+	var resolved_attack_speed := setup_attack_speed_multiplier
+	if resolved_attack_speed <= 0.0:
+		resolved_attack_speed = _get_initial_attack_speed_multiplier(character_stats)
+	attack_speed_multiplier = maxf(0.05, resolved_attack_speed)
 	attack_time_left = 0.0
 	attack_duration = 0.0
 	current_attack = ""
@@ -131,9 +134,9 @@ func force_stop() -> void:
 	_sync_attack_animation_speed()
 	_on_force_stop()
 
-func set_attack_cooldown(cooldown: float) -> void:
-	attack_cooldown = maxf(0.0, cooldown)
-	attack_cooldown_left = minf(attack_cooldown_left, attack_cooldown)
+func set_attack_cooldown(_cooldown: float) -> void:
+	attack_cooldown = 0.0
+	attack_cooldown_left = 0.0
 
 func set_attack_speed_multiplier(multiplier: float) -> void:
 	attack_speed_multiplier = maxf(0.05, multiplier)
