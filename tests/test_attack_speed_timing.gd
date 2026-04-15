@@ -267,6 +267,7 @@ func test_archer_light_projectile_release_uses_shared_windup() -> void:
 
 func test_swordsman_first_hits_use_shared_windup() -> void:
 	var swordsman = await _spawn_character(SwordsmanScene, true)
+	var expected_ultimate_hit_times := [0.20, 0.36, 0.52, 0.68, 0.84]
 
 	swordsman.attack_module._start_light_attack()
 
@@ -298,9 +299,9 @@ func test_swordsman_first_hits_use_shared_windup() -> void:
 
 	swordsman.attack_module.force_stop()
 	swordsman.attack_module.set_attack_cooldown(0.0)
-	swordsman.attack_module._start_ultimate_attack()
+	swordsman.attack_module._start_hard_segment(2)
 
-	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman ultimate attack should queue damage.")
+	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman heavy combo segment 2 should queue damage.")
 	if swordsman.attack_module.damage_events.is_empty():
 		return
 
@@ -308,8 +309,47 @@ func test_swordsman_first_hits_use_shared_windup() -> void:
 		float(swordsman.attack_module.damage_events[0]["trigger_time"]),
 		WINDUP_SECONDS,
 		WINDUP_EPSILON,
-		"Swordsman ultimate opener should start from the shared 0.2s windup."
+		"Swordsman heavy combo segment 2 should start from the shared 0.2s windup."
 	)
+
+	swordsman.attack_module.force_stop()
+	swordsman.attack_module.set_attack_cooldown(0.0)
+	swordsman.attack_module._start_hard_segment(3)
+
+	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman heavy combo segment 3 should queue damage.")
+	if swordsman.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(swordsman.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Swordsman heavy combo segment 3 should start from the shared 0.2s windup."
+	)
+
+	swordsman.attack_module.force_stop()
+	swordsman.attack_module.set_attack_cooldown(0.0)
+	swordsman.attack_module._start_ultimate_attack()
+
+	assert_false(swordsman.attack_module.damage_events.is_empty(), "Swordsman ultimate attack should queue damage.")
+	if swordsman.attack_module.damage_events.is_empty():
+		return
+
+	assert_eq(
+		swordsman.attack_module.damage_events.size(),
+		expected_ultimate_hit_times.size(),
+		"Swordsman ultimate should queue the expected number of hits."
+	)
+	if swordsman.attack_module.damage_events.size() != expected_ultimate_hit_times.size():
+		return
+
+	for i in range(expected_ultimate_hit_times.size()):
+		assert_almost_eq(
+			float(swordsman.attack_module.damage_events[i]["trigger_time"]),
+			expected_ultimate_hit_times[i],
+			WINDUP_EPSILON,
+			"Swordsman ultimate hit %d should keep the normalized timing contract." % (i + 1)
+		)
 
 func test_swordsman_combo_wait_freezes_animation_between_segments() -> void:
 	var swordsman = await _spawn_character(SwordsmanScene, true)
