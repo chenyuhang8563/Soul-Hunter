@@ -5,7 +5,7 @@
 
 # Submodules (have their own git repos)
 godot-mcp/
-tests/*
+tests
 !tests/test_vfx_pool.gd
 !tests/test_afterimage_vfx_pool.gd
 !tests/test_vfx_pool_particles.gd
