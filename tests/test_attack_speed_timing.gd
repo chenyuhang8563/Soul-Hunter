@@ -338,3 +338,53 @@ func test_swordsman_combo_wait_freezes_animation_between_segments() -> void:
 		0.0,
 		"Heavy combo wait should still freeze the animation player."
 	)
+
+func test_ai_swordsman_heavy_combo_auto_chains_all_segments() -> void:
+	var swordsman = await _spawn_character(SwordsmanScene, false)
+
+	swordsman.attack_module._start_hard_segment(1)
+	swordsman.attack_module.update(0.5, null, false)
+
+	assert_eq(
+		swordsman.attack_module.hard_combo_step,
+		2,
+		"AI swordsman heavy combo should advance into segment 2 after the opener finishes."
+	)
+	assert_true(
+		swordsman.attack_module.is_attacking(),
+		"AI swordsman should still be attacking while segment 2 auto-chains."
+	)
+	assert_eq(
+		swordsman.attack_module.current_attack,
+		"hard_attack",
+		"AI swordsman should immediately restart hard_attack playback for segment 2."
+	)
+
+	swordsman.attack_module.update(0.4, null, false)
+
+	assert_eq(
+		swordsman.attack_module.hard_combo_step,
+		3,
+		"AI swordsman heavy combo should advance into segment 3 after segment 2 finishes."
+	)
+	assert_true(
+		swordsman.attack_module.is_attacking(),
+		"AI swordsman should still be attacking while segment 3 auto-chains."
+	)
+	assert_eq(
+		swordsman.attack_module.current_attack,
+		"hard_attack",
+		"AI swordsman should immediately restart hard_attack playback for segment 3."
+	)
+
+	swordsman.attack_module.update(0.6, null, false)
+
+	assert_false(
+		swordsman.attack_module.is_attacking(),
+		"AI swordsman heavy combo should fully finish after segment 3."
+	)
+	assert_eq(
+		swordsman.attack_module.hard_combo_step,
+		0,
+		"AI swordsman heavy combo should clear combo state after the final segment."
+	)

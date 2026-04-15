@@ -146,6 +146,7 @@ func _on_attack_finished(ended_attack: String) -> void:
 	if ended_attack == "hard_attack":
 		if owner != null and not bool(owner.get("is_player_controlled")):
 			if hard_combo_step < HARD_SEGMENT_COUNT:
+				attack_cooldown_left = 0.0
 				hard_combo_step += 1
 				_start_hard_segment(hard_combo_step)
 			else:
