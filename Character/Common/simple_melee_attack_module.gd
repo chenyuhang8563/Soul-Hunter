@@ -3,8 +3,8 @@ class_name SimpleMeleeAttackModule
 
 var light_attack_duration := 0.60
 var hard_attack_duration := 0.60
-var light_attack_hit_delay := 0.40
-var hard_attack_hit_delay := 0.45
+var light_attack_hit_delay := 0.20
+var hard_attack_hit_delay := 0.20
 var melee_attack_range := 42.0
 var light_attack_probability := 0.6
 

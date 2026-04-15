@@ -55,6 +55,68 @@ func test_soldier_light_attack_first_hit_uses_shared_windup() -> void:
 		"Every first attack hit should start from the shared 0.2s windup."
 	)
 
+func test_ai_soldier_light_attack_first_hit_uses_shared_windup() -> void:
+	var soldier = await _spawn_character(SoldierScene, false)
+
+	soldier.attack_module._start_light_attack()
+
+	assert_false(soldier.attack_module.damage_events.is_empty(), "AI soldier light attack should queue damage.")
+	if soldier.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(soldier.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"AI melee attackers should share the same 0.2s first-hit windup."
+	)
+
+	soldier.attack_module.force_stop()
+	soldier.attack_module.set_attack_cooldown(0.0)
+	soldier.attack_module._start_hard_attack()
+
+	assert_false(soldier.attack_module.damage_events.is_empty(), "AI soldier hard attack should queue damage.")
+	if soldier.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(soldier.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"AI hard melee should share the same 0.2s first-hit windup."
+	)
+
+func test_soldier_hard_and_ultimate_first_hit_use_shared_windup() -> void:
+	var soldier = await _spawn_character(SoldierScene, true)
+
+	soldier.attack_module._start_hard_attack()
+
+	assert_false(soldier.attack_module.damage_events.is_empty(), "Soldier hard attack should queue damage.")
+	if soldier.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(soldier.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Soldier hard attack should start from the shared 0.2s windup."
+	)
+
+	soldier.attack_module.force_stop()
+	soldier.attack_module.set_attack_cooldown(0.0)
+	soldier.attack_module._start_ultimate_attack()
+
+	assert_false(soldier.attack_module.damage_events.is_empty(), "Soldier ultimate attack should queue damage.")
+	if soldier.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(soldier.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Soldier ultimate attack should start from the shared 0.2s windup."
+	)
+
 func test_attack_speed_multiplier_scales_real_attack_runtime() -> void:
 	var soldier = await _spawn_character(SoldierScene, true)
 	var speed_applied := _apply_attack_speed_multiplier(soldier, 2.0)
@@ -185,6 +247,22 @@ func test_archer_projectile_release_uses_shared_windup() -> void:
 		WINDUP_SECONDS,
 		WINDUP_EPSILON,
 		"Projectile release should follow the shared 0.2s windup contract."
+	)
+
+func test_archer_light_projectile_release_uses_shared_windup() -> void:
+	var archer = await _spawn_character(ArcherScene, true)
+
+	archer.attack_module.start_attack(true)
+
+	assert_false(archer.attack_module.damage_events.is_empty(), "Archer light attack should queue a release event.")
+	if archer.attack_module.damage_events.is_empty():
+		return
+
+	assert_almost_eq(
+		float(archer.attack_module.damage_events[0]["trigger_time"]),
+		WINDUP_SECONDS,
+		WINDUP_EPSILON,
+		"Archer light release should follow the shared 0.2s windup contract."
 	)
 
 func test_swordsman_combo_wait_freezes_animation_between_segments() -> void:

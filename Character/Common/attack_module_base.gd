@@ -10,7 +10,6 @@ const PARAM_IS_ATTACK_COMBINED := "parameters/conditions/is_light_attack or is_h
 const PLAYER_LIGHT_ATTACK_DURATION_MULTIPLIER := 0.8
 const CRIT_DAMAGE_MULTIPLIER := 1.5
 const INCOMING_DAMAGE_IS_CRITICAL_META := "incoming_damage_is_critical"
-const ENEMY_MELEE_TRIGGER_EXTRA_RATIO := 0.10
 const PARTICLE_EFFECT_KEYS := {
 	"HurtParticles": &"hurt_particles",
 	"ParryParticles": &"parry_particles",
@@ -246,17 +245,7 @@ func _queue_melee_stat_damage_event(
 
 func _get_effective_melee_trigger_time(trigger_time: float) -> float:
 	var duration := maxf(0.0, attack_duration)
-	var clamped_trigger := clampf(trigger_time, 0.0, duration)
-	if duration <= 0.0:
-		return clamped_trigger
-	if _uses_player_attack_timing():
-		return clamped_trigger
-	return clampf(clamped_trigger + duration * ENEMY_MELEE_TRIGGER_EXTRA_RATIO, 0.0, duration)
-
-func _uses_player_attack_timing() -> bool:
-	if owner == null:
-		return true
-	return bool(owner.get("is_player_controlled"))
+	return clampf(trigger_time, 0.0, duration)
 
 func _on_attack_started(_attack_name: String) -> void:
 	pass
