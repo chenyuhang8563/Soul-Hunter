@@ -285,6 +285,8 @@ func _refresh_cached_stat_state() -> void:
 	if attack_module != null and attack_module.has_method("set_attack_cooldown"):
 		var base_cooldown: float = float(attack_module.base_attack_cooldown)
 		attack_module.call("set_attack_cooldown", get_attack_cooldown(base_cooldown))
+	if attack_module != null and attack_module.has_method("set_attack_speed_multiplier"):
+		attack_module.call("set_attack_speed_multiplier", get_attack_speed_multiplier())
 
 func _on_buff_added(buff) -> void:
 	if buff == null or not buff.has_method("create_icon_instance"):
@@ -398,6 +400,8 @@ func get_base_stat_value(stat_id: StringName, fallback: float = 0.0) -> float:
 		fallback = player_move_speed
 	elif stat_id == &"attack_cooldown":
 		fallback = 0.30
+	elif stat_id == &"attack_speed_multiplier":
+		fallback = 1.0
 	if stats == null:
 		return fallback
 	return stats.get_value(stat_id, fallback)
@@ -843,6 +847,9 @@ func get_developer_move_speed() -> float:
 
 func get_attack_cooldown(fallback: float = 0.30) -> float:
 	return float(get_stat_value(&"attack_cooldown", fallback))
+
+func get_attack_speed_multiplier(fallback: float = 1.0) -> float:
+	return maxf(0.05, float(get_stat_value(&"attack_speed_multiplier", fallback)))
 
 func is_developer_mode_active() -> bool:
 	if control_state == null:

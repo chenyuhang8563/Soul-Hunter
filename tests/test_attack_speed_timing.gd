@@ -79,6 +79,15 @@ func test_attack_speed_multiplier_scales_real_attack_runtime() -> void:
 		"Soldier light attack should finish just after the 0.24s player-controlled boundary at 2.0x attack speed."
 	)
 
+func test_character_attack_speed_stat_defaults_to_one() -> void:
+	var soldier = await _spawn_character(SoldierScene, true)
+
+	assert_eq(
+		soldier.get_attack_speed_multiplier(),
+		1.0,
+		"Character should resolve attack_speed_multiplier to 1.0 when no override is configured."
+	)
+
 func test_archer_projectile_release_uses_shared_windup() -> void:
 	var archer = await _spawn_character(ArcherScene, true)
 
