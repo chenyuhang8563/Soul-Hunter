@@ -3,7 +3,6 @@ extends "res://Character/Common/character.gd"
 const AIR_MOVE_MULTIPLIER := 1.35
 const AI_WALK_SPEED_RATIO := 0.5
 const RETURN_TOLERANCE := 6.0
-const DEFAULT_ATTACK_COOLDOWN := 0.22
 const SoldierAttackModuleScript := preload("res://Character/Common/soldier_attack_module.gd")
 const AIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")

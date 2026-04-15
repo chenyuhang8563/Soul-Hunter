@@ -14,8 +14,6 @@ const CharacterMotionDriverScript := preload("res://Character/Common/character_m
 @onready var line_of_sight: RayCast2D = $RayCast2D
 
 @export var ai_enabled := false
-@export var attack_cooldown := 0.36
-
 var motion_driver: CharacterMotionDriver
 
 func _on_character_ready() -> void:
