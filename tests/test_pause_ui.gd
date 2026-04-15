@@ -51,3 +51,5 @@ func test_hidden_pause_ui_root_ignores_mouse_but_captures_when_open() -> void:
 		Control.MOUSE_FILTER_STOP,
 		"When the pause panel opens, its fullscreen root should capture clicks."
 	)
+
+	pause_ui.unpause()
