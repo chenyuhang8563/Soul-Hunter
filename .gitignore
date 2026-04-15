@@ -5,11 +5,12 @@
 
 # Submodules (have their own git repos)
 godot-mcp/
-tests
+tests/*
 !tests/test_vfx_pool.gd
 !tests/test_afterimage_vfx_pool.gd
 !tests/test_vfx_pool_particles.gd
 !tests/test_pause_ui.gd
+!tests/test_attack_speed_timing.gd
 addons
 .gutconfig.json
 docs/
