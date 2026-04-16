@@ -3,7 +3,7 @@ class_name CharacterStats
 
 @export var max_health := 450.0
 @export var move_speed := 100.0
-@export var attack_cooldown := 0.30
+@export var attack_cooldown := 0.22
 @export var light_attack_damage := 25.0
 @export var hard_attack_damage := 45.0
 @export var ultimate_attack := 20.0
