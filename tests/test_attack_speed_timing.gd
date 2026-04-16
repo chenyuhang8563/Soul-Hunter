@@ -3,6 +3,7 @@ extends GutTest
 const SoldierScene := preload("res://Character/Soldier/soldier.tscn")
 const ArcherScene := preload("res://Character/Archer/archer.tscn")
 const SwordsmanScene := preload("res://Character/Swordsman/swordsman.tscn")
+const RewardPool := preload("res://Data/Roguelike/reward_pool_basic.tres")
 const WINDUP_SECONDS := 0.2
 const WINDUP_EPSILON := 0.001
 
@@ -38,6 +39,14 @@ func _apply_attack_speed_multiplier(character: Node, multiplier: float) -> bool:
 			character.call("_refresh_cached_stat_state")
 		return true
 	return false
+
+func _find_reward_card(card_id: StringName) -> Resource:
+	if RewardPool == null:
+		return null
+	for card in RewardPool.get("cards"):
+		if card != null and card.get("id") == card_id:
+			return card
+	return null
 
 func test_soldier_light_attack_first_hit_uses_shared_windup() -> void:
 	var soldier = await _spawn_character(SoldierScene, true)
@@ -235,6 +244,28 @@ func test_possession_combo_haste_buff_raises_attack_speed_multiplier() -> void:
 		soldier.get_attack_speed_multiplier(),
 		1.0,
 		"Possession combo haste should now increase attack speed instead of reducing cooldown."
+	)
+
+func test_attack_speed_reward_card_raises_attack_speed_multiplier_through_run_modifier_controller() -> void:
+	var soldier = await _spawn_character(SoldierScene)
+	var run_modifier_controller = soldier.ensure_run_modifier_controller()
+	var attack_speed_card := _find_reward_card(&"attack_speed_up")
+
+	assert_not_null(attack_speed_card, "Reward pool should expose an attack_speed_up card for run-modifier coverage.")
+	if attack_speed_card == null:
+		return
+
+	run_modifier_controller.apply_reward_card(attack_speed_card)
+
+	assert_true(
+		run_modifier_controller.get_selected_cards().has(&"attack_speed_up"),
+		"Applying the reward card should record attack_speed_up on the run modifier controller."
+	)
+	assert_almost_eq(
+		soldier.get_attack_speed_multiplier(),
+		1.15,
+		WINDUP_EPSILON,
+		"attack_speed_up should raise attack_speed_multiplier through the reward-card data path."
 	)
 
 func test_archer_projectile_release_uses_shared_windup() -> void:
