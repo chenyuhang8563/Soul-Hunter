@@ -19,8 +19,6 @@ const HARD_ATTACK_HIT_DELAYS := [0.20, 0.20, 0.20]
 const HARD_COMBO_CHAIN_WINDOW := 0.45
 const MELEE_ATTACK_RANGE := 44.0
 
-var animation_player: AnimationPlayer
-
 var hard_combo_step := 0
 var hard_combo_chain_left := 0.0
 var hard_waiting_next := false
