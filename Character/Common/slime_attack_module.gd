@@ -13,8 +13,8 @@ func _init() -> void:
 		"light_attack_probability": 0.6,
 	})
 
-func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false) -> bool:
-	var did_apply := super._apply_damage_to_target(target, damage, critical_hit)
+func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false, event: Dictionary = {}) -> bool:
+	var did_apply := super._apply_damage_to_target(target, damage, critical_hit, event)
 	if not did_apply:
 		return false
 	if target != null and target.has_method("add_buff"):

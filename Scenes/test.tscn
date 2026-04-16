@@ -2,14 +2,12 @@
 
 [ext_resource type="Texture2D" uid="uid://de35260wfg6fo" path="res://Assets/Tiles/Floor Tiles1.png" id="1_lc1oi"]
 [ext_resource type="Texture2D" uid="uid://drrdlxcvg8onx" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 5.png" id="1_qpfo2"]
-[ext_resource type="PackedScene" uid="uid://bktv8jcuya3k7" path="res://Character/Soldier/soldier.tscn" id="2_8od7v"]
 [ext_resource type="Texture2D" uid="uid://bous1xsly5rly" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 4.png" id="2_yb21e"]
 [ext_resource type="Texture2D" uid="uid://m27f2dr2s1um" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 3.png" id="3_aees8"]
 [ext_resource type="PackedScene" uid="uid://b7torsllpb85n" path="res://Character/Orc/orc.tscn" id="4_35xla"]
 [ext_resource type="Texture2D" uid="uid://dcjapwn62bn6p" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 2.png" id="4_mie3u"]
 [ext_resource type="PackedScene" uid="uid://ehwbvthv2sps" path="res://Character/Swordsman/swordsman.tscn" id="4_ys1qc"]
 [ext_resource type="Texture2D" uid="uid://downal3kdnp8f" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 1.png" id="5_0qy5o"]
-[ext_resource type="PackedScene" uid="uid://dlll1sp3vdsb2" path="res://Character/Archer/archer.tscn" id="5_35xla"]
 [ext_resource type="PackedScene" uid="uid://ys25otk3sp5k" path="res://Character/Slime/slime.tscn" id="6_i3aeo"]
 [ext_resource type="PackedScene" uid="uid://c5hja74ptp5kd" path="res://Scenes/UI/pause_ui.tscn" id="12_yb21e"]
 [ext_resource type="PackedScene" uid="uid://ce4x6ryhyyir0" path="res://Global/audio_manager.tscn" id="13_aees8"]
@@ -1208,17 +1206,12 @@ use_kinematic_bodies = true
 [node name="Camera2D" type="Camera2D" parent="." unique_id=73439647]
 position = Vector2(160, 90)
 
-[node name="Soldier" parent="." unique_id=812296209 instance=ExtResource("2_8od7v")]
-position = Vector2(50, 36)
-
 [node name="Swordsman" parent="." unique_id=1473400387 instance=ExtResource("4_ys1qc")]
 position = Vector2(218, 47)
+start_player_controlled = true
 
 [node name="Orc" parent="." unique_id=1350751769 instance=ExtResource("4_35xla")]
 position = Vector2(368, 43)
-
-[node name="Archer" parent="." unique_id=1710627706 instance=ExtResource("5_35xla")]
-position = Vector2(298, 35)
 
 [node name="Slime" parent="." unique_id=1231243137 instance=ExtResource("6_i3aeo")]
 position = Vector2(137, 55)

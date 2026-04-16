@@ -112,7 +112,7 @@ func _start_ultimate_attack() -> void:
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
 	var hit_damage := _get_stat_value(&"ultimate_attack", stats.ultimate_attack) / float(ULTIMATE_HIT_COUNT)
 	for hit_time in ultimate_hit_times:
-		_queue_melee_damage_event(float(hit_time), hit_damage, ULTIMATE_ATTACK_RANGE, false, false, _get_ultimate_slash_spec())
+		_queue_melee_damage_event(float(hit_time), hit_damage, ULTIMATE_ATTACK_RANGE, false, false, _get_ultimate_slash_spec(), ULTIMATE_HIT_COUNT)
 
 func _sync_attack_animation_speed() -> void:
 	if animation_player == null:
@@ -182,8 +182,8 @@ func _on_force_stop() -> void:
 func _get_ultimate_slash_spec() -> Dictionary:
 	return _create_slash_spec(Vector2(20.0, -6.0), 0.0, Vector2(1.55, 1.0), 0.12, 64.0)
 
-func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false) -> bool:
-	var did_apply := super._apply_damage_to_target(target, damage, critical_hit)
+func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false, event: Dictionary = {}) -> bool:
+	var did_apply := super._apply_damage_to_target(target, damage, critical_hit, event)
 	if not did_apply:
 		return false
 	if current_attack != "ultimate_attack" or _ultimate_swiftness_granted:

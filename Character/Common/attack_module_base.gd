@@ -178,7 +178,8 @@ func _queue_damage_event(
 		attack_range: float,
 		require_facing: bool,
 		prefer_context_target: bool,
-		slash_spec: Dictionary = {}
+		slash_spec: Dictionary = {},
+		defense_share_count: int = 1
 ) -> void:
 	damage_events.append({
 		"trigger_time": maxf(0.0, trigger_time),
@@ -187,6 +188,7 @@ func _queue_damage_event(
 		"require_facing": require_facing,
 		"prefer_context_target": prefer_context_target,
 		"slash_spec": slash_spec.duplicate(true),
+		"defense_share_count": maxi(1, defense_share_count),
 		"triggered": false
 	})
 
@@ -196,7 +198,8 @@ func _queue_melee_damage_event(
 		attack_range: float,
 		require_facing: bool,
 		prefer_context_target: bool,
-		slash_spec: Dictionary = {}
+		slash_spec: Dictionary = {},
+		defense_share_count: int = 1
 ) -> void:
 	_queue_damage_event(
 		_get_effective_melee_trigger_time(trigger_time),
@@ -204,7 +207,8 @@ func _queue_melee_damage_event(
 		attack_range,
 		require_facing,
 		prefer_context_target,
-		slash_spec
+		slash_spec,
+		defense_share_count
 	)
 
 func _queue_stat_damage_event(
@@ -365,10 +369,11 @@ func _try_apply_damage_event(event: Dictionary) -> void:
 	var damage_amount := float(damage_result.get("damage", 0.0))
 	var critical_hit := bool(damage_result.get("critical_hit", false))
 	for hit_target in hit_targets:
-		if _check_clash(hit_target):
+		var did_clash := _check_clash(hit_target)
+		if did_clash:
 			_handle_clash(hit_target)
 			continue
-		if _apply_damage_to_target(hit_target, damage_amount, critical_hit):
+		if _apply_damage_to_target(hit_target, damage_amount, critical_hit, event):
 			dealt_damage = true
 	if dealt_damage:
 		_play_slash_vfx_from_event(event)
@@ -646,10 +651,10 @@ func _should_play_player_hit_flesh_sfx(target: Node2D, final_damage: float) -> b
 		return false
 	return not _is_player_controlled_target(target)
 
-func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false) -> bool:
+func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool = false, event: Dictionary = {}) -> bool:
 	if not _is_valid_damage_target(target):
 		return false
-	var effective_damage := _get_effective_damage(target, damage)
+	var effective_damage := _get_effective_damage(target, damage, event)
 	var previous_health := _get_target_health_value(target)
 	var had_critical_meta := target.has_meta(INCOMING_DAMAGE_IS_CRITICAL_META)
 	var previous_critical_meta = null
@@ -684,9 +689,14 @@ func _apply_damage_to_target(target: Node2D, damage: float, critical_hit: bool =
 		_play_finisher_effect(target)
 	return true
 
-func _get_effective_damage(target: Node2D, base_damage: float) -> float:
+func _get_effective_damage(target: Node2D, base_damage: float, event: Dictionary = {}) -> float:
 	if owner != null and DeveloperMode.applies_to(owner) and _is_enemy_character_target(target):
 		return _get_lethal_damage(target)
+	var defense_share_count := maxi(1, int(event.get("defense_share_count", 1)))
+	if defense_share_count > 1 and target != null and target.has_method("get_stat_value"):
+		var target_defense := float(target.call("get_stat_value", &"defense", 0.0))
+		if target_defense > 0.0:
+			return base_damage + target_defense * float(defense_share_count - 1) / float(defense_share_count)
 	return base_damage
 
 func _get_target_health_value(target: Node2D) -> float:
