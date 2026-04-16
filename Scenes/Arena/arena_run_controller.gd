@@ -356,7 +356,7 @@ func _complete_current_wave_if_no_hostiles_remain() -> void:
 	if current_state != RunState.IN_WAVE:
 		return
 	_rebuild_active_enemy_snapshot()
-	if _active_enemies.is_empty():
+	if _active_enemies.is_empty() and not _has_living_wave_enemies():
 		_begin_wave_clear_buffer()
 
 func _begin_wave_clear_buffer() -> void:
@@ -376,7 +376,7 @@ func _begin_wave_clear_buffer() -> void:
 		if current_state != RunState.IN_WAVE or current_wave != scheduled_wave:
 			return
 		_rebuild_active_enemy_snapshot()
-		if _active_enemies.is_empty():
+		if _active_enemies.is_empty() and not _has_living_wave_enemies():
 			complete_current_wave()
 	)
 
@@ -395,6 +395,32 @@ func _rebuild_active_enemy_snapshot() -> void:
 		if _is_hostile_wave_enemy(enemy):
 			rebuilt_enemies.append(enemy)
 	_active_enemies = rebuilt_enemies
+
+func _has_living_wave_enemies() -> bool:
+	if not is_inside_tree():
+		return false
+	var tree := get_tree()
+	if tree == null:
+		return false
+	for enemy in tree.get_nodes_in_group(ARENA_ENEMY_GROUP):
+		if _is_living_wave_enemy(enemy):
+			return true
+	return false
+
+func _is_living_wave_enemy(enemy: Node) -> bool:
+	if enemy == null or not is_instance_valid(enemy):
+		return false
+	if not enemy.has_meta(ARENA_WAVE_META_KEY):
+		return false
+	if int(enemy.get_meta(ARENA_WAVE_META_KEY, -1)) != current_wave:
+		return false
+	if enemy.get("is_player_controlled") != null and bool(enemy.get("is_player_controlled")):
+		return false
+	if enemy.has_method("is_alive"):
+		return bool(enemy.call("is_alive"))
+	if enemy.get("is_dead") != null:
+		return not bool(enemy.get("is_dead"))
+	return true
 
 func _sync_spawn_metadata(enemy: Node, spawn_position: Vector2) -> void:
 	if enemy.get("spawn_position") != null:
