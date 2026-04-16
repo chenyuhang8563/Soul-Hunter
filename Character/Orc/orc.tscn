@@ -206,7 +206,6 @@ _data = {
 
 [node name="Orc" unique_id=1350751769 instance=ExtResource("1_tpl")]
 script = ExtResource("3_script")
-attack_cooldown = 0.48
 stats = ExtResource("4_stats")
 
 [node name="Sprite2D" parent="." index="0" unique_id=1966064385]

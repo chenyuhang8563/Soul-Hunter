@@ -14,8 +14,8 @@ const ULTIMATE_ATTACK_DURATION := 1.20
 const ULTIMATE_ATTACK_RANGE := 64.0
 const ULTIMATE_HIT_COUNT := 5
 const ATTACK_COOLDOWN := 0.30
-const LIGHT_ATTACK_HIT_DELAY := 0.40
-const HARD_ATTACK_HIT_DELAYS := [0.45, 0.30, 0.45]
+const LIGHT_ATTACK_HIT_DELAY := 0.20
+const HARD_ATTACK_HIT_DELAYS := [0.20, 0.20, 0.20]
 const HARD_COMBO_CHAIN_WINDOW := 0.45
 const MELEE_ATTACK_RANGE := 44.0
 
@@ -26,7 +26,7 @@ var hard_combo_chain_left := 0.0
 var hard_waiting_next := false
 var _ultimate_swiftness_granted := false
 var hard_attack_times := PackedFloat32Array(HARD_ATTACK_TIMES)
-var ultimate_hit_times := PackedFloat32Array([0.08, 0.26, 0.44, 0.62, 0.80])
+var ultimate_hit_times := PackedFloat32Array([0.20, 0.36, 0.52, 0.68, 0.84])
 
 func setup(
 		host: CharacterBody2D,
@@ -116,6 +116,14 @@ func _start_ultimate_attack() -> void:
 	for hit_time in ultimate_hit_times:
 		_queue_melee_damage_event(float(hit_time), hit_damage, ULTIMATE_ATTACK_RANGE, false, false, _get_ultimate_slash_spec())
 
+func _sync_attack_animation_speed() -> void:
+	if animation_player == null:
+		return
+	if hard_waiting_next:
+		animation_player.speed_scale = 0.0
+		return
+	super._sync_attack_animation_speed()
+
 func _start_hard_segment(combo_step: int) -> void:
 	# 计算当前段的持续时间
 	var segment_start: float = HARD_ATTACK_TIMES[combo_step - 1]
@@ -128,7 +136,7 @@ func _start_hard_segment(combo_step: int) -> void:
 	if animation_player != null and animation_player.has_animation("hard_attack"):
 		animation_tree.active = false
 		# 恢复播放速度并定位到段开始
-		animation_player.speed_scale = 1.0
+		animation_player.speed_scale = attack_speed_multiplier
 		animation_player.play("hard_attack")
 		animation_player.seek(segment_start, true)
 	else:

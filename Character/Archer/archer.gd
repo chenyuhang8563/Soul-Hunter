@@ -14,8 +14,6 @@ const CharacterMotionDriverScript := preload("res://Character/Common/character_m
 @onready var line_of_sight: RayCast2D = $RayCast2D
 
 @export var ai_enabled := false
-@export var attack_cooldown := 0.36
-
 var motion_driver: CharacterMotionDriver
 
 func _on_character_ready() -> void:
@@ -23,7 +21,7 @@ func _on_character_ready() -> void:
 	ai_module = AIModuleScript.new()
 	motion_driver = CharacterMotionDriverScript.new()
 	_set_locomotion_conditions(0.0)
-	attack_module.setup(self, sprite, animation_tree, animation_player, null, null, stats, get_attack_cooldown(attack_cooldown), _resolve_audio_manager())
+	attack_module.setup(self, sprite, animation_tree, animation_player, null, null, stats, get_attack_speed_multiplier(), _resolve_audio_manager())
 	ai_module.setup(self, sprite, visual_scope, attack_scope, line_of_sight, attack_module, get_player_move_speed() * AI_WALK_SPEED_RATIO, RETURN_TOLERANCE)
 	ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)

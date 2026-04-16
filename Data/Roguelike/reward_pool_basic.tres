@@ -73,14 +73,14 @@ effects = [SubResource("RewardEffect_move_speed")]
 
 [sub_resource type="Resource" id="RewardEffect_attack_speed"]
 script = ExtResource("3_effect")
-stat_id = &"attack_cooldown"
-value = -0.03
+stat_id = &"attack_speed_multiplier"
+value = 0.15
 
 [sub_resource type="Resource" id="RewardCard_attack_speed"]
 script = ExtResource("2_card")
 id = &"attack_speed_up"
-title = "Attack Speed Up"
-description = "Reduce attack cooldown by 0.03 seconds."
+title = "Attack Speed +15%"
+description = "Increase attack speed by 15% for this run."
 effects = [SubResource("RewardEffect_attack_speed")]
 
 [sub_resource type="Resource" id="RewardEffect_crit_chance"]

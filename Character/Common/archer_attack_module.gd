@@ -7,8 +7,8 @@ func _init() -> void:
 	configure({
 		"light_attack_duration": 0.90,
 		"hard_attack_duration": 1.20,
-		"light_attack_hit_delay": 0.50,
-		"hard_attack_hit_delay": 0.70,
+		"light_attack_hit_delay": 0.20,
+		"hard_attack_hit_delay": 0.20,
 		"melee_attack_range": 40.0,
 		"light_attack_probability": 0.65,
 	})
