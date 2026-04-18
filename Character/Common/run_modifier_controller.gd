@@ -16,6 +16,9 @@ signal stats_changed()
 
 var _host: Object = null
 var _selected_cards: Array[StringName] = []
+var _selected_card_titles: Array[String] = []
+var _hud_summary_tokens: Array[Dictionary] = []
+var _hud_numeric_totals := {}
 var _modifiers: Array = []
 var _lifesteal_percent := 0.0
 var _dash_path_damage := 0.0
@@ -39,6 +42,9 @@ func setup(host: Object) -> void:
 
 func reset() -> void:
 	_selected_cards.clear()
+	_selected_card_titles.clear()
+	_hud_summary_tokens.clear()
+	_hud_numeric_totals.clear()
 	_modifiers.clear()
 	_lifesteal_percent = 0.0
 	_dash_path_damage = 0.0
@@ -57,10 +63,14 @@ func apply_reward_card(card: Resource) -> void:
 	if card == null:
 		return
 
+	_track_hud_summary_entry(card)
 	if card.has_method("get"):
 		var card_id = card.get("id") as StringName
 		if card_id != &"":
 			_selected_cards.append(card_id)
+		var card_title := str(card.get("title"))
+		if not card_title.is_empty():
+			_selected_card_titles.append(card_title)
 
 	var effects: Array = card.get("effects")
 	var stat_effect_applied := false
@@ -81,6 +91,27 @@ func modify_stat_value(stat_id: StringName, base_value: float) -> float:
 func get_selected_cards() -> Array[StringName]:
 	return _selected_cards.duplicate()
 
+func get_selected_card_titles() -> Array[String]:
+	return _selected_card_titles.duplicate()
+
+func get_hud_buff_summary_text() -> String:
+	var tokens: Array[String] = []
+	for token in _hud_summary_tokens:
+		var token_type := String(token.get("type", ""))
+		if token_type == "numeric":
+			var category: StringName = token.get("category", &"")
+			var total := float(_hud_numeric_totals.get(category, 0.0))
+			if total <= 0.0:
+				continue
+			tokens.append(_format_numeric_hud_entry(
+				String(token.get("label", "")),
+				total,
+				String(token.get("suffix", ""))
+			))
+			continue
+		tokens.append(String(token.get("text", "")))
+	return " ".join(tokens)
+
 func get_lifesteal_percent() -> float:
 	return _lifesteal_percent
 
@@ -92,6 +123,58 @@ func has_active_effects() -> bool:
 
 func has_active_stat_modifiers() -> bool:
 	return not _modifiers.is_empty()
+
+func _track_hud_summary_entry(card: Resource) -> void:
+	if not card.has_method("get"):
+		return
+
+	var card_id := card.get("id") as StringName
+	var numeric_entry := _get_numeric_hud_entry(card_id)
+	if not numeric_entry.is_empty():
+		var category: StringName = numeric_entry.get("category", &"")
+		if not _hud_numeric_totals.has(category):
+			_hud_numeric_totals[category] = 0.0
+			_hud_summary_tokens.append({
+				"type": "numeric",
+				"category": category,
+				"label": numeric_entry.get("label", ""),
+				"suffix": numeric_entry.get("suffix", ""),
+			})
+		_hud_numeric_totals[category] = float(_hud_numeric_totals.get(category, 0.0)) + float(numeric_entry.get("value", 0.0))
+		return
+
+	var card_title := str(card.get("title"))
+	if not card_title.is_empty():
+		_hud_summary_tokens.append({
+			"type": "text",
+			"text": card_title,
+		})
+
+func _get_numeric_hud_entry(card_id: StringName) -> Dictionary:
+	match card_id:
+		&"attack_up":
+			return {"category": &"attack", "label": "Attack", "value": 10.0, "suffix": ""}
+		&"lifesteal":
+			return {"category": &"lifesteal", "label": "Lifesteal", "value": 20.0, "suffix": "%"}
+		&"max_health_up":
+			return {"category": &"vitality", "label": "Vitality", "value": 40.0, "suffix": ""}
+		&"move_speed_up":
+			return {"category": &"move_speed", "label": "Move Speed", "value": 15.0, "suffix": ""}
+		&"attack_speed_up":
+			return {"category": &"attack_speed", "label": "Attack Speed", "value": 15.0, "suffix": "%"}
+		&"crit_chance_up":
+			return {"category": &"crit_chance", "label": "Crit Chance", "value": 15.0, "suffix": "%"}
+		&"defense_up":
+			return {"category": &"defense", "label": "Defense", "value": 10.0, "suffix": ""}
+	return {}
+
+func _format_numeric_hud_entry(label: String, total: float, suffix: String) -> String:
+	return "%s + %s%s" % [label, _format_hud_numeric_value(total), suffix]
+
+func _format_hud_numeric_value(total: float) -> String:
+	if is_equal_approx(total, roundf(total)):
+		return str(int(roundf(total)))
+	return str(total)
 
 func _apply_effect(effect: Resource) -> bool:
 	if effect == null:

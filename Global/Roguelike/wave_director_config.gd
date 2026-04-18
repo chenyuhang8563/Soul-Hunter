@@ -11,3 +11,4 @@ const EnemySpawnEntryScript := preload("res://Global/Roguelike/enemy_spawn_entry
 @export_range(0.0, 10.0, 0.01, "or_greater") var attack_scale_per_wave := 0.05
 @export_range(0.0, 10.0, 0.01, "or_greater") var move_speed_scale_per_wave := 0.02
 @export var enemy_entries: Array = []
+@export var wave_overrides: Array = []

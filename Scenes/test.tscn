@@ -6,10 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://m27f2dr2s1um" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 3.png" id="3_aees8"]
 [ext_resource type="Texture2D" uid="uid://dcjapwn62bn6p" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 2.png" id="4_mie3u"]
 [ext_resource type="Texture2D" uid="uid://downal3kdnp8f" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 1.png" id="5_0qy5o"]
+[ext_resource type="PackedScene" uid="uid://dlll1sp3vdsb2" path="res://Character/Archer/archer.tscn" id="10_iaow0"]
 [ext_resource type="PackedScene" uid="uid://gkkfbypg37se" path="res://Character/Werebear/werebear.tscn" id="12_aees8"]
 [ext_resource type="PackedScene" uid="uid://c5hja74ptp5kd" path="res://Scenes/UI/pause_ui.tscn" id="12_yb21e"]
 [ext_resource type="PackedScene" uid="uid://ce4x6ryhyyir0" path="res://Global/audio_manager.tscn" id="13_aees8"]
-[ext_resource type="PackedScene" uid="uid://bktv8jcuya3k7" path="res://Character/Soldier/soldier.tscn" id="13_mie3u"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("1_lc1oi")
@@ -1214,6 +1214,6 @@ bgm_volume_db = -7.0
 position = Vector2(181, 1)
 reactive_backstep_distance = 50.0
 
-[node name="Soldier" parent="." unique_id=812296209 instance=ExtResource("13_mie3u")]
-position = Vector2(36, 2)
+[node name="Archer" parent="." unique_id=1710627706 instance=ExtResource("10_iaow0")]
+position = Vector2(28, 26)
 start_player_controlled = true

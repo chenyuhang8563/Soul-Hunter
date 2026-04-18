@@ -41,6 +41,7 @@ func _setup_runtime() -> void:
 func _setup_ui() -> void:
 	_hud = ArenaHudScript.new()
 	add_child(_hud)
+	_hud.set_buff_summary_text("")
 
 	_reward_ui = RewardSelectionUIScript.new()
 	add_child(_reward_ui)
@@ -94,8 +95,18 @@ func _on_run_failed(reached_wave: int) -> void:
 	_result_ui.show_defeat(reached_wave)
 
 func _on_reward_card_selected(card_id: StringName) -> void:
-	_arena_controller.select_reward_card(card_id)
+	if _arena_controller.select_reward_card(card_id):
+		_refresh_selected_buff_titles()
 
 func _on_restart_requested() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+func _refresh_selected_buff_titles() -> void:
+	if _hud == null or _arena_controller == null:
+		return
+	var modifier_controller := _arena_controller.get_run_modifier_controller()
+	if modifier_controller == null:
+		_hud.set_buff_summary_text("")
+		return
+	_hud.set_buff_summary_text(modifier_controller.get_hud_buff_summary_text())
