@@ -31,6 +31,7 @@ const PROMPT_ICON_UPDATE_INTERVAL := 0.05
 const WORLD_COLLISION_MASK := 1
 
 @onready var hp_bar: ProgressBar = get_node_or_null("HPBar")
+@onready var hp_damage_bar: ProgressBar = get_node_or_null("HPDamageBar")
 @onready var posture_bar: ProgressBar = get_node_or_null("PostureBar")
 @onready var animation_tree: AnimationTree = get_node_or_null("AnimationTree")
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer")
@@ -123,7 +124,7 @@ func _ready() -> void:
 	_default_collision_layer = collision_layer
 	_default_collision_mask = collision_mask
 	_respawn_scene_path = scene_file_path
-	_get_ui_presenter().setup(hp_bar, posture_bar)
+	_get_ui_presenter().setup(hp_bar, posture_bar, hp_damage_bar)
 	if animation_tree != null:
 		animation_tree.active = true
 	if animation_player != null and not animation_player.animation_finished.is_connected(_on_animation_finished):

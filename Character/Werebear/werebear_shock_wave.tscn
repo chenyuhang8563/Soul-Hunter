@@ -1,0 +1,51 @@
+[gd_scene load_steps=6 format=3 uid="uid://d0d4i523xwndd"]
+
+[ext_resource type="Script" path="res://Character/Werebear/werebear_shock_wave.gd" id="1_c40bm"]
+
+[ext_resource type="Texture2D" uid="uid://crvwtmnyi7243" path="res://Assets/Sprites/Werebear/Werebear-Attack03_Effect.png" id="2_qxy5t"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qxy5t"]
+atlas = ExtResource("2_qxy5t")
+region = Rect2(500, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eq1ax"]
+atlas = ExtResource("2_qxy5t")
+region = Rect2(600, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dtema"]
+atlas = ExtResource("2_qxy5t")
+region = Rect2(700, 0, 100, 100)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_u6xoc"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qxy5t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eq1ax")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dtema")
+}],
+"loop": false,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qxy5t"]
+size = Vector2(14, 23)
+
+[node name="WerebearShockWave" type="Area2D" unique_id=1330919436]
+script = ExtResource("1_c40bm")
+
+[node name="ShockWaveSprite" type="AnimatedSprite2D" parent="." unique_id=225868259]
+sprite_frames = SubResource("SpriteFrames_u6xoc")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2060163506]
+position = Vector2(-6, -4.5)
+shape = SubResource("RectangleShape2D_qxy5t")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1463601535]
+position = Vector2(25, -4.5)
+shape = SubResource("RectangleShape2D_qxy5t")

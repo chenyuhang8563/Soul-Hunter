@@ -70,6 +70,8 @@ func on_died(_killer: CharacterBody2D) -> void:
 	owner._set_corpse_collision_state()
 	if owner.hp_bar != null:
 		owner.hp_bar.visible = false
+	if owner.hp_damage_bar != null:
+		owner.hp_damage_bar.visible = false
 	if owner.posture_bar != null:
 		owner.posture_bar.visible = false
 	owner._on_enter_dead()
@@ -103,6 +105,8 @@ func revive(revive_in_place: bool = false) -> void:
 		owner.animation_tree.active = true
 	if owner.hp_bar != null:
 		owner.hp_bar.visible = true
+	if owner.hp_damage_bar != null:
+		owner.hp_damage_bar.visible = true
 	owner._on_revived()
 	owner.health.setup(owner.get_stat_value(&"max_health", owner.stats.max_health))
 	owner.current_posture = 0.0

@@ -202,6 +202,12 @@ func physics_process_ai(delta: float) -> float:
 	var can_move = true
 	if attack_module != null and attack_module.has_method("can_move"):
 		can_move = attack_module.can_move()
+
+	if attack_module != null and attack_module.has_method("get_attack_motion_velocity"):
+		var attack_motion_velocity = attack_module.call("get_attack_motion_velocity", character.velocity)
+		if attack_motion_velocity is Vector2:
+			character.velocity = attack_motion_velocity as Vector2
+			return input_dir
 		
 	if can_move:
 		character.velocity.x = input_dir * walk_speed
