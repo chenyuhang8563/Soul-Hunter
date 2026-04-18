@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CharacterStats" format=3 uid="uid://da3ejr7jcidvu"]
+
+[ext_resource type="Script" uid="uid://vghfk6t4jw8m" path="res://Character/Common/character_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+max_health = 1200.0
+move_speed = 105.0
+attack_cooldown = 0.18
+light_attack_damage = 42.0
+hard_attack_damage = 78.0
+ultimate_attack = 58.0
+defense = 10.0
+crit_chance = 8.0

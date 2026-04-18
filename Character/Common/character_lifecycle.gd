@@ -55,6 +55,8 @@ func on_damaged(_amount: float, _current_health: float, _max_health: float, sour
 	owner._on_enter_hurt()
 	if owner.animation_tree != null:
 		owner.animation_tree.active = false
+	# Make sure a paused startup animation cannot freeze the hurt clip.
+	owner.animation_player.speed_scale = 1.0
 	owner.animation_player.play(owner.ANIM_HURT)
 
 func on_died(_killer: CharacterBody2D) -> void:

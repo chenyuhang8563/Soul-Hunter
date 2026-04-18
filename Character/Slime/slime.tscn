@@ -207,7 +207,10 @@ texture = ExtResource("2_rn4pd")
 hframes = 12
 vframes = 6
 
-[node name="AnimationTree" parent="." index="9" unique_id=306858432]
+[node name="CollisionShape2D" parent="." index="4" unique_id=749656219]
+position = Vector2(0, -1)
+
+[node name="AnimationTree" parent="." index="10" unique_id=306858432]
 tree_root = SubResource("AnimationNodeStateMachine_t6s8c")
 parameters/conditions/attack_finished = false
 "parameters/conditions/is_light_attack or is_hard_attack" = false
@@ -216,5 +219,5 @@ parameters/attack_state_machine/conditions/is_light_attack = false
 parameters/locomotion_state_machine/conditions/is_idle = false
 parameters/locomotion_state_machine/conditions/is_walking = false
 
-[node name="AnimationPlayer" parent="." index="10" unique_id=280822122]
+[node name="AnimationPlayer" parent="." index="11" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_nh5ry")

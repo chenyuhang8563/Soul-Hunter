@@ -7,10 +7,11 @@ const ULTIMATE_ATTACK_DURATION := 0.80
 const ATTACK_COOLDOWN := 0.30
 const LIGHT_ATTACK_HIT_DELAY := 0.20
 const HARD_ATTACK_HIT_DELAY := 0.20
-const ULTIMATE_ATTACK_HIT_DELAY := 0.20
 const MELEE_ATTACK_RANGE := 42.0
 const ULTIMATE_ATTACK_RANGE := 64.0
 const ARROW_SCENE := preload("res://Scenes/arrow.tscn")
+
+var _ultimate_projectile_released := false
 
 func setup(
 		host: CharacterBody2D,
@@ -65,21 +66,37 @@ func _start_hard_attack() -> void:
 
 func _start_ultimate_attack() -> void:
 	_begin_attack("ultimate_attack", ULTIMATE_ATTACK_DURATION, false, false, false, true)
-	_queue_stat_damage_event(ULTIMATE_ATTACK_HIT_DELAY, &"ultimate_attack", stats.ultimate_attack, ULTIMATE_ATTACK_RANGE, false, false)
 
-func _handle_damage_event_override(event: Dictionary) -> bool:
-	if current_attack == "ultimate_attack":
-		if owner == null:
-			return true
-		
-		var arrow_instance = ARROW_SCENE.instantiate()
-		var facing_dir := Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
-		
-		var spawn_pos = owner.global_position + Vector2(0, 0) + facing_dir * 10
-		arrow_instance.position = spawn_pos
-		var damage_result := _resolve_damage_event_result(event)
-		arrow_instance.setup(facing_dir, float(damage_result.get("damage", 0.0)), owner, bool(damage_result.get("critical_hit", false)))
-		
-		owner.get_parent().add_child(arrow_instance)
-		return true
-	return false
+func _on_attack_started(_attack_name: String) -> void:
+	_ultimate_projectile_released = false
+
+func _on_attack_finished(_attack_name: String) -> void:
+	_ultimate_projectile_released = false
+
+func _on_force_stop() -> void:
+	_ultimate_projectile_released = false
+
+func on_animation_event(event_name: StringName) -> void:
+	if event_name != &"release_projectile":
+		return
+	if current_attack != "ultimate_attack" or _ultimate_projectile_released:
+		return
+	if owner == null:
+		return
+	
+	var arrow_instance = ARROW_SCENE.instantiate()
+	var facing_dir := Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
+	var spawn_pos = owner.global_position + Vector2(0, 0) + facing_dir * 10
+	arrow_instance.position = spawn_pos
+	var damage_result := _resolve_damage_event_result({
+		"stat_id": &"ultimate_attack",
+		"damage": stats.ultimate_attack,
+	})
+	arrow_instance.setup(facing_dir, float(damage_result.get("damage", 0.0)), owner, bool(damage_result.get("critical_hit", false)))
+	
+	var spawn_parent := owner.get_parent()
+	if spawn_parent == null:
+		spawn_parent = owner.get_tree().current_scene
+	if spawn_parent != null:
+		spawn_parent.add_child(arrow_instance)
+	_ultimate_projectile_released = true

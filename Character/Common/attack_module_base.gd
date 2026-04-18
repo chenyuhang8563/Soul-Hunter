@@ -266,6 +266,9 @@ func _on_attack_finished(_attack_name: String) -> void:
 func _on_idle_update(_delta: float) -> void:
 	pass
 
+func on_animation_event(_event_name: StringName) -> void:
+	pass
+
 func _on_force_stop() -> void:
 	pass
 

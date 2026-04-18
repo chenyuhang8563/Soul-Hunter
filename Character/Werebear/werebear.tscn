@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cgsqhun5hsij2" path="res://Assets/Sprites/Werebear/Werebear.png" id="2_q76v7"]
 [ext_resource type="Texture2D" uid="uid://d4hg8yy54nt3f" path="res://Assets/Sprites/Werebear/Werebear_noeffect.png" id="3_q76v7"]
 [ext_resource type="Script" uid="uid://b637ne4g0rap5" path="res://Character/Werebear/werebear.gd" id="4_5ew3q"]
+[ext_resource type="Resource" path="res://Data/CharacterStats/werebear_boss_stats.tres" id="5_stats"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0rcnq"]
 size = Vector2(23, 31)
@@ -43,6 +44,7 @@ states/hard_attack/position = Vector2(406, 168)
 states/light_attack/node = SubResource("AnimationNodeAnimation_attack_light")
 states/light_attack/position = Vector2(406, 66)
 transitions = ["Start", "light_attack", SubResource("AnimationNodeStateMachineTransition_attack_light"), "Start", "hard_attack", SubResource("AnimationNodeStateMachineTransition_attack_hard"), "Start", "bow_attack", SubResource("AnimationNodeStateMachineTransition_attack_bow")]
+graph_offset = Vector2(12, 41)
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_idle"]
 animation = &"idle"
@@ -264,12 +266,25 @@ phase_two_health_ratio = 0.5
 boss_ai_enabled = true
 reactive_backstep_distance = 20.0
 reactive_backstep_chance = 0.2
+stats = ExtResource("5_stats")
 
 [node name="Sprite2D" parent="." index="0" unique_id=1966064385]
 scale = Vector2(2, 2)
 texture = ExtResource("2_q76v7")
 hframes = 13
 vframes = 7
+
+[node name="HPDamageBar" parent="." index="1" unique_id=179840398]
+offset_top = -31.0
+offset_bottom = -26.0
+
+[node name="HPBar" parent="." index="2" unique_id=1933057317]
+offset_top = -31.0
+offset_bottom = -26.0
+
+[node name="PostureBar" parent="." index="3" unique_id=1452710565]
+offset_top = -25.0
+offset_bottom = -21.0
 
 [node name="CollisionShape2D" parent="." index="4" unique_id=749656219]
 position = Vector2(2.5, -2.5)
@@ -295,4 +310,3 @@ parameters/locomotion_state_machine/conditions/is_walking = false
 
 [node name="AnimationPlayer" parent="." index="11" unique_id=280822122]
 libraries/ = SubResource("AnimationLibrary_q76v7")
-autoplay = &"idle"

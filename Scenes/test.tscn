@@ -1208,6 +1208,7 @@ position = Vector2(160, 90)
 [node name="PauseUI" parent="." unique_id=96758534 instance=ExtResource("12_yb21e")]
 
 [node name="AudioManager" parent="." unique_id=1583249533 instance=ExtResource("13_aees8")]
+bgm_volume_db = -7.0
 
 [node name="Werebear" parent="." unique_id=240269984 instance=ExtResource("12_aees8")]
 position = Vector2(181, 1)

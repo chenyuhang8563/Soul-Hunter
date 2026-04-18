@@ -16,11 +16,13 @@ const REACTIVE_BACKSTEP_DURATION := 0.34
 const LIGHT_ATTACK_HIT_DELAY := 0.20
 const HARD_ATTACK_HIT_DELAY := 0.55
 const ULTIMATE_IMPACT_TIME := 0.50
+const STARTUP_PAUSE_TRIGGER_TIME := 0.30
+const HARD_STARTUP_PAUSE_DURATION := 0.30
+const ULTIMATE_STARTUP_PAUSE_DURATION := 0.30
 
 const LIGHT_ATTACK_RANGE := 80.0
 const HARD_ATTACK_RANGE := 48.0
 const SHOCKWAVE_BASE_DAMAGE_RATIO := 1.0
-const SHOCKWAVE_EXPAND_HOLD := 0.12
 const SHOCKWAVE_INITIAL_SCALE_X := 1.0
 const SHOCKWAVE_SCALE_Y := 1.0
 const SHOCKWAVE_MASK := 2
@@ -32,7 +34,10 @@ const PHASE_ONE_HARD_COOLDOWN := 0.75
 const PHASE_ONE_ULTIMATE_COOLDOWN := 1.80
 const PHASE_ONE_SHOCKWAVE_TARGET_SCALE_X := 1.0
 const PHASE_ONE_SHOCKWAVE_EXPAND_DURATION := 0.0
-const PHASE_ONE_SHOCKWAVE_FOLLOW_INTERVAL := 0.05
+const PHASE_ONE_SHOCKWAVE_HOLD_DURATION := 0.35
+const PHASE_ONE_SHOCKWAVE_PAIR_COUNT := 3
+const PHASE_ONE_SHOCKWAVE_PAIR_INTERVAL := 0.20
+const PHASE_ONE_SHOCKWAVE_PAIR_OFFSET := 24.0
 
 const PHASE_TWO_LIGHT_COOLDOWN := 0.24
 const PHASE_TWO_HARD_COOLDOWN := 0.55
@@ -74,8 +79,9 @@ var _phase_two_wave_origin := Vector2.ZERO
 var _phase_two_wave_spawn_timer := 0.0
 var _phase_two_wave_total_spawns := 0
 var _phase_two_wave_spawned_count := 0
-var _phase_one_follow_wave_pending := false
-var _phase_one_follow_wave_timer := 0.0
+var _phase_one_wave_pairs_active := false
+var _phase_one_wave_pair_timer := 0.0
+var _phase_one_wave_pair_spawned_count := 0
 var hard_combo_step := 0
 var hard_combo_chain_left := 0.0
 var hard_waiting_next := false
@@ -83,6 +89,10 @@ var reactive_backstep_distance := DEFAULT_REACTIVE_BACKSTEP_DISTANCE
 var _damage_pressure_time_left := 0.0
 var _reactive_backstep_direction := 0.0
 var _attack_motion_tween: Tween = null
+var _startup_pause_pending := false
+var _startup_pause_trigger_time := 0.0
+var _startup_pause_duration := 0.0
+var _startup_pause_time_left := 0.0
 
 func setup(
 		host: CharacterBody2D,
@@ -120,7 +130,7 @@ func update(delta: float, target: Node2D = null, in_scope: bool = false) -> void
 		_trigger_ultimate_shockwave()
 	if _phase_two_wave_cast_active:
 		_update_phase_two_wave_cast(delta)
-	if _phase_one_follow_wave_pending:
+	if _phase_one_wave_pairs_active:
 		_update_phase_one_follow_wave(delta)
 
 func try_start_from_input() -> void:
@@ -255,17 +265,21 @@ func _start_ultimate_attack() -> void:
 	_reset_attack_runtime_state()
 	_reset_shockwave_cast_state()
 	_current_attack_interrupt_lock = true
-	_begin_attack(String(MOVE_ULTIMATE), ULTIMATE_ATTACK_DURATION, false, false, false, true)
+	_begin_attack(String(MOVE_ULTIMATE), ULTIMATE_ATTACK_DURATION + ULTIMATE_STARTUP_PAUSE_DURATION, false, false, false, true)
+	_configure_startup_pause(ULTIMATE_STARTUP_PAUSE_DURATION)
 
 func _start_hard_segment(combo_step: int) -> void:
 	var segment_start := float(HARD_ATTACK_TIMES[combo_step - 1])
 	var segment_end := float(HARD_ATTACK_TIMES[combo_step])
-	var segment_duration := maxf(0.0, segment_end - segment_start)
-	var segment_hit_delay := float(HARD_ATTACK_HIT_DELAYS[combo_step - 1])
+	var startup_pause := HARD_STARTUP_PAUSE_DURATION if combo_step == 1 else 0.0
+	var segment_duration := maxf(0.0, segment_end - segment_start) + startup_pause
+	var segment_hit_delay := float(HARD_ATTACK_HIT_DELAYS[combo_step - 1]) + startup_pause
 
 	_begin_attack(String(MOVE_HARD), segment_duration, false, false, true, false)
 	var move_distance := HARD_ATTACK_STAGE_TWO_MOVE_DISTANCE if combo_step >= 2 else HARD_ATTACK_STAGE_ONE_MOVE_DISTANCE
-	_start_attack_motion_tween(move_distance, HARD_ATTACK_MOVE_DURATION)
+	_start_attack_motion_tween(move_distance, HARD_ATTACK_MOVE_DURATION, startup_pause)
+	if startup_pause > 0.0:
+		_configure_startup_pause(startup_pause)
 	_queue_melee_stat_damage_event(segment_hit_delay, &"hard_attack_damage", stats.hard_attack_damage, HARD_ATTACK_RANGE, true, true, _get_hard_slash_spec())
 	if animation_player != null and animation_player.has_animation(String(MOVE_HARD)):
 		animation_tree.active = false
@@ -281,15 +295,14 @@ func _can_spawn_ultimate_shockwave() -> bool:
 	if _ultimate_shockwave_spawned or owner == null:
 		return false
 	var elapsed := attack_duration - attack_time_left
-	return elapsed >= ULTIMATE_IMPACT_TIME
+	return elapsed >= ULTIMATE_IMPACT_TIME + ULTIMATE_STARTUP_PAUSE_DURATION
 
 func _trigger_ultimate_shockwave() -> void:
 	_begin_shockwave_cast()
 	if _phase_two:
 		_start_phase_two_wave_cast()
 	else:
-		_spawn_shockwave_segment(Vector2.ZERO, false)
-		_start_phase_one_follow_wave()
+		_start_phase_one_wave_cast()
 	_ultimate_shockwave_spawned = true
 	_current_attack_interrupt_lock = false
 
@@ -327,19 +340,33 @@ func _finish_phase_two_wave_cast() -> void:
 	_phase_two_wave_total_spawns = 0
 	_phase_two_wave_spawned_count = 0
 
-func _start_phase_one_follow_wave() -> void:
-	_phase_one_follow_wave_pending = true
-	_phase_one_follow_wave_timer = PHASE_ONE_SHOCKWAVE_FOLLOW_INTERVAL
+func _start_phase_one_wave_cast() -> void:
+	_phase_one_wave_pairs_active = true
+	_phase_one_wave_pair_timer = 0.0
+	_phase_one_wave_pair_spawned_count = 0
+	_spawn_next_phase_one_wave_pair()
 
 func _update_phase_one_follow_wave(delta: float) -> void:
-	if not _phase_one_follow_wave_pending:
+	if not _phase_one_wave_pairs_active:
 		return
-	_phase_one_follow_wave_timer -= delta
-	if _phase_one_follow_wave_timer > 0.0:
+	if _phase_one_wave_pair_spawned_count >= PHASE_ONE_SHOCKWAVE_PAIR_COUNT:
+		_phase_one_wave_pairs_active = false
+		_phase_one_wave_pair_timer = 0.0
 		return
-	_phase_one_follow_wave_pending = false
-	_phase_one_follow_wave_timer = 0.0
-	_spawn_shockwave_segment(Vector2.ZERO, false)
+	_phase_one_wave_pair_timer -= delta
+	while _phase_one_wave_pair_timer <= 0.0 and _phase_one_wave_pair_spawned_count < PHASE_ONE_SHOCKWAVE_PAIR_COUNT:
+		_spawn_next_phase_one_wave_pair()
+		_phase_one_wave_pair_timer += PHASE_ONE_SHOCKWAVE_PAIR_INTERVAL
+	if _phase_one_wave_pair_spawned_count >= PHASE_ONE_SHOCKWAVE_PAIR_COUNT:
+		_phase_one_wave_pairs_active = false
+		_phase_one_wave_pair_timer = 0.0
+
+func _spawn_next_phase_one_wave_pair() -> void:
+	var pair_index := _phase_one_wave_pair_spawned_count + 1
+	var offset_distance := PHASE_ONE_SHOCKWAVE_PAIR_OFFSET * float(pair_index)
+	_spawn_shockwave_segment(Vector2(offset_distance, 0.0), false)
+	_spawn_shockwave_segment(Vector2(-offset_distance, 0.0), false)
+	_phase_one_wave_pair_spawned_count += 1
 
 func _spawn_next_phase_two_wave_segment() -> void:
 	var segment_index := _phase_two_wave_spawned_count
@@ -392,7 +419,7 @@ func _spawn_shockwave_segment(offset: Vector2, fullscreen_mode: bool) -> void:
 			"scale_y": SHOCKWAVE_SCALE_Y,
 			"target_scale_x": _get_shockwave_target_scale_x() if not fullscreen_mode else SHOCKWAVE_INITIAL_SCALE_X,
 			"expand_duration": _get_shockwave_expand_duration() if not fullscreen_mode else 0.0,
-			"hold_duration": PHASE_TWO_SHOCKWAVE_SEGMENT_LIFETIME if fullscreen_mode else SHOCKWAVE_EXPAND_HOLD,
+			"hold_duration": _get_shockwave_hold_duration(fullscreen_mode),
 		})
 
 func _get_shockwave_spawn_origin() -> Vector2:
@@ -416,6 +443,11 @@ func _get_shockwave_expand_duration() -> float:
 		return PHASE_TWO_SHOCKWAVE_EXPAND_DURATION
 	return PHASE_ONE_SHOCKWAVE_EXPAND_DURATION
 
+func _get_shockwave_hold_duration(fullscreen_mode: bool) -> float:
+	if fullscreen_mode:
+		return PHASE_TWO_SHOCKWAVE_SEGMENT_LIFETIME
+	return PHASE_ONE_SHOCKWAVE_HOLD_DURATION
+
 func register_shockwave_hit(cast_id: int, body: Node2D, damage_amount: float) -> bool:
 	if cast_id != _shockwave_cast_id:
 		return false
@@ -437,7 +469,16 @@ func notify_damage_taken(amount: float, source: Node2D = null) -> void:
 		current_target = source as Node2D
 
 func _on_attack_updated(_delta: float, _elapsed: float) -> void:
-	pass
+	if animation_player == null:
+		return
+	if _startup_pause_pending and _elapsed >= _startup_pause_trigger_time:
+		_startup_pause_pending = false
+		_startup_pause_time_left = _startup_pause_duration
+		animation_player.speed_scale = 0.0
+	if _startup_pause_time_left > 0.0:
+		_startup_pause_time_left = maxf(0.0, _startup_pause_time_left - _delta)
+		if _startup_pause_time_left == 0.0:
+			_sync_attack_animation_speed()
 
 func _sync_attack_animation_speed() -> void:
 	if hard_waiting_next and animation_player != null:
@@ -481,6 +522,7 @@ func _reset_move_cooldowns() -> void:
 
 func _reset_attack_runtime_state() -> void:
 	_stop_attack_motion_tween()
+	_clear_startup_pause()
 	_ultimate_shockwave_spawned = false
 	_current_attack_interrupt_lock = false
 	if current_attack != MOVE_REACTIVE_BACKSTEP and owner != null:
@@ -488,8 +530,9 @@ func _reset_attack_runtime_state() -> void:
 
 func _reset_shockwave_cast_state() -> void:
 	_shockwave_cast_hit_targets.clear()
-	_phase_one_follow_wave_pending = false
-	_phase_one_follow_wave_timer = 0.0
+	_phase_one_wave_pairs_active = false
+	_phase_one_wave_pair_timer = 0.0
+	_phase_one_wave_pair_spawned_count = 0
 	_phase_two_wave_cast_active = false
 	_phase_two_wave_origin = Vector2.ZERO
 	_phase_two_wave_spawn_timer = 0.0
@@ -531,7 +574,7 @@ func _face_current_target() -> void:
 		return
 	sprite.flip_h = delta_x < 0.0
 
-func _start_attack_motion_tween(distance: float, duration: float) -> void:
+func _start_attack_motion_tween(distance: float, duration: float, delay: float = 0.0) -> void:
 	if owner == null or duration <= 0.0 or is_zero_approx(distance):
 		return
 	var direction := -1.0 if sprite != null and sprite.flip_h else 1.0
@@ -539,6 +582,8 @@ func _start_attack_motion_tween(distance: float, duration: float) -> void:
 	_attack_motion_tween = owner.create_tween()
 	_attack_motion_tween.set_trans(Tween.TRANS_QUAD)
 	_attack_motion_tween.set_ease(Tween.EASE_OUT)
+	if delay > 0.0:
+		_attack_motion_tween.tween_interval(delay)
 	_attack_motion_tween.tween_property(owner, "global_position:x", owner.global_position.x + direction * distance, duration)
 	_attack_motion_tween.finished.connect(_clear_attack_motion_tween)
 
@@ -549,6 +594,20 @@ func _stop_attack_motion_tween() -> void:
 
 func _clear_attack_motion_tween() -> void:
 	_attack_motion_tween = null
+
+func _configure_startup_pause(duration: float) -> void:
+	if duration <= 0.0:
+		return
+	_startup_pause_pending = true
+	_startup_pause_trigger_time = STARTUP_PAUSE_TRIGGER_TIME
+	_startup_pause_duration = duration
+	_startup_pause_time_left = 0.0
+
+func _clear_startup_pause() -> void:
+	_startup_pause_pending = false
+	_startup_pause_trigger_time = 0.0
+	_startup_pause_duration = 0.0
+	_startup_pause_time_left = 0.0
 
 func _start_reactive_backstep() -> void:
 	_stop_attack_motion_tween()

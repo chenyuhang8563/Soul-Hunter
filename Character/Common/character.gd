@@ -953,6 +953,10 @@ func _on_animation_finished(anim_name: StringName) -> void:
 	if lifecycle_state != null:
 		lifecycle_state.on_animation_finished(anim_name)
 
+func _on_attack_animation_event(event_name: StringName) -> void:
+	if attack_module != null and attack_module.has_method("on_animation_event"):
+		attack_module.call("on_animation_event", event_name)
+
 func consume_for_possession() -> void:
 	if lifecycle_state != null:
 		lifecycle_state.consume_for_possession()
