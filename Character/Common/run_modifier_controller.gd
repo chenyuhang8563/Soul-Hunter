@@ -2,6 +2,7 @@ extends RefCounted
 class_name RunModifierController
 
 const RewardEffectDefinitionScript := preload("res://Global/Roguelike/reward_effect_definition.gd")
+const RewardPoolResource := preload("res://Data/Roguelike/reward_pool_basic.tres")
 const ModifierScript := preload("res://Character/Common/modifier.gd")
 const DefenseDownBuffScript := preload("res://Character/Common/Buffs/defense_down_buff.gd")
 const PossessionComboHasteBuffScript := preload("res://Character/Common/Buffs/possession_combo_haste_buff.gd")
@@ -19,8 +20,13 @@ var _selected_cards: Array[StringName] = []
 var _selected_card_titles: Array[String] = []
 var _hud_summary_tokens: Array[Dictionary] = []
 var _hud_numeric_totals := {}
+var _developer_buff_values := {}
+var _developer_hud_summary_tokens: Array[Dictionary] = []
+var _developer_hud_numeric_totals := {}
 var _modifiers: Array = []
+var _developer_modifiers: Array = []
 var _lifesteal_percent := 0.0
+var _developer_lifesteal_percent := 0.0
 var _dash_path_damage := 0.0
 var _has_possession_combo_haste := false
 var _possession_combo_window := 3.0
@@ -45,8 +51,13 @@ func reset() -> void:
 	_selected_card_titles.clear()
 	_hud_summary_tokens.clear()
 	_hud_numeric_totals.clear()
+	_developer_buff_values.clear()
+	_developer_hud_summary_tokens.clear()
+	_developer_hud_numeric_totals.clear()
 	_modifiers.clear()
+	_developer_modifiers.clear()
 	_lifesteal_percent = 0.0
+	_developer_lifesteal_percent = 0.0
 	_dash_path_damage = 0.0
 	_has_possession_combo_haste = false
 	_possession_combo_window = 3.0
@@ -96,33 +107,53 @@ func get_selected_card_titles() -> Array[String]:
 
 func get_hud_buff_summary_text() -> String:
 	var tokens: Array[String] = []
-	for token in _hud_summary_tokens:
-		var token_type := String(token.get("type", ""))
-		if token_type == "numeric":
-			var category: StringName = token.get("category", &"")
-			var total := float(_hud_numeric_totals.get(category, 0.0))
-			if total <= 0.0:
-				continue
-			tokens.append(_format_numeric_hud_entry(
-				String(token.get("label", "")),
-				total,
-				String(token.get("suffix", ""))
-			))
-			continue
-		tokens.append(String(token.get("text", "")))
+	_append_hud_summary_tokens(_hud_summary_tokens, _hud_numeric_totals, tokens)
+	_append_hud_summary_tokens(_developer_hud_summary_tokens, _developer_hud_numeric_totals, tokens)
 	return " ".join(tokens)
 
 func get_lifesteal_percent() -> float:
-	return _lifesteal_percent
+	return _lifesteal_percent + _developer_lifesteal_percent
 
 func get_dash_path_damage() -> float:
 	return _dash_path_damage
 
 func has_active_effects() -> bool:
-	return not _selected_cards.is_empty() or not _modifiers.is_empty() or _lifesteal_percent > 0.0 or _dash_path_damage > 0.0 or _has_possession_combo_haste or _detach_dash_armor_break_duration > 0.0
+	return not _selected_cards.is_empty() or not _developer_buff_values.is_empty() or not _modifiers.is_empty() or not _developer_modifiers.is_empty() or get_lifesteal_percent() > 0.0 or _dash_path_damage > 0.0 or _has_possession_combo_haste or _detach_dash_armor_break_duration > 0.0
 
 func has_active_stat_modifiers() -> bool:
-	return not _modifiers.is_empty()
+	return not _modifiers.is_empty() or not _developer_modifiers.is_empty()
+
+func get_developer_buff_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	for card in RewardPoolResource.cards:
+		if not _supports_developer_buff(card):
+			continue
+		var card_id := card.get("id") as StringName
+		var numeric_entry := _get_numeric_hud_entry(card_id)
+		options.append({
+			"id": card_id,
+			"label": String(numeric_entry.get("label", str(card.get("title")))),
+			"default_value": float(numeric_entry.get("value", 0.0)),
+			"suffix": String(numeric_entry.get("suffix", "")),
+		})
+	return options
+
+func get_developer_buff_value(card_id: StringName) -> float:
+	return float(_developer_buff_values.get(card_id, 0.0))
+
+func set_developer_buff_value(card_id: StringName, value: float) -> void:
+	if card_id == &"":
+		return
+	if not _supports_developer_buff(_find_reward_card_by_id(card_id)):
+		return
+	var sanitized_value := maxf(0.0, value)
+	if sanitized_value <= 0.0:
+		_developer_buff_values.erase(card_id)
+	else:
+		_developer_buff_values[card_id] = sanitized_value
+	_rebuild_developer_buff_state()
+	_mark_stats_dirty()
+	_notify_stats_changed(true)
 
 func _track_hud_summary_entry(card: Resource) -> void:
 	if not card.has_method("get"):
@@ -175,6 +206,22 @@ func _format_hud_numeric_value(total: float) -> String:
 	if is_equal_approx(total, roundf(total)):
 		return str(int(roundf(total)))
 	return str(total)
+
+func _append_hud_summary_tokens(summary_tokens: Array[Dictionary], numeric_totals: Dictionary, output_tokens: Array[String]) -> void:
+	for token in summary_tokens:
+		var token_type := String(token.get("type", ""))
+		if token_type == "numeric":
+			var category: StringName = token.get("category", &"")
+			var total := float(numeric_totals.get(category, 0.0))
+			if total <= 0.0:
+				continue
+			output_tokens.append(_format_numeric_hud_entry(
+				String(token.get("label", "")),
+				total,
+				String(token.get("suffix", ""))
+			))
+			continue
+		output_tokens.append(String(token.get("text", "")))
 
 func _apply_effect(effect: Resource) -> bool:
 	if effect == null:
@@ -257,14 +304,15 @@ func _notify_stats_changed(force_emit: bool = false) -> void:
 func _rebuild_modifier_cache() -> void:
 	_modifier_cache.clear()
 	var ordered_modifiers: Array[Dictionary] = []
-	for modifier in _modifiers:
-		if modifier == null:
-			continue
-		ordered_modifiers.append({
-			"modifier": modifier,
-			"mode": modifier.mode,
-			"priority": modifier.priority,
-		})
+	for modifier_group in [_modifiers, _developer_modifiers]:
+		for modifier in modifier_group:
+			if modifier == null:
+				continue
+			ordered_modifiers.append({
+				"modifier": modifier,
+				"mode": modifier.mode,
+				"priority": modifier.priority,
+			})
 	ordered_modifiers.sort_custom(_sort_modifier_entries)
 	for entry in ordered_modifiers:
 		var modifier: Variant = entry.get("modifier")
@@ -400,3 +448,69 @@ func _resolve_damage_source() -> CharacterBody2D:
 	if _host is CharacterBody2D:
 		return _host as CharacterBody2D
 	return null
+
+func _rebuild_developer_buff_state() -> void:
+	_developer_hud_summary_tokens.clear()
+	_developer_hud_numeric_totals.clear()
+	_developer_modifiers.clear()
+	_developer_lifesteal_percent = 0.0
+	for card in RewardPoolResource.cards:
+		if card == null or not card.has_method("get"):
+			continue
+		var card_id := card.get("id") as StringName
+		if not _developer_buff_values.has(card_id):
+			continue
+		if not _supports_developer_buff(card):
+			continue
+		var display_value := float(_developer_buff_values.get(card_id, 0.0))
+		if display_value <= 0.0:
+			continue
+		var numeric_entry := _get_numeric_hud_entry(card_id)
+		var default_display_value := float(numeric_entry.get("value", 0.0))
+		if default_display_value <= 0.0:
+			continue
+		var category: StringName = numeric_entry.get("category", &"")
+		_developer_hud_numeric_totals[category] = display_value
+		_developer_hud_summary_tokens.append({
+			"type": "numeric",
+			"category": category,
+			"label": String(numeric_entry.get("label", "")),
+			"suffix": String(numeric_entry.get("suffix", "")),
+		})
+		var scale := display_value / default_display_value
+		for effect in card.get("effects"):
+			if effect == null:
+				continue
+			var scaled_value := float(effect.value) * scale
+			if int(effect.effect_type) == int(RewardEffectDefinitionScript.EffectType.STAT_ADD):
+				_developer_modifiers.append(ModifierScript.new(effect.stat_id, scaled_value, ModifierScript.Mode.ADD, 0))
+				continue
+			if int(effect.effect_type) == int(RewardEffectDefinitionScript.EffectType.SKILL):
+				if effect.effect_id == SKILL_EFFECT_LIFESTEAL_PERCENT or effect.effect_id == &"lifesteal":
+					_developer_lifesteal_percent += scaled_value
+
+func _find_reward_card_by_id(card_id: StringName) -> Resource:
+	for card in RewardPoolResource.cards:
+		if card != null and card.has_method("get") and card.get("id") == card_id:
+			return card
+	return null
+
+func _supports_developer_buff(card: Resource) -> bool:
+	if card == null or not card.has_method("get"):
+		return false
+	var card_id := card.get("id") as StringName
+	var numeric_entry := _get_numeric_hud_entry(card_id)
+	if numeric_entry.is_empty():
+		return false
+	var effects: Array = card.get("effects")
+	if effects.is_empty():
+		return false
+	for effect in effects:
+		if effect == null:
+			return false
+		if int(effect.effect_type) == int(RewardEffectDefinitionScript.EffectType.STAT_ADD):
+			continue
+		if int(effect.effect_type) == int(RewardEffectDefinitionScript.EffectType.SKILL) and (effect.effect_id == SKILL_EFFECT_LIFESTEAL_PERCENT or effect.effect_id == &"lifesteal"):
+			continue
+		return false
+	return true

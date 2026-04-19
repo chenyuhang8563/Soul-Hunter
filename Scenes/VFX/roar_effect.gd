@@ -1,5 +1,7 @@
 extends Node2D
 
+const PLAYBACK_LOOP_COUNT := 3
+
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 
@@ -21,7 +23,7 @@ func play_once(world_position: Vector2, facing_left: bool, release_cb: Callable)
 	if sprite != null:
 		sprite.flip_h = facing_left
 		sprite.frame = 0
-	var playback_duration := _get_playback_duration()
+	var playback_duration := _get_total_playback_duration()
 	if animation_player != null and animation_player.has_animation(&"default"):
 		animation_player.play(&"default")
 	var tree := get_tree()
@@ -58,7 +60,11 @@ func _finish_playback(play_serial: int) -> void:
 		release_cb.call()
 
 
-func _get_playback_duration() -> float:
+func _get_single_loop_duration() -> float:
 	if animation_player != null and animation_player.has_animation(&"default"):
 		return maxf(animation_player.get_animation(&"default").length, 0.01)
 	return 0.3
+
+
+func _get_total_playback_duration() -> float:
+	return _get_single_loop_duration() * float(PLAYBACK_LOOP_COUNT)

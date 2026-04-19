@@ -1215,5 +1215,5 @@ position = Vector2(181, 1)
 reactive_backstep_distance = 50.0
 
 [node name="Archer" parent="." unique_id=1710627706 instance=ExtResource("10_iaow0")]
-position = Vector2(28, 26)
+position = Vector2(50, 87)
 start_player_controlled = true

@@ -1,9 +1,17 @@
 extends Node
 
+signal mode_changed(enabled)
+
 var enabled := false
 
 func toggle() -> bool:
-	enabled = not enabled
+	return set_enabled(not enabled)
+
+func set_enabled(value: bool) -> bool:
+	if enabled == value:
+		return enabled
+	enabled = value
+	mode_changed.emit(enabled)
 	return enabled
 
 func is_enabled() -> bool:

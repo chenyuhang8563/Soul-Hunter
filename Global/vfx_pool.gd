@@ -129,19 +129,23 @@ func play_explosion(world_position: Vector2) -> void:
 	effect.play(&"default")
 
 
-func play_scene_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0) -> void:
+func play_scene_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0, completion_cb: Callable = Callable()) -> Node:
 	var effect_node := _acquire_scene_effect(effect_key)
 	if effect_node == null:
-		return
+		return null
 	if not effect_node.has_method("play_once"):
 		_release_effect(effect_key, effect_node)
-		return
+		return null
 	var effect := effect_node as Node
 	var active_for_key: Array = _active[effect_key]
 	active_for_key.append(effect)
 	var facing_left := horizontal_direction < 0.0
-	var release_cb := Callable(self, "_release_effect").bind(effect_key, effect)
+	var release_cb := func() -> void:
+		_release_effect(effect_key, effect)
+		if completion_cb.is_valid():
+			completion_cb.call()
 	effect_node.call("play_once", world_position, facing_left, release_cb)
+	return effect_node
 
 
 func play_particle_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0) -> void:

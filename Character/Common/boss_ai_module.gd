@@ -9,7 +9,6 @@ const PHASE_TWO_MIN_ATTACK_PRESSURE_DISTANCE := 18.0
 const PHASE_TWO_WALK_SPEED_MULTIPLIER := 1.15
 const DEFAULT_REACTIVE_BACKSTEP_DISTANCE := 20.0
 const DEFAULT_REACTIVE_BACKSTEP_CHANCE := 0.2
-const INTRO_ROAR_DURATION_FRAMES := 30
 const INTRO_ROAR_VFX_KEY := &"werebear_roar"
 const VFX_POOL_NODE_NAME := "VfxPool"
 const AIState_BACKSTEP := 4
@@ -23,7 +22,7 @@ var _backstep_decision_pending := false
 var _had_target_last_frame := false
 var _was_reactive_backstep_candidate_last_frame := false
 var _intro_roar_pending := true
-var _intro_roar_frames_left := 0
+var _intro_roar_playback_serial := 0
 var _roar_locked_target: Node2D = null
 
 func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D, _attack_scope: Area2D, _line_of_sight: RayCast2D, _attack_module: AttackModuleBase, _walk_speed: float = 50.0, _return_tolerance: float = 6.0) -> void:
@@ -41,7 +40,7 @@ func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D
 		reactive_backstep_chance = DEFAULT_REACTIVE_BACKSTEP_CHANCE
 	_reset_backstep_decision_state()
 	_intro_roar_pending = true
-	_intro_roar_frames_left = 0
+	_intro_roar_playback_serial = 0
 	_roar_locked_target = null
 
 func enter_phase_two() -> void:
@@ -212,14 +211,11 @@ func _process_intro_roar() -> bool:
 		return false
 	_hold_intro_idle_pose()
 	_apply_roar_target_constraints()
-	_intro_roar_frames_left = max(0, _intro_roar_frames_left - 1)
-	if _intro_roar_frames_left == 0:
-		_finish_intro_roar()
 	return true
 
 func _start_intro_roar() -> void:
 	_intro_roar_pending = false
-	_intro_roar_frames_left = INTRO_ROAR_DURATION_FRAMES
+	_intro_roar_playback_serial += 1
 	ai_state = AIState_ROAR
 	_sync_target_state()
 	if attack_module != null:
@@ -227,11 +223,13 @@ func _start_intro_roar() -> void:
 			attack_module.force_stop()
 		elif attack_module.has_method("reset"):
 			attack_module.reset()
-	_play_intro_roar_vfx()
+	if not _play_intro_roar_vfx(_intro_roar_playback_serial):
+		_finish_intro_roar()
+		return
 	_apply_roar_target_constraints()
 
 func _finish_intro_roar() -> void:
-	_intro_roar_frames_left = 0
+	_intro_roar_playback_serial += 1
 	if ai_state == AIState_ROAR:
 		ai_state = AIState.IDLE
 	_release_roar_target_lock()
@@ -274,14 +272,21 @@ func _release_roar_target_lock() -> void:
 		_roar_locked_target.pop_external_player_input_lock()
 	_roar_locked_target = null
 
-func _play_intro_roar_vfx() -> void:
+func _play_intro_roar_vfx(playback_serial: int) -> bool:
 	if character == null or character.get_tree() == null:
-		return
+		return false
 	var vfx_pool := character.get_tree().root.get_node_or_null(VFX_POOL_NODE_NAME)
 	if vfx_pool == null or not vfx_pool.has_method("play_scene_effect"):
-		return
+		return false
 	var horizontal_direction := -1.0 if sprite != null and sprite.flip_h else 1.0
-	vfx_pool.call("play_scene_effect", INTRO_ROAR_VFX_KEY, character.global_position, horizontal_direction)
+	var completion_cb := Callable(self, "_on_intro_roar_vfx_finished").bind(playback_serial)
+	var effect = vfx_pool.call("play_scene_effect", INTRO_ROAR_VFX_KEY, character.global_position, horizontal_direction, completion_cb)
+	return effect != null
+
+func _on_intro_roar_vfx_finished(playback_serial: int) -> void:
+	if playback_serial != _intro_roar_playback_serial:
+		return
+	_finish_intro_roar()
 
 func _force_node_face_world_x(target_node: Node2D, target_world_x: float) -> void:
 	if target_node == null or not is_instance_valid(target_node):

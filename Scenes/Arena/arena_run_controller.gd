@@ -145,8 +145,28 @@ func get_reward_options() -> Array:
 func get_run_modifier_controller() -> RunModifierController:
 	return _run_modifier_controller
 
+func get_total_waves() -> int:
+	return _get_total_waves()
+
 func get_rest_time_left() -> float:
 	return _rest_time_left
+
+func jump_to_rest_after_wave(wave_index: int) -> bool:
+	var total_waves := _get_total_waves()
+	if total_waves <= 1:
+		return false
+	var target_wave := clampi(wave_index, 1, total_waves - 1)
+	_reset_wave_clear_buffer()
+	_clear_spawned_wave_enemies()
+	_active_enemies.clear()
+	_reward_options.clear()
+	current_wave = target_wave
+	current_wave_plan.clear()
+	_rest_time_left = rest_duration
+	current_state = RunState.REST
+	_set_tree_paused(false)
+	rest_started.emit(_rest_time_left)
+	return true
 
 func _start_wave(wave_index: int) -> void:
 	_reset_wave_clear_buffer()
@@ -395,6 +415,17 @@ func _rebuild_active_enemy_snapshot() -> void:
 		if _is_hostile_wave_enemy(enemy):
 			rebuilt_enemies.append(enemy)
 	_active_enemies = rebuilt_enemies
+
+func _clear_spawned_wave_enemies() -> void:
+	if not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for enemy in tree.get_nodes_in_group(ARENA_ENEMY_GROUP):
+		if enemy == null or not is_instance_valid(enemy):
+			continue
+		enemy.queue_free()
 
 func _has_living_wave_enemies() -> bool:
 	if not is_inside_tree():
