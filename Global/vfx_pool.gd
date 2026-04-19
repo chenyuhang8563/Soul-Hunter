@@ -11,6 +11,7 @@ const PARTICLE_TEMPLATE_SIGNATURE_META := "_vfx_pool_particle_template_signature
 const CutScene := preload("res://Scenes/VFX/cut.tscn")
 const AfterimageScene := preload("res://Scenes/VFX/afterimage.tscn")
 const ExplosionScene := preload("res://Scenes/VFX/explosion.tscn")
+const WerebearRoarScene := preload("res://Scenes/VFX/roar_effect.tscn")
 const HurtParticlesScene := preload("res://Scenes/VFX/particles/hurt_particles.tscn")
 const ParryParticlesScene := preload("res://Scenes/VFX/particles/parry_particles.tscn")
 const FinisherBurstParticlesScene := preload("res://Scenes/VFX/particles/finisher_burst_particles.tscn")
@@ -36,6 +37,7 @@ func _build_default_registry() -> Dictionary:
 		"cut": {"scene": CutScene, "prewarm": 8},
 		"afterimage": {"scene": AfterimageScene, "prewarm": 15},
 		"explosion": {"scene": ExplosionScene, "prewarm": 6},
+		"werebear_roar": {"scene": WerebearRoarScene, "prewarm": 1},
 		"hurt_particles": {"scene": HurtParticlesScene, "prewarm": 4},
 		"parry_particles": {"scene": ParryParticlesScene, "prewarm": 4},
 		"finisher_burst": {"scene": FinisherBurstParticlesScene, "prewarm": 2},
@@ -125,6 +127,21 @@ func play_explosion(world_position: Vector2) -> void:
 		CONNECT_ONE_SHOT
 	)
 	effect.play(&"default")
+
+
+func play_scene_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0) -> void:
+	var effect_node := _acquire_scene_effect(effect_key)
+	if effect_node == null:
+		return
+	if not effect_node.has_method("play_once"):
+		_release_effect(effect_key, effect_node)
+		return
+	var effect := effect_node as Node
+	var active_for_key: Array = _active[effect_key]
+	active_for_key.append(effect)
+	var facing_left := horizontal_direction < 0.0
+	var release_cb := Callable(self, "_release_effect").bind(effect_key, effect)
+	effect_node.call("play_once", world_position, facing_left, release_cb)
 
 
 func play_particle_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0) -> void:

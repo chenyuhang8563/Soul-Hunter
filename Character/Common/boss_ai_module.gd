@@ -9,7 +9,11 @@ const PHASE_TWO_MIN_ATTACK_PRESSURE_DISTANCE := 18.0
 const PHASE_TWO_WALK_SPEED_MULTIPLIER := 1.15
 const DEFAULT_REACTIVE_BACKSTEP_DISTANCE := 20.0
 const DEFAULT_REACTIVE_BACKSTEP_CHANCE := 0.2
+const INTRO_ROAR_DURATION_FRAMES := 30
+const INTRO_ROAR_VFX_KEY := &"werebear_roar"
+const VFX_POOL_NODE_NAME := "VfxPool"
 const AIState_BACKSTEP := 4
+const AIState_ROAR := 5
 
 var _phase_two := false
 var _base_walk_speed := 50.0
@@ -18,6 +22,9 @@ var reactive_backstep_chance := DEFAULT_REACTIVE_BACKSTEP_CHANCE
 var _backstep_decision_pending := false
 var _had_target_last_frame := false
 var _was_reactive_backstep_candidate_last_frame := false
+var _intro_roar_pending := true
+var _intro_roar_frames_left := 0
+var _roar_locked_target: Node2D = null
 
 func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D, _attack_scope: Area2D, _line_of_sight: RayCast2D, _attack_module: AttackModuleBase, _walk_speed: float = 50.0, _return_tolerance: float = 6.0) -> void:
 	super.setup(_character, _sprite, _visual_scope, _attack_scope, _line_of_sight, _attack_module, _walk_speed, _return_tolerance)
@@ -33,6 +40,9 @@ func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D
 	else:
 		reactive_backstep_chance = DEFAULT_REACTIVE_BACKSTEP_CHANCE
 	_reset_backstep_decision_state()
+	_intro_roar_pending = true
+	_intro_roar_frames_left = 0
+	_roar_locked_target = null
 
 func enter_phase_two() -> void:
 	if _phase_two:
@@ -47,10 +57,13 @@ func is_in_backstep_state() -> bool:
 	return ai_state == AIState_BACKSTEP
 
 func force_stop() -> void:
+	_finish_intro_roar()
 	super.force_stop()
 	_reset_backstep_decision_state()
 
 func physics_process_ai(delta: float) -> float:
+	if _process_intro_roar():
+		return 0.0
 	_sync_target_state()
 	_sync_backstep_decision_window()
 	var target_in_scope := target != null and _is_target_in_attack_scope(target)
@@ -183,6 +196,118 @@ func _reset_backstep_decision_state() -> void:
 	_backstep_decision_pending = false
 	_had_target_last_frame = false
 	_was_reactive_backstep_candidate_last_frame = false
+
+func _process_intro_roar() -> bool:
+	if not _intro_roar_pending and ai_state != AIState_ROAR:
+		return false
+	if character == null:
+		return false
+	if _intro_roar_pending and not character.is_on_floor():
+		_hold_intro_idle_pose()
+		_release_roar_target_lock()
+		return true
+	if _intro_roar_pending:
+		_start_intro_roar()
+	if ai_state != AIState_ROAR:
+		return false
+	_hold_intro_idle_pose()
+	_apply_roar_target_constraints()
+	_intro_roar_frames_left = max(0, _intro_roar_frames_left - 1)
+	if _intro_roar_frames_left == 0:
+		_finish_intro_roar()
+	return true
+
+func _start_intro_roar() -> void:
+	_intro_roar_pending = false
+	_intro_roar_frames_left = INTRO_ROAR_DURATION_FRAMES
+	ai_state = AIState_ROAR
+	_sync_target_state()
+	if attack_module != null:
+		if attack_module.has_method("force_stop"):
+			attack_module.force_stop()
+		elif attack_module.has_method("reset"):
+			attack_module.reset()
+	_play_intro_roar_vfx()
+	_apply_roar_target_constraints()
+
+func _finish_intro_roar() -> void:
+	_intro_roar_frames_left = 0
+	if ai_state == AIState_ROAR:
+		ai_state = AIState.IDLE
+	_release_roar_target_lock()
+
+func _hold_intro_idle_pose() -> void:
+	ai_state = AIState_ROAR if not _intro_roar_pending else AIState.IDLE
+	if character != null:
+		character.velocity.x = 0.0
+	if sprite != null:
+		sprite.frame = 0
+
+func _apply_roar_target_constraints() -> void:
+	var resolved_target := target
+	if resolved_target == null or not is_instance_valid(resolved_target):
+		resolved_target = _roar_locked_target
+	if resolved_target == null or not is_instance_valid(resolved_target):
+		return
+	_lock_roar_target(resolved_target)
+	if _roar_locked_target != null and is_instance_valid(_roar_locked_target):
+		if _roar_locked_target.has_method("face_towards_world_x"):
+			_roar_locked_target.face_towards_world_x(character.global_position.x)
+		else:
+			_force_node_face_world_x(_roar_locked_target, character.global_position.x)
+
+func _lock_roar_target(target_node: Node2D) -> void:
+	if target_node == null or not is_instance_valid(target_node):
+		return
+	if _roar_locked_target == target_node:
+		return
+	_release_roar_target_lock()
+	_roar_locked_target = target_node
+	if _roar_locked_target.has_method("push_external_player_input_lock"):
+		_roar_locked_target.push_external_player_input_lock()
+
+func _release_roar_target_lock() -> void:
+	if _roar_locked_target == null or not is_instance_valid(_roar_locked_target):
+		_roar_locked_target = null
+		return
+	if _roar_locked_target.has_method("pop_external_player_input_lock"):
+		_roar_locked_target.pop_external_player_input_lock()
+	_roar_locked_target = null
+
+func _play_intro_roar_vfx() -> void:
+	if character == null or character.get_tree() == null:
+		return
+	var vfx_pool := character.get_tree().root.get_node_or_null(VFX_POOL_NODE_NAME)
+	if vfx_pool == null or not vfx_pool.has_method("play_scene_effect"):
+		return
+	var horizontal_direction := -1.0 if sprite != null and sprite.flip_h else 1.0
+	vfx_pool.call("play_scene_effect", INTRO_ROAR_VFX_KEY, character.global_position, horizontal_direction)
+
+func _force_node_face_world_x(target_node: Node2D, target_world_x: float) -> void:
+	if target_node == null or not is_instance_valid(target_node):
+		return
+	var target_sprite := _find_target_sprite(target_node)
+	if target_sprite == null:
+		return
+	var delta_x := target_world_x - target_node.global_position.x
+	if is_zero_approx(delta_x):
+		return
+	target_sprite.flip_h = delta_x < 0.0
+
+func _find_target_sprite(target_node: Node2D) -> Sprite2D:
+	if target_node == null:
+		return null
+	if target_node.has_method("get"):
+		var sprite_prop = target_node.get("sprite")
+		if sprite_prop is Sprite2D:
+			return sprite_prop as Sprite2D
+	var named_sprite := target_node.get_node_or_null("Sprite2D") as Sprite2D
+	if named_sprite != null:
+		return named_sprite
+	for child in target_node.get_children():
+		if child is Sprite2D:
+			return child as Sprite2D
+	return null
 
 func _should_enter_backstep_state(candidate: Node2D) -> bool:
 	if not _backstep_decision_pending:

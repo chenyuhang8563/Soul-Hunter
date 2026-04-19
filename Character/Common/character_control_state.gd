@@ -45,7 +45,7 @@ func get_camera() -> Camera2D:
 	return null
 
 func is_player_input_blocked() -> bool:
-	return owner.is_dead or DialogueManager.is_dialogue_active()
+	return owner.is_dead or DialogueManager.is_dialogue_active() or (owner.has_method("has_external_player_input_lock") and owner.has_external_player_input_lock())
 
 func try_manual_detach(delta: float) -> void:
 	if not owner.is_player_controlled or owner.is_dead or is_player_input_blocked():

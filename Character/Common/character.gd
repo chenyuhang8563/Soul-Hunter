@@ -116,6 +116,7 @@ var dash_cooldown_left := 0.0
 var invincibility_time_left := 0.0
 var _dash_start_position := Vector2.ZERO
 var _possession_input_lock_count := 0
+var _external_player_input_lock_count := 0
 
 func _ready() -> void:
 	if stats == null:
@@ -711,6 +712,24 @@ func is_possession_input_locked() -> bool:
 
 func _release_possession_input_lock() -> void:
 	_possession_input_lock_count = max(0, _possession_input_lock_count - 1)
+
+func push_external_player_input_lock() -> void:
+	_external_player_input_lock_count += 1
+
+func pop_external_player_input_lock() -> void:
+	_external_player_input_lock_count = max(0, _external_player_input_lock_count - 1)
+
+func has_external_player_input_lock() -> bool:
+	return _external_player_input_lock_count > 0
+
+func face_towards_world_x(target_world_x: float) -> void:
+	var self_sprite := _find_self_sprite()
+	if self_sprite == null:
+		return
+	var delta_x := target_world_x - global_position.x
+	if is_zero_approx(delta_x):
+		return
+	self_sprite.flip_h = delta_x < 0.0
 
 func is_player_character() -> bool:
 	return is_player_controlled
