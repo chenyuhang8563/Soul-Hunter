@@ -29,6 +29,11 @@ const DEVELOPER_SPEED_MULTIPLIER := 2.0
 const HAZARD_CHECK_INTERVAL := 0.1
 const PROMPT_ICON_UPDATE_INTERVAL := 0.05
 const WORLD_COLLISION_MASK := 1
+const PHASE_SHIFT_HIT_THRESHOLD := 3
+const PHASE_SHIFT_HIT_WINDOW_DURATION := 2.0
+const PHASE_SHIFT_DURATION := 3.0
+const PHASE_SHIFT_FLASH_CYCLES := 2
+const PHASE_SHIFT_MIN_ALPHA := 0.35
 
 @onready var hp_bar: ProgressBar = get_node_or_null("HPBar")
 @onready var hp_damage_bar: ProgressBar = get_node_or_null("HPDamageBar")
@@ -114,9 +119,16 @@ var _pending_player_runtime_state: Dictionary = {}
 var _is_creating_afterimages: bool = false
 var dash_cooldown_left := 0.0
 var invincibility_time_left := 0.0
+var consecutive_hit_count := 0
+var phase_shift_time_left := 0.0
 var _dash_start_position := Vector2.ZERO
 var _possession_input_lock_count := 0
 var _external_player_input_lock_count := 0
+var phase_shift_tween: Tween
+var _phase_shift_original_sprite_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
+var _phase_shift_saved_collision_layer := 0
+var _phase_shift_saved_collision_mask := 0
+var _phase_shift_hit_timestamps: Array[float] = []
 
 func _ready() -> void:
 	if stats == null:
@@ -135,6 +147,9 @@ func _ready() -> void:
 	_apply_pending_player_runtime_state()
 	_clear_static_buff_icon_placeholder()
 	_setup_health()
+	var self_sprite := _find_self_sprite()
+	if self_sprite != null:
+		_phase_shift_original_sprite_modulate = self_sprite.self_modulate
 	add_to_group("possessable_character")
 	set_player_controlled(start_player_controlled)
 	if interaction_state != null:
@@ -174,6 +189,7 @@ func _exit_tree() -> void:
 	_clear_possession_combo_overlay()
 	_clear_hit_flash_overlay()
 	_clear_all_buff_icons()
+	_stop_phase_shift_flash()
 
 func _set_locomotion_conditions(input_dir: float) -> void:
 	if animation_tree == null:
@@ -192,6 +208,7 @@ func _set_scope_monitoring(enabled: bool) -> void:
 
 func _on_control_mode_changed(is_controlled: bool) -> void:
 	auto_revive = is_controlled
+	_reset_phase_shift_state()
 
 func _on_enter_hurt_override() -> void:
 	if ai_module != null:
@@ -203,12 +220,14 @@ func _on_enter_hurt_override() -> void:
 
 func _on_enter_dead_override() -> void:
 	finish_dash()
+	_reset_phase_shift_state()
 	if ai_module != null and ai_module.has_method("force_stop"):
 		ai_module.force_stop()
 	_set_locomotion_conditions(0.0)
 	_set_scope_monitoring(false)
 
 func _on_revived_override() -> void:
+	_reset_phase_shift_state()
 	if ai_module != null and ai_module.has_method("force_stop"):
 		ai_module.force_stop()
 	_set_locomotion_conditions(0.0)
@@ -512,10 +531,85 @@ func _on_damaged(_amount: float, _current_health: float, _max_health: float, sou
 		var is_critical_hit := has_meta("incoming_damage_is_critical") and bool(get_meta("incoming_damage_is_critical"))
 		damage_number_spawner.call("spawn_label", _amount, is_critical_hit)
 	if _amount > 0.0:
+		register_consecutive_player_hit()
 		_play_hit_flash()
 		_trigger_hit_camera_shake(source)
 	if lifecycle_state != null:
 		lifecycle_state.on_damaged(_amount, _current_health, _max_health, source)
+
+func _register_consecutive_player_hit() -> void:
+	if not is_player_controlled or is_dead:
+		return
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	_phase_shift_hit_timestamps.append(now_seconds)
+	_prune_phase_shift_hits(now_seconds)
+	consecutive_hit_count = _phase_shift_hit_timestamps.size()
+	if consecutive_hit_count < PHASE_SHIFT_HIT_THRESHOLD:
+		return
+	consecutive_hit_count = 0
+	_phase_shift_hit_timestamps.clear()
+	_start_phase_shift()
+
+func register_consecutive_player_hit() -> void:
+	_register_consecutive_player_hit()
+
+func _prune_phase_shift_hits(now_seconds: float) -> void:
+	while not _phase_shift_hit_timestamps.is_empty() and now_seconds - _phase_shift_hit_timestamps[0] > PHASE_SHIFT_HIT_WINDOW_DURATION:
+		_phase_shift_hit_timestamps.pop_front()
+
+func _start_phase_shift() -> void:
+	if not is_player_controlled or is_dead:
+		return
+	if phase_shift_time_left <= 0.0:
+		_phase_shift_saved_collision_layer = collision_layer
+		_phase_shift_saved_collision_mask = collision_mask
+	phase_shift_time_left = PHASE_SHIFT_DURATION
+	_refresh_runtime_collision_state()
+	_play_phase_shift_flash()
+
+func _end_phase_shift() -> void:
+	phase_shift_time_left = 0.0
+	_stop_phase_shift_flash()
+	if is_dead:
+		return
+	if dash_time_left > 0.0:
+		_set_intangible_collision_state()
+		return
+	collision_layer = _default_collision_layer
+	collision_mask = _default_collision_mask
+	if _should_collide_with_character_bodies():
+		collision_mask |= _default_collision_layer
+
+func _reset_phase_shift_state() -> void:
+	consecutive_hit_count = 0
+	_phase_shift_hit_timestamps.clear()
+	phase_shift_time_left = 0.0
+	_stop_phase_shift_flash()
+
+func _play_phase_shift_flash() -> void:
+	var self_sprite := _find_self_sprite()
+	if self_sprite == null:
+		return
+	_stop_phase_shift_flash()
+	self_sprite.self_modulate = _phase_shift_original_sprite_modulate
+	var half_cycle_duration := PHASE_SHIFT_DURATION / float(PHASE_SHIFT_FLASH_CYCLES * 2)
+	phase_shift_tween = create_tween()
+	for _cycle in range(PHASE_SHIFT_FLASH_CYCLES):
+		phase_shift_tween.tween_property(self_sprite, "self_modulate:a", PHASE_SHIFT_MIN_ALPHA, half_cycle_duration)
+		phase_shift_tween.tween_property(self_sprite, "self_modulate:a", _phase_shift_original_sprite_modulate.a, half_cycle_duration)
+	phase_shift_tween.finished.connect(func() -> void:
+		phase_shift_tween = null
+		if self_sprite != null and is_instance_valid(self_sprite):
+			self_sprite.self_modulate = _phase_shift_original_sprite_modulate
+	)
+
+func _stop_phase_shift_flash() -> void:
+	if phase_shift_tween != null and phase_shift_tween.is_valid():
+		phase_shift_tween.kill()
+	phase_shift_tween = null
+	var self_sprite := _find_self_sprite()
+	if self_sprite != null:
+		self_sprite.self_modulate = _phase_shift_original_sprite_modulate
 
 func _trigger_hit_camera_shake(source: CharacterBody2D) -> void:
 	if source == null or not is_instance_valid(source):
@@ -758,10 +852,20 @@ func set_interaction_prompt_visible(show_prompt: bool) -> void:
 func _process(delta: float) -> void:
 	_sync_hit_flash_overlay()
 	_sync_possession_combo_overlay()
+	var was_phase_shift_active := phase_shift_time_left > 0.0
 	if dash_cooldown_left > 0.0:
 		dash_cooldown_left = maxf(0.0, dash_cooldown_left - delta)
 	if invincibility_time_left > 0.0:
 		invincibility_time_left = maxf(0.0, invincibility_time_left - delta)
+	if not _phase_shift_hit_timestamps.is_empty():
+		_prune_phase_shift_hits(Time.get_ticks_msec() / 1000.0)
+		consecutive_hit_count = _phase_shift_hit_timestamps.size()
+	if phase_shift_time_left > 0.0:
+		phase_shift_time_left = maxf(0.0, phase_shift_time_left - delta)
+	if was_phase_shift_active and phase_shift_time_left <= 0.0:
+		_end_phase_shift()
+	if not is_dead:
+		_refresh_runtime_collision_state()
 	if control_state != null:
 		control_state.try_toggle_developer_mode()
 	if interaction_state != null:
@@ -811,7 +915,7 @@ func finish_dash() -> void:
 	dash_time_left = 0.0
 	dash_velocity = Vector2.ZERO
 	if not is_dead:
-		_restore_default_collision_state()
+		_refresh_runtime_collision_state()
 	stop_afterimage_effect()
 	if was_dashing:
 		dash_finished.emit(_dash_start_position, dash_end_position)
@@ -832,7 +936,10 @@ func start_invincibility(duration: float) -> void:
 	invincibility_time_left = maxf(invincibility_time_left, maxf(0.0, duration))
 
 func is_damage_invincible() -> bool:
-	return invincibility_time_left > 0.0
+	return invincibility_time_left > 0.0 or phase_shift_time_left > 0.0
+
+func is_phase_shift_active() -> bool:
+	return phase_shift_time_left > 0.0
 
 func _start_dash_state(dash_vector: Vector2, duration: float, cooldown_duration: float, invincibility_duration: float) -> void:
 	_dash_start_position = global_position
@@ -846,8 +953,19 @@ func _start_dash_state(dash_vector: Vector2, duration: float, cooldown_duration:
 	start_afterimage_effect()
 
 func _apply_dash_collision_mask() -> void:
+	_set_intangible_collision_state()
+
+func _set_intangible_collision_state() -> void:
 	collision_layer = 0
 	collision_mask = _default_collision_mask & WORLD_COLLISION_MASK
+
+func _refresh_runtime_collision_state() -> void:
+	if is_dead:
+		return
+	if dash_time_left > 0.0 or is_phase_shift_active():
+		_set_intangible_collision_state()
+		return
+	_restore_default_collision_state()
 
 func apply_knockback_physics(delta: float) -> void:
 	if control_state != null:
