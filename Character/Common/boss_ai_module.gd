@@ -50,6 +50,10 @@ func enter_phase_two() -> void:
 	_phase_two = true
 	walk_speed = _base_walk_speed * PHASE_TWO_WALK_SPEED_MULTIPLIER
 
+func refresh_walk_speed(base_walk_speed: float) -> void:
+	_base_walk_speed = base_walk_speed
+	walk_speed = _base_walk_speed * PHASE_TWO_WALK_SPEED_MULTIPLIER if _phase_two else _base_walk_speed
+
 func is_phase_two() -> bool:
 	return _phase_two
 

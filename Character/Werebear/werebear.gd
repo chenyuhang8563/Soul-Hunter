@@ -9,6 +9,7 @@ const BOSS_AI_MODULE_PATH := "res://Character/Common/boss_ai_module.gd"
 const FallbackAttackModuleScript := preload("res://Character/Common/swordsman_attack_module.gd")
 const FallbackAIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")
+const WerebearEnrageBuffScript := preload("res://Character/Common/Buffs/werebear_enrage_buff.gd")
 const BOSS_ATTACK_SCOPE_SCALE := Vector2(4.0, 4.0)
 
 @onready var sprite: Sprite2D = _find_self_sprite()
@@ -46,6 +47,7 @@ func _on_character_ready() -> void:
 		ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)
 	_refresh_runtime_mode()
+	_refresh_boss_ai_walk_speed()
 
 func _physics_process(delta: float) -> void:
 	if motion_driver != null:
@@ -95,13 +97,25 @@ func _update_boss_phase() -> void:
 		return
 	phase_two_triggered = true
 	current_phase = 2
+	_apply_phase_two_enrage()
 	if attack_module != null and attack_module.has_method("enter_phase_two"):
 		attack_module.enter_phase_two()
 	if ai_module != null and ai_module.has_method("enter_phase_two"):
 		ai_module.enter_phase_two()
+	_refresh_boss_ai_walk_speed()
 
 func is_phase_two() -> bool:
 	return phase_two_triggered
+
+func _refresh_boss_ai_walk_speed() -> void:
+	if ai_module != null and ai_module.has_method("refresh_walk_speed"):
+		ai_module.call("refresh_walk_speed", get_player_move_speed() * AI_WALK_SPEED_RATIO)
+
+func _apply_phase_two_enrage() -> void:
+	if buff_controller == null or buff_controller.has_buff(&"werebear_enrage"):
+		return
+	add_buff(WerebearEnrageBuffScript.new())
+	_refresh_boss_ai_walk_speed()
 
 func _refresh_runtime_mode() -> void:
 	var should_enable_enemy_ai := boss_ai_enabled and not is_player_controlled and not is_interactable_npc

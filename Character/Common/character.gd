@@ -614,9 +614,14 @@ func _ensure_possession_combo_overlay() -> Sprite2D:
 	add_child(possession_combo_overlay_sprite)
 	return possession_combo_overlay_sprite
 
+func _has_red_overlay_buff() -> bool:
+	if buff_controller == null:
+		return false
+	return buff_controller.has_buff(&"possession_combo_haste") or buff_controller.has_buff(&"werebear_enrage")
+
 func _sync_possession_combo_overlay() -> void:
 	var sprite := _find_self_sprite()
-	if sprite == null or buff_controller == null or not buff_controller.has_buff(&"possession_combo_haste"):
+	if sprite == null or not _has_red_overlay_buff():
 		_clear_possession_combo_overlay()
 		return
 	var overlay := _ensure_possession_combo_overlay()
