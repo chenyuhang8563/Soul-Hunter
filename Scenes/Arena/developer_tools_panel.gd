@@ -88,6 +88,13 @@ func _build_ui() -> void:
 	_buff_selector.focus_mode = Control.FOCUS_NONE
 	_buff_selector.add_theme_font_override("font", QuaverFont)
 	_buff_selector.add_theme_font_size_override("font_size", 6)
+	var buff_popup := _buff_selector.get_popup()
+	if buff_popup != null:
+		buff_popup.add_theme_font_override("font", QuaverFont)
+		buff_popup.add_theme_font_size_override("font_size", 6)
+		buff_popup.add_theme_constant_override("item_start_padding", 2)
+		buff_popup.add_theme_constant_override("item_end_padding", 2)
+		buff_popup.add_theme_constant_override("v_separation", 0)
 	_buff_selector.item_selected.connect(_on_buff_selected)
 	_buff_section.add_child(_buff_selector)
 
