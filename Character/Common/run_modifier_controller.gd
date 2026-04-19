@@ -107,8 +107,9 @@ func get_selected_card_titles() -> Array[String]:
 
 func get_hud_buff_summary_text() -> String:
 	var tokens: Array[String] = []
-	_append_hud_summary_tokens(_hud_summary_tokens, _hud_numeric_totals, tokens)
-	_append_hud_summary_tokens(_developer_hud_summary_tokens, _developer_hud_numeric_totals, tokens)
+	var merged_numeric_categories := {}
+	_append_hud_summary_tokens(_hud_summary_tokens, _hud_numeric_totals, _developer_hud_numeric_totals, merged_numeric_categories, tokens)
+	_append_hud_summary_tokens(_developer_hud_summary_tokens, _developer_hud_numeric_totals, _hud_numeric_totals, merged_numeric_categories, tokens)
 	return " ".join(tokens)
 
 func get_lifesteal_percent() -> float:
@@ -207,14 +208,17 @@ func _format_hud_numeric_value(total: float) -> String:
 		return str(int(roundf(total)))
 	return str(total)
 
-func _append_hud_summary_tokens(summary_tokens: Array[Dictionary], numeric_totals: Dictionary, output_tokens: Array[String]) -> void:
+func _append_hud_summary_tokens(summary_tokens: Array[Dictionary], numeric_totals: Dictionary, secondary_numeric_totals: Dictionary, merged_numeric_categories: Dictionary, output_tokens: Array[String]) -> void:
 	for token in summary_tokens:
 		var token_type := String(token.get("type", ""))
 		if token_type == "numeric":
 			var category: StringName = token.get("category", &"")
-			var total := float(numeric_totals.get(category, 0.0))
+			if merged_numeric_categories.has(category):
+				continue
+			var total := float(numeric_totals.get(category, 0.0)) + float(secondary_numeric_totals.get(category, 0.0))
 			if total <= 0.0:
 				continue
+			merged_numeric_categories[category] = true
 			output_tokens.append(_format_numeric_hud_entry(
 				String(token.get("label", "")),
 				total,
@@ -364,10 +368,11 @@ func _disconnect_host_signals() -> void:
 			_host.disconnect("dash_finished", dash_callable)
 
 func _on_host_damage_dealt(_target: Object, final_damage: float) -> void:
-	if _host == null or _lifesteal_percent <= 0.0 or final_damage <= 0.0:
+	var lifesteal_percent := get_lifesteal_percent()
+	if _host == null or lifesteal_percent <= 0.0 or final_damage <= 0.0:
 		return
 	if _host.has_method("heal"):
-		_host.heal(final_damage * (_lifesteal_percent / 100.0))
+		_host.heal(final_damage * (lifesteal_percent / 100.0))
 
 func _on_host_dash_finished(start_position: Vector2, end_position: Vector2) -> void:
 	if _next_dash_is_detach:
