@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" uid="uid://bafe4k3tkvx53" path="res://Global/Roguelike/wave_director_config.gd" id="1_config"]
 [ext_resource type="Script" uid="uid://b5xv6mwcjam3r" path="res://Global/Roguelike/enemy_spawn_entry.gd" id="2_entry"]
-[ext_resource type="Script" path="res://Global/Roguelike/wave_spawn_override.gd" id="3_override"]
+[ext_resource type="Script" uid="uid://1okq1ljvmnly" path="res://Global/Roguelike/wave_spawn_override.gd" id="3_override"]
 [ext_resource type="PackedScene" uid="uid://ys25otk3sp5k" path="res://Character/Slime/slime.tscn" id="3_slime"]
 [ext_resource type="PackedScene" uid="uid://b7torsllpb85n" path="res://Character/Orc/orc.tscn" id="4_orc"]
 [ext_resource type="PackedScene" uid="uid://ehwbvthv2sps" path="res://Character/Swordsman/swordsman.tscn" id="5_swordsman"]
 [ext_resource type="PackedScene" uid="uid://dlll1sp3vdsb2" path="res://Character/Archer/archer.tscn" id="6_archer"]
-[ext_resource type="PackedScene" path="res://Character/Werebear/werebear.tscn" id="7_werebear"]
+[ext_resource type="PackedScene" uid="uid://gkkfbypg37se" path="res://Character/Werebear/werebear.tscn" id="7_werebear"]
 
 [sub_resource type="Resource" id="EnemySpawnEntry_slime"]
 script = ExtResource("2_entry")

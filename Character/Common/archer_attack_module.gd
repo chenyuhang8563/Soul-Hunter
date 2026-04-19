@@ -3,7 +3,7 @@ class_name ArcherAttackModule
 
 const ARROW_SCENE := preload("res://Scenes/arrow.tscn")
 const EXPLOSIVE_LIGHT_SHOT_INTERVAL := 3
-const EXPLOSIVE_ARROW_DAMAGE := 15.0
+const EXPLOSIVE_ARROW_DAMAGE := 50.0
 const EXPLOSIVE_ARROW_RADIUS := 40.0
 
 var _projectile_released := false
