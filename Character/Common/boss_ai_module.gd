@@ -24,6 +24,7 @@ var _was_reactive_backstep_candidate_last_frame := false
 var _intro_roar_pending := true
 var _intro_roar_playback_serial := 0
 var _roar_locked_target: Node2D = null
+var _forced_chase_target: Node2D = null
 
 func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D, _attack_scope: Area2D, _line_of_sight: RayCast2D, _attack_module: AttackModuleBase, _walk_speed: float = 50.0, _return_tolerance: float = 6.0) -> void:
 	super.setup(_character, _sprite, _visual_scope, _attack_scope, _line_of_sight, _attack_module, _walk_speed, _return_tolerance)
@@ -56,14 +57,15 @@ func is_in_backstep_state() -> bool:
 	return ai_state == AIState_BACKSTEP
 
 func force_stop() -> void:
-	_finish_intro_roar()
+	_finish_intro_roar(false)
 	super.force_stop()
 	_reset_backstep_decision_state()
+	_forced_chase_target = null
 
 func physics_process_ai(delta: float) -> float:
 	if _process_intro_roar():
 		return 0.0
-	_sync_target_state()
+	_sync_boss_target_state()
 	_sync_backstep_decision_window()
 	var target_in_scope := target != null and _is_target_in_attack_scope(target)
 	var can_reactive_backstep := target != null and _can_start_reactive_backstep(target)
@@ -217,20 +219,27 @@ func _start_intro_roar() -> void:
 	_intro_roar_pending = false
 	_intro_roar_playback_serial += 1
 	ai_state = AIState_ROAR
-	_sync_target_state()
+	target = _resolve_intro_roar_target()
+	_face_boss_toward_target(target)
 	if attack_module != null:
 		if attack_module.has_method("force_stop"):
 			attack_module.force_stop()
 		elif attack_module.has_method("reset"):
 			attack_module.reset()
 	if not _play_intro_roar_vfx(_intro_roar_playback_serial):
-		_finish_intro_roar()
+		_finish_intro_roar(true)
 		return
 	_apply_roar_target_constraints()
 
-func _finish_intro_roar() -> void:
+func _finish_intro_roar(begin_forced_chase: bool = true) -> void:
 	_intro_roar_playback_serial += 1
-	if ai_state == AIState_ROAR:
+	var chase_target := _resolve_intro_roar_target() if begin_forced_chase else null
+	if chase_target != null:
+		_forced_chase_target = chase_target
+		target = chase_target
+		ai_state = AIState.CHASE
+	elif ai_state == AIState_ROAR:
+		target = null
 		ai_state = AIState.IDLE
 	_release_roar_target_lock()
 
@@ -286,7 +295,54 @@ func _play_intro_roar_vfx(playback_serial: int) -> bool:
 func _on_intro_roar_vfx_finished(playback_serial: int) -> void:
 	if playback_serial != _intro_roar_playback_serial:
 		return
-	_finish_intro_roar()
+	_finish_intro_roar(true)
+
+func _sync_boss_target_state() -> void:
+	if _is_forced_chase_target_valid(_forced_chase_target):
+		target = _forced_chase_target
+		return
+	_forced_chase_target = null
+	_sync_target_state()
+
+func _resolve_intro_roar_target() -> Node2D:
+	var scene_player := _find_scene_player_target()
+	if scene_player != null:
+		return scene_player
+	if _roar_locked_target != null and _is_forced_chase_target_valid(_roar_locked_target):
+		return _roar_locked_target
+	if target != null and _is_forced_chase_target_valid(target):
+		return target
+	return null
+
+func _find_scene_player_target() -> Node2D:
+	if character == null or character.get_tree() == null:
+		return null
+	var best_target: Node2D = null
+	var best_distance := INF
+	for node in character.get_tree().get_nodes_in_group("player_controlled"):
+		if not (node is Node2D):
+			continue
+		var candidate := node as Node2D
+		if not _is_forced_chase_target_valid(candidate):
+			continue
+		var distance := character.global_position.distance_to(candidate.global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best_target = candidate
+	return best_target
+
+func _is_forced_chase_target_valid(candidate: Node2D) -> bool:
+	if candidate == null or not is_instance_valid(candidate):
+		return false
+	return is_valid_enemy(candidate)
+
+func _face_boss_toward_target(target_node: Node2D) -> void:
+	if sprite == null or character == null or target_node == null or not is_instance_valid(target_node):
+		return
+	var delta_x := target_node.global_position.x - character.global_position.x
+	if is_zero_approx(delta_x):
+		return
+	sprite.flip_h = delta_x < 0.0
 
 func _force_node_face_world_x(target_node: Node2D, target_world_x: float) -> void:
 	if target_node == null or not is_instance_valid(target_node):

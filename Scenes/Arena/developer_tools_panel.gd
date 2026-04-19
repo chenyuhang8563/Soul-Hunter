@@ -6,6 +6,7 @@ signal jump_to_rest_requested(wave_index)
 signal developer_mode_toggled(enabled)
 
 const SharedLabelSettings := preload("res://Resources/new_label_settings.tres")
+const QuaverFont := preload("res://Assets/Fonts/quaver.ttf")
 
 var _panel: PanelContainer = null
 var _section_list: VBoxContainer = null
@@ -59,9 +60,9 @@ func _build_ui() -> void:
 	anchor.anchor_top = 0.0
 	anchor.anchor_right = 1.0
 	anchor.anchor_bottom = 0.0
-	anchor.offset_left = -188.0
+	anchor.offset_left = -152.0
 	anchor.offset_top = 12.0
-	anchor.offset_right = -12.0
+	anchor.offset_right = -8.0
 	anchor.offset_bottom = 0.0
 	root.add_child(anchor)
 
@@ -69,21 +70,24 @@ func _build_ui() -> void:
 	anchor.add_child(_panel)
 
 	var panel_margin := MarginContainer.new()
-	panel_margin.add_theme_constant_override("margin_left", 8)
-	panel_margin.add_theme_constant_override("margin_top", 8)
-	panel_margin.add_theme_constant_override("margin_right", 8)
-	panel_margin.add_theme_constant_override("margin_bottom", 8)
+	panel_margin.add_theme_constant_override("margin_left", 6)
+	panel_margin.add_theme_constant_override("margin_top", 6)
+	panel_margin.add_theme_constant_override("margin_right", 6)
+	panel_margin.add_theme_constant_override("margin_bottom", 6)
 	_panel.add_child(panel_margin)
 
 	_section_list = VBoxContainer.new()
-	_section_list.add_theme_constant_override("separation", 10)
+	_section_list.add_theme_constant_override("separation", 6)
 	panel_margin.add_child(_section_list)
 
 	_buff_section = _create_section("1. Buff Value")
 	_section_list.add_child(_buff_section)
 
 	_buff_selector = OptionButton.new()
+	_buff_selector.custom_minimum_size = Vector2(88.0, 0.0)
 	_buff_selector.focus_mode = Control.FOCUS_NONE
+	_buff_selector.add_theme_font_override("font", QuaverFont)
+	_buff_selector.add_theme_font_size_override("font_size", 6)
 	_buff_selector.item_selected.connect(_on_buff_selected)
 	_buff_section.add_child(_buff_selector)
 
@@ -104,20 +108,25 @@ func _build_ui() -> void:
 	_wave_section.add_child(wave_row)
 
 	_wave_input = SpinBox.new()
-	_wave_input.custom_minimum_size = Vector2(64.0, 0.0)
+	_wave_input.custom_minimum_size = Vector2(52.0, 0.0)
 	_wave_input.step = 1.0
 	_wave_input.rounded = true
 	_wave_input.focus_mode = Control.FOCUS_NONE
+	_wave_input.add_theme_font_override("font", QuaverFont)
+	_wave_input.add_theme_font_size_override("font_size", 6)
 	wave_row.add_child(_wave_input)
+	var wave_line_edit := _wave_input.get_line_edit()
+	if wave_line_edit != null:
+		wave_line_edit.add_theme_font_override("font", QuaverFont)
+		wave_line_edit.add_theme_font_size_override("font_size", 6)
 
 	_wave_jump_button = Button.new()
 	_wave_jump_button.text = "Go"
+	_wave_jump_button.custom_minimum_size = Vector2(28.0, 0.0)
 	_wave_jump_button.focus_mode = Control.FOCUS_NONE
-	_wave_jump_button.add_theme_font_override("font", SharedLabelSettings.font)
-	_wave_jump_button.add_theme_font_size_override("font_size", SharedLabelSettings.font_size)
-	_wave_jump_button.pressed.connect(func() -> void:
-		jump_to_rest_requested.emit(int(roundi(_wave_input.value)))
-	)
+	_wave_jump_button.add_theme_font_override("font", QuaverFont)
+	_wave_jump_button.add_theme_font_size_override("font_size", 6)
+	_wave_jump_button.pressed.connect(_on_wave_jump_button_pressed)
 	wave_row.add_child(_wave_jump_button)
 
 	var wave_hint := _create_small_label("Jump to the rest after wave X.")
@@ -129,8 +138,8 @@ func _build_ui() -> void:
 	_developer_mode_toggle = CheckBox.new()
 	_developer_mode_toggle.text = "Manual Enable"
 	_developer_mode_toggle.focus_mode = Control.FOCUS_NONE
-	_developer_mode_toggle.add_theme_font_override("font", SharedLabelSettings.font)
-	_developer_mode_toggle.add_theme_font_size_override("font_size", SharedLabelSettings.font_size)
+	_developer_mode_toggle.add_theme_font_override("font", QuaverFont)
+	_developer_mode_toggle.add_theme_font_size_override("font_size", 6)
 	_developer_mode_toggle.toggled.connect(func(enabled: bool) -> void:
 		developer_mode_toggled.emit(enabled)
 	)
@@ -141,10 +150,11 @@ func _build_ui() -> void:
 
 func _create_section(title: String) -> VBoxContainer:
 	var section := VBoxContainer.new()
-	section.add_theme_constant_override("separation", 4)
+	section.add_theme_constant_override("separation", 3)
 	var title_label := Label.new()
 	title_label.text = title
-	title_label.label_settings = SharedLabelSettings
+	title_label.add_theme_font_override("font", QuaverFont)
+	title_label.add_theme_font_size_override("font_size", 6)
 	section.add_child(title_label)
 	return section
 
@@ -152,7 +162,7 @@ func _create_small_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_override("font", SharedLabelSettings.font)
+	label.add_theme_font_override("font", QuaverFont)
 	label.add_theme_font_size_override("font_size", 5)
 	return label
 
@@ -215,6 +225,9 @@ func _on_buff_slider_changed(value: float) -> void:
 	_update_buff_value_label(value)
 	buff_value_changed.emit(card_id, value)
 
+func _on_wave_jump_button_pressed() -> void:
+	jump_to_rest_requested.emit(_get_requested_wave_index())
+
 func _update_buff_value_label(value: float) -> void:
 	if _buff_options.is_empty():
 		_buff_value_label.text = ""
@@ -230,3 +243,14 @@ func _format_numeric_value(value: float) -> String:
 	if is_equal_approx(value, roundf(value)):
 		return str(int(roundf(value)))
 	return str(value)
+
+func _get_requested_wave_index() -> int:
+	var requested_wave := int(roundi(_wave_input.value))
+	var line_edit := _wave_input.get_line_edit()
+	if line_edit != null:
+		var typed_text := String(line_edit.text).strip_edges()
+		if not typed_text.is_empty():
+			requested_wave = typed_text.to_int()
+	var min_wave := int(roundi(_wave_input.min_value))
+	var max_wave := int(roundi(_wave_input.max_value))
+	return clampi(requested_wave, min_wave, max_wave)
