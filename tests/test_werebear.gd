@@ -284,6 +284,27 @@ func test_werebear_phase_two_applies_permanent_knockback_resist_buff() -> void:
 	assert_eq(resist_count, 1, "Repeated phase-two updates should not duplicate knockback resist.")
 
 
+func test_werebear_phase_two_knockback_resist_helper_is_idempotent() -> void:
+	var werebear = add_child_autofree(WerebearScene.instantiate())
+	await get_tree().process_frame
+	await get_tree().physics_frame
+
+	werebear._apply_phase_two_knockback_resist()
+	werebear._apply_phase_two_knockback_resist()
+
+	var resist_count := 0
+	for buff in werebear.buff_controller.get_active_buffs():
+		if buff != null and buff.stack_key == &"werebear_knockback_resist":
+			resist_count += 1
+
+	assert_eq(resist_count, 1, "Werebear should keep only one permanent knockback-resist buff when phase-two resist is applied repeatedly.")
+	assert_eq(
+		float(werebear.get_stat_value(&"knockback_taken_multiplier", 1.0)),
+		0.5,
+		"Werebear's effective knockback multiplier should stay at the permanent half-knockback value."
+	)
+
+
 func test_werebear_phase_two_halves_knockback_velocity() -> void:
 	var werebear = add_child_autofree(WerebearScene.instantiate())
 	var source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
@@ -315,3 +336,14 @@ func test_werebear_initialization_switches_bgm_to_boss_fight() -> void:
 	if fake_audio_manager.last_bgm_stream == null:
 		return
 	assert_eq(fake_audio_manager.last_bgm_stream.resource_path, BossFightBgmPath)
+
+
+func test_werebear_without_boss_ai_does_not_request_boss_bgm() -> void:
+	var fake_audio_manager: FakeAudioManager = add_child_autofree(FakeAudioManager.new())
+	var werebear = WerebearScene.instantiate()
+	werebear.boss_ai_enabled = false
+	add_child_autofree(werebear)
+	await get_tree().process_frame
+	await get_tree().physics_frame
+
+	assert_null(fake_audio_manager.last_bgm_stream, "Non-boss Werebear contexts should not request the boss battle BGM.")
