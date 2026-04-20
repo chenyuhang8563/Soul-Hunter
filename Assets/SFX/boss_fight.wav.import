@@ -1,14 +1,14 @@
-﻿[remap]
+[remap]
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://c6ld1wlb7y7w2"
-path="res://.godot/imported/boss_fight.wav-48aeb1ebb1278ecd7abc8ef8278aee9c.sample"
+uid="uid://bvbwyw5x3ivfi"
+path="res://.godot/imported/boss_fight.wav-f3ace211a39d1dee32addd71672cf469.sample"
 
 [deps]
 
 source_file="res://Assets/SFX/boss_fight.wav"
-dest_files=["res://.godot/imported/boss_fight.wav-48aeb1ebb1278ecd7abc8ef8278aee9c.sample"]
+dest_files=["res://.godot/imported/boss_fight.wav-f3ace211a39d1dee32addd71672cf469.sample"]
 
 [params]
 

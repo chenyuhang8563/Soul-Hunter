@@ -64,13 +64,15 @@ func receive_possession_from(possessor: CharacterBody2D) -> bool:
 		return false
 	if possessor.has_method("get_team_id") and int(possessor.call("get_team_id")) == owner.team_id:
 		return false
-	if possessor.has_method("set_player_controlled"):
-		possessor.call("set_player_controlled", false)
 	var runtime_state: Dictionary = {}
 	if possessor.has_method("capture_player_runtime_state"):
 		runtime_state = possessor.call("capture_player_runtime_state")
+	var possessor_team_id: int = owner.team_id
 	if possessor.has_method("get_team_id"):
-		owner.team_id = int(possessor.call("get_team_id"))
+		possessor_team_id = int(possessor.call("get_team_id"))
+	if possessor.has_method("set_player_controlled"):
+		possessor.call("set_player_controlled", false)
+	owner.team_id = possessor_team_id
 	if owner.is_dead:
 		owner.revive(true)
 	if owner.has_method("apply_player_runtime_state"):
