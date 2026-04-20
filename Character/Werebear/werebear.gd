@@ -9,6 +9,7 @@ const BOSS_AI_MODULE_PATH := "res://Character/Common/boss_ai_module.gd"
 const FallbackAttackModuleScript := preload("res://Character/Common/swordsman_attack_module.gd")
 const FallbackAIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")
+const BossFightBgmStream := preload("res://Assets/SFX/boss_fight.wav")
 const WerebearEnrageBuffScript := preload("res://Character/Common/Buffs/werebear_enrage_buff.gd")
 const BOSS_ATTACK_SCOPE_SCALE := Vector2(4.0, 4.0)
 
@@ -36,6 +37,7 @@ func _on_character_ready() -> void:
 	motion_driver = CharacterMotionDriverScript.new()
 	current_phase = 1
 	phase_two_triggered = false
+	_play_boss_bgm()
 	_set_locomotion_conditions(0.0)
 	if attack_scope_shape != null:
 		attack_scope_shape.scale = BOSS_ATTACK_SCOPE_SCALE
@@ -116,6 +118,11 @@ func _apply_phase_two_enrage() -> void:
 		return
 	add_buff(WerebearEnrageBuffScript.new())
 	_refresh_boss_ai_walk_speed()
+
+func _play_boss_bgm() -> void:
+	var audio_manager := _resolve_audio_manager()
+	if audio_manager != null and audio_manager.has_method("play_bgm_stream"):
+		audio_manager.call("play_bgm_stream", BossFightBgmStream)
 
 func _refresh_runtime_mode() -> void:
 	var should_enable_enemy_ai := boss_ai_enabled and not is_player_controlled and not is_interactable_npc

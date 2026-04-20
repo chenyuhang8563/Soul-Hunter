@@ -425,6 +425,12 @@ func _clear_spawned_wave_enemies() -> void:
 	for enemy in tree.get_nodes_in_group(ARENA_ENEMY_GROUP):
 		if enemy == null or not is_instance_valid(enemy):
 			continue
+		if enemy == _player:
+			continue
+		if enemy.is_in_group(&"player_controlled"):
+			continue
+		if enemy.get("is_player_controlled") != null and bool(enemy.get("is_player_controlled")):
+			continue
 		enemy.queue_free()
 
 func _has_living_wave_enemies() -> bool:
