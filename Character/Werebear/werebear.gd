@@ -9,8 +9,9 @@ const BOSS_AI_MODULE_PATH := "res://Character/Common/boss_ai_module.gd"
 const FallbackAttackModuleScript := preload("res://Character/Common/swordsman_attack_module.gd")
 const FallbackAIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")
-const BossFightBgmStream := preload("res://Assets/SFX/boss_fight.wav")
 const WerebearEnrageBuffScript := preload("res://Character/Common/Buffs/werebear_enrage_buff.gd")
+const WerebearKnockbackResistBuffScript := preload("res://Character/Common/Buffs/werebear_knockback_resist_buff.gd")
+const BossFightBgmStream := preload("res://Assets/SFX/boss_fight.wav")
 const BOSS_ATTACK_SCOPE_SCALE := Vector2(4.0, 4.0)
 
 @onready var sprite: Sprite2D = _find_self_sprite()
@@ -37,7 +38,6 @@ func _on_character_ready() -> void:
 	motion_driver = CharacterMotionDriverScript.new()
 	current_phase = 1
 	phase_two_triggered = false
-	_play_boss_bgm()
 	_set_locomotion_conditions(0.0)
 	if attack_scope_shape != null:
 		attack_scope_shape.scale = BOSS_ATTACK_SCOPE_SCALE
@@ -50,6 +50,7 @@ func _on_character_ready() -> void:
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)
 	_refresh_runtime_mode()
 	_refresh_boss_ai_walk_speed()
+	_request_boss_bgm()
 
 func _physics_process(delta: float) -> void:
 	if motion_driver != null:
@@ -100,6 +101,7 @@ func _update_boss_phase() -> void:
 	phase_two_triggered = true
 	current_phase = 2
 	_apply_phase_two_enrage()
+	_apply_phase_two_knockback_resist()
 	if attack_module != null and attack_module.has_method("enter_phase_two"):
 		attack_module.enter_phase_two()
 	if ai_module != null and ai_module.has_method("enter_phase_two"):
@@ -119,10 +121,25 @@ func _apply_phase_two_enrage() -> void:
 	add_buff(WerebearEnrageBuffScript.new())
 	_refresh_boss_ai_walk_speed()
 
-func _play_boss_bgm() -> void:
+func _apply_phase_two_knockback_resist() -> void:
+	if buff_controller == null or buff_controller.has_buff(&"werebear_knockback_resist"):
+		return
+	add_buff(WerebearKnockbackResistBuffScript.new())
+
+func _request_boss_bgm() -> void:
+	if not _is_boss_battle_bgm_context():
+		return
 	var audio_manager := _resolve_audio_manager()
 	if audio_manager != null and audio_manager.has_method("play_bgm_stream"):
-		audio_manager.call("play_bgm_stream", BossFightBgmStream)
+		audio_manager.play_bgm_stream(BossFightBgmStream)
+
+func _is_boss_battle_bgm_context() -> bool:
+	if is_player_controlled or is_interactable_npc or not boss_ai_enabled:
+		return false
+	# The dedicated boss AI module is the clearest runtime marker that this Werebear
+	# instance is the boss encounter rather than a generic AI-enabled variant.
+	var ai_script: Script = ai_module.get_script() if ai_module != null else null
+	return ai_script != null and ai_script.resource_path == BOSS_AI_MODULE_PATH
 
 func _refresh_runtime_mode() -> void:
 	var should_enable_enemy_ai := boss_ai_enabled and not is_player_controlled and not is_interactable_npc
