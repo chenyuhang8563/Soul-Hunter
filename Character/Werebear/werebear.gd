@@ -11,6 +11,7 @@ const FallbackAIModuleScript := preload("res://Character/Common/ai_module.gd")
 const CharacterMotionDriverScript := preload("res://Character/Common/character_motion_driver.gd")
 const WerebearEnrageBuffScript := preload("res://Character/Common/Buffs/werebear_enrage_buff.gd")
 const WerebearKnockbackResistBuffScript := preload("res://Character/Common/Buffs/werebear_knockback_resist_buff.gd")
+const BossFightBgmStream := preload("res://Assets/SFX/boss_fight.wav")
 const BOSS_ATTACK_SCOPE_SCALE := Vector2(4.0, 4.0)
 
 @onready var sprite: Sprite2D = _find_self_sprite()
@@ -49,6 +50,7 @@ func _on_character_ready() -> void:
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)
 	_refresh_runtime_mode()
 	_refresh_boss_ai_walk_speed()
+	_request_boss_bgm()
 
 func _physics_process(delta: float) -> void:
 	if motion_driver != null:
@@ -123,6 +125,13 @@ func _apply_phase_two_knockback_resist() -> void:
 	if buff_controller == null or buff_controller.has_buff(&"werebear_knockback_resist"):
 		return
 	add_buff(WerebearKnockbackResistBuffScript.new())
+
+func _request_boss_bgm() -> void:
+	if not boss_ai_enabled or is_player_controlled or is_interactable_npc:
+		return
+	var audio_manager := _resolve_audio_manager()
+	if audio_manager != null and audio_manager.has_method("play_bgm_stream"):
+		audio_manager.play_bgm_stream(BossFightBgmStream)
 
 func _refresh_runtime_mode() -> void:
 	var should_enable_enemy_ai := boss_ai_enabled and not is_player_controlled and not is_interactable_npc
