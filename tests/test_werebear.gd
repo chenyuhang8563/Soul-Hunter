@@ -275,6 +275,14 @@ func test_werebear_phase_two_applies_permanent_knockback_resist_buff() -> void:
 			resist_count += 1
 	assert_eq(resist_count, 1, "Werebear should only add one permanent knockback-resist buff in phase two.")
 
+	werebear._update_boss_phase()
+
+	resist_count = 0
+	for buff in werebear.buff_controller.get_active_buffs():
+		if buff != null and buff.stack_key == &"werebear_knockback_resist":
+			resist_count += 1
+	assert_eq(resist_count, 1, "Repeated phase-two updates should not duplicate knockback resist.")
+
 
 func test_werebear_phase_two_halves_knockback_velocity() -> void:
 	var werebear = add_child_autofree(WerebearScene.instantiate())

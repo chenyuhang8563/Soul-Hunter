@@ -127,11 +127,19 @@ func _apply_phase_two_knockback_resist() -> void:
 	add_buff(WerebearKnockbackResistBuffScript.new())
 
 func _request_boss_bgm() -> void:
-	if not boss_ai_enabled or is_player_controlled or is_interactable_npc:
+	if not _is_boss_battle_bgm_context():
 		return
 	var audio_manager := _resolve_audio_manager()
 	if audio_manager != null and audio_manager.has_method("play_bgm_stream"):
 		audio_manager.play_bgm_stream(BossFightBgmStream)
+
+func _is_boss_battle_bgm_context() -> bool:
+	if is_player_controlled or is_interactable_npc or not boss_ai_enabled:
+		return false
+	# The dedicated boss AI module is the clearest runtime marker that this Werebear
+	# instance is the boss encounter rather than a generic AI-enabled variant.
+	var ai_script: Script = ai_module.get_script() if ai_module != null else null
+	return ai_script != null and ai_script.resource_path == BOSS_AI_MODULE_PATH
 
 func _refresh_runtime_mode() -> void:
 	var should_enable_enemy_ai := boss_ai_enabled and not is_player_controlled and not is_interactable_npc
