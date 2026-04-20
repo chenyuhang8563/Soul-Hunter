@@ -34,9 +34,10 @@ const PHASE_ONE_HARD_COOLDOWN := 0.75
 const PHASE_ONE_ULTIMATE_COOLDOWN := 1.80
 const PHASE_ONE_SHOCKWAVE_TARGET_SCALE_X := 1.0
 const PHASE_ONE_SHOCKWAVE_EXPAND_DURATION := 0.0
-const PHASE_ONE_SHOCKWAVE_HOLD_DURATION := 0.35
+const PHASE_ONE_SHOCKWAVE_HOLD_DURATION := 0.50
+const PHASE_ONE_SHOCKWAVE_DAMAGE_WINDOW := 0.12
 const PHASE_ONE_SHOCKWAVE_PAIR_COUNT := 3
-const PHASE_ONE_SHOCKWAVE_PAIR_INTERVAL := 0.20
+const PHASE_ONE_SHOCKWAVE_PAIR_INTERVAL := 0.10
 const PHASE_ONE_SHOCKWAVE_PAIR_OFFSET := 24.0
 
 const PHASE_TWO_LIGHT_COOLDOWN := 0.24
@@ -45,8 +46,9 @@ const PHASE_TWO_ULTIMATE_COOLDOWN := 1.10
 const PHASE_TWO_SHOCKWAVE_TARGET_SCALE_X := 1.0
 const PHASE_TWO_SHOCKWAVE_EXPAND_DURATION := 0.0
 const PHASE_TWO_SHOCKWAVE_SEGMENT_SPACING := 28.0
-const PHASE_TWO_SHOCKWAVE_SEGMENT_INTERVAL := 0.05
+const PHASE_TWO_SHOCKWAVE_SEGMENT_INTERVAL := 0.03
 const PHASE_TWO_SHOCKWAVE_SEGMENT_LIFETIME := 0.65
+const PHASE_TWO_SHOCKWAVE_DAMAGE_WINDOW := 0.18
 const PHASE_TWO_SCREEN_PADDING := 48.0
 
 const HARD_SEGMENT_COUNT := 2
@@ -420,6 +422,7 @@ func _spawn_shockwave_segment(offset: Vector2, fullscreen_mode: bool) -> void:
 			"target_scale_x": _get_shockwave_target_scale_x() if not fullscreen_mode else SHOCKWAVE_INITIAL_SCALE_X,
 			"expand_duration": _get_shockwave_expand_duration() if not fullscreen_mode else 0.0,
 			"hold_duration": _get_shockwave_hold_duration(fullscreen_mode),
+			"damage_window": _get_shockwave_damage_window(fullscreen_mode),
 		})
 
 func _get_shockwave_spawn_origin() -> Vector2:
@@ -447,6 +450,11 @@ func _get_shockwave_hold_duration(fullscreen_mode: bool) -> float:
 	if fullscreen_mode:
 		return PHASE_TWO_SHOCKWAVE_SEGMENT_LIFETIME
 	return PHASE_ONE_SHOCKWAVE_HOLD_DURATION
+
+func _get_shockwave_damage_window(fullscreen_mode: bool) -> float:
+	if fullscreen_mode:
+		return PHASE_TWO_SHOCKWAVE_DAMAGE_WINDOW
+	return PHASE_ONE_SHOCKWAVE_DAMAGE_WINDOW
 
 func register_shockwave_hit(cast_id: int, body: Node2D, damage_amount: float) -> bool:
 	if cast_id != _shockwave_cast_id:

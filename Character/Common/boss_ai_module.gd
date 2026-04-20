@@ -335,10 +335,12 @@ func _find_scene_player_target() -> Node2D:
 			best_target = candidate
 	return best_target
 
-func _is_forced_chase_target_valid(candidate: Node2D) -> bool:
+func _is_forced_chase_target_valid(candidate) -> bool:
 	if candidate == null or not is_instance_valid(candidate):
 		return false
-	return is_valid_enemy(candidate)
+	if not (candidate is Node2D):
+		return false
+	return is_valid_enemy(candidate as Node2D)
 
 func _face_boss_toward_target(target_node: Node2D) -> void:
 	if sprite == null or character == null or target_node == null or not is_instance_valid(target_node):

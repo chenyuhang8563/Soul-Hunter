@@ -17,12 +17,14 @@ var fullscreen_mode := false
 var target_scale_x := DEFAULT_INITIAL_SCALE_X
 var expand_duration := 0.0
 var hold_duration := 0.0
+var damage_window := 0.0
 var initial_scale_x := DEFAULT_INITIAL_SCALE_X
 var scale_y := DEFAULT_SCALE_Y
 
 var _setup_complete := false
 var _wave_started := false
 var _active_tween: Tween = null
+var _damage_tween: Tween = null
 var _hit_target_ids: Dictionary = {}
 
 func _ready() -> void:
@@ -44,6 +46,7 @@ func setup(config: Dictionary) -> void:
 	target_scale_x = maxf(DEFAULT_INITIAL_SCALE_X, float(config.get("target_scale_x", DEFAULT_INITIAL_SCALE_X)))
 	expand_duration = maxf(0.0, float(config.get("expand_duration", 0.0)))
 	hold_duration = maxf(0.0, float(config.get("hold_duration", 0.0)))
+	damage_window = minf(hold_duration, maxf(0.0, float(config.get("damage_window", hold_duration))))
 	initial_scale_x = maxf(0.05, float(config.get("initial_scale_x", DEFAULT_INITIAL_SCALE_X)))
 	scale_y = maxf(0.05, float(config.get("scale_y", DEFAULT_SCALE_Y)))
 	collision_layer = int(config.get("collision_layer", collision_layer))
@@ -53,6 +56,7 @@ func setup(config: Dictionary) -> void:
 	_hit_target_ids.clear()
 	_wave_started = false
 	_stop_active_tween()
+	_stop_damage_tween()
 
 	if is_inside_tree():
 		_start_wave()
@@ -74,14 +78,22 @@ func _start_wave() -> void:
 	call_deferred("_refresh_overlap_hits")
 	call_deferred("_refresh_group_overlap_hits")
 
+	_damage_tween = create_tween()
+	_damage_tween.tween_interval(damage_window)
+	_damage_tween.finished.connect(_disable_damage)
+
 	_active_tween = create_tween()
 	_active_tween.tween_property(self, "scale:x", target_scale_x, expand_duration)
 	_active_tween.tween_interval(hold_duration)
 	_active_tween.finished.connect(_finish_wave)
 
-func _finish_wave() -> void:
+func _disable_damage() -> void:
 	monitoring = false
 	set_physics_process(false)
+	_stop_damage_tween()
+
+func _finish_wave() -> void:
+	_disable_damage()
 	_stop_active_tween()
 	queue_free()
 
@@ -90,7 +102,14 @@ func _stop_active_tween() -> void:
 		_active_tween.kill()
 	_active_tween = null
 
+func _stop_damage_tween() -> void:
+	if _damage_tween != null and is_instance_valid(_damage_tween):
+		_damage_tween.kill()
+	_damage_tween = null
+
 func _refresh_overlap_hits() -> void:
+	if not monitoring:
+		return
 	for body in get_overlapping_bodies():
 		if body == null or not is_instance_valid(body):
 			continue
