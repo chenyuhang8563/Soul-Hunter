@@ -46,7 +46,10 @@ func on_damaged(_amount: float, _current_health: float, _max_health: float, sour
 		var direction := signf(owner.global_position.x - source.global_position.x)
 		if direction == 0.0:
 			direction = 1.0 if randf() > 0.5 else -1.0
-		owner.knockback_velocity = direction * owner.KNOCKBACK_VELOCITY
+		var knockback_multiplier := 1.0
+		if owner.has_method("get_stat_value"):
+			knockback_multiplier = float(owner.call("get_stat_value", &"knockback_taken_multiplier", 1.0))
+		owner.knockback_velocity = direction * owner.KNOCKBACK_VELOCITY * knockback_multiplier
 	else:
 		owner.knockback_velocity = 0.0
 	if owner.animation_player == null or not owner.animation_player.has_animation(owner.ANIM_HURT):
