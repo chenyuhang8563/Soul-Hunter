@@ -90,8 +90,11 @@ func try_start_dash() -> void:
 	owner.start_dash(owner.get_facing_direction())
 
 func apply_knockback_physics(delta: float) -> void:
+	var knockback_multiplier := 1.0
+	if owner.has_method("get_stat_value"):
+		knockback_multiplier = maxf(0.0, float(owner.get_stat_value(&"knockback_taken_multiplier", 1.0)))
 	if owner.knockback_velocity != 0.0:
-		owner.knockback_velocity = move_toward(owner.knockback_velocity, 0.0, owner.KNOCKBACK_DECAY * delta)
+		owner.knockback_velocity = move_toward(owner.knockback_velocity, 0.0, owner.KNOCKBACK_DECAY * knockback_multiplier * delta)
 	owner.velocity.x = owner.knockback_velocity
 
 func try_common_jump() -> void:

@@ -23,6 +23,18 @@ class FakeDamageSource extends CharacterBody2D:
 		global_position = start_position
 
 
+func _measure_knockback_distance(werebear, source: CharacterBody2D) -> float:
+	werebear.global_position = Vector2.ZERO
+	werebear.knockback_velocity = 0.0
+	werebear.lifecycle_state.on_damaged(5.0, werebear.health.current_health, werebear.health.max_health, source)
+	var start_x: float = werebear.global_position.x
+	for _frame in range(30):
+		await get_tree().physics_frame
+		if is_zero_approx(werebear.knockback_velocity):
+			break
+	return absf(werebear.global_position.x - start_x)
+
+
 func before_each() -> void:
 	Engine.time_scale = 1.0
 	get_tree().paused = false
@@ -324,6 +336,28 @@ func test_werebear_phase_two_halves_knockback_velocity() -> void:
 
 	assert_eq(phase_one_knockback, werebear.KNOCKBACK_VELOCITY)
 	assert_eq(phase_two_knockback, werebear.KNOCKBACK_VELOCITY * 0.5)
+
+
+func test_werebear_phase_two_halves_knockback_travel_distance() -> void:
+	var phase_one_werebear = add_child_autofree(WerebearScene.instantiate())
+	var phase_one_source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
+	await get_tree().process_frame
+	await get_tree().physics_frame
+
+	var phase_one_distance: float = await _measure_knockback_distance(phase_one_werebear, phase_one_source)
+
+	var phase_two_werebear = add_child_autofree(WerebearScene.instantiate())
+	var phase_two_source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	phase_two_werebear.health.current_health = phase_two_werebear.health.max_health * phase_two_werebear.phase_two_health_ratio
+	phase_two_werebear._update_boss_phase()
+
+	var phase_two_distance: float = await _measure_knockback_distance(phase_two_werebear, phase_two_source)
+
+	assert_gt(phase_one_distance, 0.0)
+	assert_gt(phase_two_distance, phase_one_distance * 0.4)
+	assert_lt(phase_two_distance, phase_one_distance * 0.6)
 
 
 func test_werebear_initialization_switches_bgm_to_boss_fight() -> void:
