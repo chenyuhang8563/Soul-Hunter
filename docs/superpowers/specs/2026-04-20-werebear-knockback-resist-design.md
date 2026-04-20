@@ -31,14 +31,14 @@ This keeps shared lifecycle code generic, makes knockback resistance reusable fo
 
 ### Werebear Rule
 
-- The werebear receives a permanent knockback-resistance buff during initialization.
+- The werebear receives a permanent knockback-resistance buff when it enters phase two.
 - That buff reduces `knockback_taken_multiplier` to `0.5`.
 - Result: the werebear receives 50% of the normal horizontal knockback.
 
 ### Scope
 
-- This mechanic applies for the werebear from initialization onward.
-- It is not tied to phase two or enrage.
+- This mechanic begins when the werebear enters phase two and persists for the rest of that life.
+- It is tied to the phase-two transition, not to the pre-phase-two state.
 - It only changes how much knockback is taken, not the damage, hurt animation, or posture logic.
 
 ## Data Model
@@ -110,9 +110,9 @@ This buff should be focused and single-purpose.
 
 ### `res://Character/Werebear/werebear.gd`
 
-Apply the permanent knockback-resistance buff during werebear initialization.
+Apply the permanent knockback-resistance buff when the werebear enters phase two.
 
-This should happen in the werebear's setup path, not in phase two.
+This should reuse the existing guarded phase-two transition path so the buff is only added once per life.
 
 ## Why This Is Preferred
 
@@ -131,7 +131,8 @@ Add focused tests for:
 
 1. `knockback_taken_multiplier` default stat resolves to `1.0`
 2. the werebear knockback-resistance buff changes that stat to `0.5`
-3. a werebear hit by a source receives half the normal `knockback_velocity`
+3. a pre-phase-two werebear still takes normal knockback
+4. a phase-two werebear hit by a source receives half the normal `knockback_velocity`
 
 Keep the tests local to the shared stat/buff layer and the werebear behavior layer.
 
@@ -140,6 +141,8 @@ Keep the tests local to the shared stat/buff layer and the werebear behavior lay
 Verify in Godot that:
 
 - the werebear still enters hurt animation when hit
+- pre-phase-two knockback remains unchanged
+- after entering phase two, the werebear is displaced noticeably less than before
 - the werebear is displaced noticeably less than a normal enemy under the same hit
 - existing werebear phase-two/enrage/BGM behavior still works
 
@@ -154,7 +157,6 @@ Verify in Godot that:
 
 ## Out Of Scope
 
-- Phase-two-specific knockback resistance
 - Full knockback immunity
 - Vertical knockback redesign
 - New UI icon or tooltip for boss knockback resistance
