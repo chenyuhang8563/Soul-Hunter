@@ -18,7 +18,7 @@ value = 10.0
 script = ExtResource("2_card")
 id = &"attack_up"
 title = "Attack +10"
-description = "Light attack +10 and hard attack +10 for this run."
+description = "攻击+10"
 effects = [SubResource("RewardEffect_attack_light"), SubResource("RewardEffect_attack_hard")]
 
 [sub_resource type="Resource" id="RewardEffect_lifesteal"]
@@ -31,7 +31,7 @@ value = 20.0
 script = ExtResource("2_card")
 id = &"lifesteal"
 title = "Lifesteal +20%"
-description = "Heal for 20% of the final damage you deal."
+description = "吸血+20%"
 effects = [SubResource("RewardEffect_lifesteal")]
 
 [sub_resource type="Resource" id="RewardEffect_dash_damage"]
@@ -44,7 +44,7 @@ value = 10.0
 script = ExtResource("2_card")
 id = &"dash_slash"
 title = "Dash Slash"
-description = "After dashing, deal 10 damage to enemies on the dash path."
+description = "对冲刺路径上的敌人造成10点伤害"
 effects = [SubResource("RewardEffect_dash_damage")]
 
 [sub_resource type="Resource" id="RewardEffect_max_health"]
@@ -56,7 +56,7 @@ value = 40.0
 script = ExtResource("2_card")
 id = &"max_health_up"
 title = "Vitality +40"
-description = "Increase max health by 40 for this run."
+description = "最大生命值+40"
 effects = [SubResource("RewardEffect_max_health")]
 
 [sub_resource type="Resource" id="RewardEffect_move_speed"]
@@ -68,7 +68,7 @@ value = 15.0
 script = ExtResource("2_card")
 id = &"move_speed_up"
 title = "Move Speed +15"
-description = "Gain 15 bonus movement speed."
+description = "移速+15"
 effects = [SubResource("RewardEffect_move_speed")]
 
 [sub_resource type="Resource" id="RewardEffect_attack_speed"]
@@ -80,7 +80,7 @@ value = 0.15
 script = ExtResource("2_card")
 id = &"attack_speed_up"
 title = "Attack Speed +15%"
-description = "Increase attack speed by 15% for this run."
+description = "攻速+15%"
 effects = [SubResource("RewardEffect_attack_speed")]
 
 [sub_resource type="Resource" id="RewardEffect_crit_chance"]
@@ -92,7 +92,7 @@ value = 15.0
 script = ExtResource("2_card")
 id = &"crit_chance_up"
 title = "Crit Chance +15%"
-description = "Increase critical strike chance by 15% for this run."
+description = "暴击率+15%"
 effects = [SubResource("RewardEffect_crit_chance")]
 
 [sub_resource type="Resource" id="RewardEffect_defense"]
@@ -104,7 +104,7 @@ value = 10.0
 script = ExtResource("2_card")
 id = &"defense_up"
 title = "Defense +10"
-description = "Increase defense by 10 for this run."
+description = "防御+10"
 effects = [SubResource("RewardEffect_defense")]
 
 [sub_resource type="Resource" id="RewardEffect_possession_combo_haste"]
@@ -119,7 +119,7 @@ aux_value = 3.0
 script = ExtResource("2_card")
 id = &"possession_combo_haste"
 title = "Possession Rhythm"
-description = "After 3 possessions within 3 seconds, gain 15% move speed and attack speed for a short time."
+description = "连续附身将获得短时15%攻速和移速"
 effects = [SubResource("RewardEffect_possession_combo_haste")]
 
 [sub_resource type="Resource" id="RewardEffect_detach_dash_armor_break"]
@@ -133,7 +133,7 @@ duration = 4.0
 script = ExtResource("2_card")
 id = &"detach_dash_armor_break"
 title = "Breaking Escape"
-description = "Detach dash applies Defense Down for 4 seconds to enemies on the path."
+description = "灵魂出窍将对路径上的敌人施加破防"
 effects = [SubResource("RewardEffect_detach_dash_armor_break")]
 
 [resource]

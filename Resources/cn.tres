@@ -1,0 +1,7 @@
+[gd_resource type="LabelSettings" format=3 uid="uid://ccjq02i8u7ovw"]
+
+[ext_resource type="FontFile" uid="uid://b37hhjq33y1vy" path="res://Assets/Fonts/vonwaon-bitmap.ttf/VonwaonBitmap-16px.ttf" id="1_vd4u1"]
+
+[resource]
+font = ExtResource("1_vd4u1")
+font_size = 8
