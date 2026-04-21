@@ -3,13 +3,18 @@ class_name RewardSelectionUI
 
 signal card_selected(card_id: StringName)
 
+const RewardCardDefinitionScript := preload("res://Global/Roguelike/reward_card_definition.gd")
 const SharedLabelSettings := preload("res://Resources/cn.tres")
 const BronzeFrameTexture := preload("res://Assets/Sprites/UI/Cards/bronze.png")
 const SilverFrameTexture := preload("res://Assets/Sprites/UI/Cards/silver.png")
 const GoldFrameTexture := preload("res://Assets/Sprites/UI/Cards/gold.png")
+const DemonFrameTexture := preload("res://Assets/Sprites/UI/Cards/demon.png")
+const GodFrameTexture := preload("res://Assets/Sprites/UI/Cards/god.png")
 const BronzeFrameRegion := Rect2(41.0, 16.0, 120.0, 170.0)
 const SilverFrameRegion := Rect2(42.0, 19.0, 121.0, 164.0)
 const GoldFrameRegion := Rect2(26.0, 11.0, 112.0, 147.0)
+const DemonFrameRegion := Rect2(0.0, 0.0, 88.0, 128.0)
+const GodFrameRegion := Rect2(0.0, 0.0, 88.0, 128.0)
 const DefaultCardContentMargin := 6
 const FramedCardContentMarginLeft := 18
 const FramedCardContentMarginTop := 18
@@ -32,10 +37,8 @@ func present_cards(cards: Array) -> void:
 		_cards_box.remove_child(child)
 		child.queue_free()
 
-	for card_index in range(cards.size()):
-		var card = cards[card_index]
-		var frame_texture_resource := _create_card_frame_texture(card_index)
-		var is_framed_card := frame_texture_resource != null
+	for card in cards:
+		var frame_texture_resource := _create_card_frame_texture(_get_card_rarity(card))
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(88.0, 128.0)
 		button.focus_mode = Control.FOCUS_NONE
@@ -46,29 +49,22 @@ func present_cards(cards: Array) -> void:
 			card_selected.emit(card.id)
 		)
 
-		if is_framed_card:
-			var frame_texture := TextureRect.new()
-			frame_texture.name = "FrameTexture"
-			frame_texture.set_anchors_preset(Control.PRESET_FULL_RECT)
-			frame_texture.texture = frame_texture_resource
-			frame_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			frame_texture.stretch_mode = TextureRect.STRETCH_SCALE
-			frame_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			button.add_child(frame_texture)
+		var frame_texture := TextureRect.new()
+		frame_texture.name = "FrameTexture"
+		frame_texture.set_anchors_preset(Control.PRESET_FULL_RECT)
+		frame_texture.texture = frame_texture_resource
+		frame_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame_texture.stretch_mode = TextureRect.STRETCH_SCALE
+		frame_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(frame_texture)
 
 		var content := MarginContainer.new()
 		content.name = "Content"
 		content.set_anchors_preset(Control.PRESET_FULL_RECT)
-		if is_framed_card:
-			content.add_theme_constant_override("margin_left", FramedCardContentMarginLeft)
-			content.add_theme_constant_override("margin_top", FramedCardContentMarginTop)
-			content.add_theme_constant_override("margin_right", FramedCardContentMarginRight)
-			content.add_theme_constant_override("margin_bottom", FramedCardContentMarginBottom)
-		else:
-			content.add_theme_constant_override("margin_left", DefaultCardContentMargin)
-			content.add_theme_constant_override("margin_top", DefaultCardContentMargin)
-			content.add_theme_constant_override("margin_right", DefaultCardContentMargin)
-			content.add_theme_constant_override("margin_bottom", DefaultCardContentMargin)
+		content.add_theme_constant_override("margin_left", FramedCardContentMarginLeft)
+		content.add_theme_constant_override("margin_top", FramedCardContentMarginTop)
+		content.add_theme_constant_override("margin_right", FramedCardContentMarginRight)
+		content.add_theme_constant_override("margin_bottom", FramedCardContentMarginBottom)
 		button.add_child(content)
 
 		var layout := VBoxContainer.new()
@@ -88,8 +84,7 @@ func present_cards(cards: Array) -> void:
 		description.text = str(card.description)
 		description.label_settings = SharedLabelSettings
 		description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		if is_framed_card:
-			description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		description.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		description.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		description.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -102,16 +97,27 @@ func present_cards(cards: Array) -> void:
 func hide_ui() -> void:
 	visible = false
 
-func _create_card_frame_texture(card_index: int) -> AtlasTexture:
-	match card_index:
-		0:
-			return _create_frame_texture(BronzeFrameTexture, BronzeFrameRegion)
-		1:
+func _get_card_rarity(card) -> int:
+	if card == null:
+		return RewardCardDefinitionScript.Rarity.BRONZE
+		
+	var rarity_value = card.get("rarity")
+	if rarity_value == null:
+		return RewardCardDefinitionScript.Rarity.BRONZE
+	return int(rarity_value)
+
+func _create_card_frame_texture(rarity: int) -> AtlasTexture:
+	match rarity:
+		RewardCardDefinitionScript.Rarity.SILVER:
 			return _create_frame_texture(SilverFrameTexture, SilverFrameRegion)
-		2:
+		RewardCardDefinitionScript.Rarity.GOLD:
 			return _create_frame_texture(GoldFrameTexture, GoldFrameRegion)
+		RewardCardDefinitionScript.Rarity.DEMON:
+			return _create_frame_texture(DemonFrameTexture, DemonFrameRegion)
+		RewardCardDefinitionScript.Rarity.GOD:
+			return _create_frame_texture(GodFrameTexture, GodFrameRegion)
 		_:
-			return null
+			return _create_frame_texture(BronzeFrameTexture, BronzeFrameRegion)
 
 func _create_frame_texture(texture: Texture2D, region: Rect2) -> AtlasTexture:
 	var atlas_texture := AtlasTexture.new()
