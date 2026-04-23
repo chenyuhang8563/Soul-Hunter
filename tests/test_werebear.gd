@@ -35,6 +35,13 @@ func _measure_knockback_distance(werebear, source: CharacterBody2D) -> float:
 	return absf(werebear.global_position.x - start_x)
 
 
+func _remove_werebear_knockback_resist(werebear) -> void:
+	for buff in werebear.buff_controller.get_active_buffs():
+		if buff != null and buff.stack_key == &"werebear_knockback_resist":
+			werebear.buff_controller.remove_buff(buff)
+			return
+
+
 func before_each() -> void:
 	Engine.time_scale = 1.0
 	get_tree().paused = false
@@ -60,6 +67,7 @@ func test_werebear_initializes_boss_runtime_defaults() -> void:
 	assert_eq(werebear.current_phase, 1)
 	assert_false(werebear.phase_two_triggered)
 	assert_eq(werebear.team_id, 1)
+	assert_true(werebear.buff_controller.has_buff(&"werebear_knockback_resist"))
 	assert_true(visual_scope.monitoring, "Boss AI should enable target acquisition when not player-controlled.")
 	assert_true(attack_scope.monitoring, "Boss AI should enable attack scope when active.")
 
@@ -263,21 +271,18 @@ func test_werebear_phase_two_applies_enrage_once_and_resyncs_boss_walk_speed() -
 	assert_eq(enrage_count, 1, "Repeated phase-two updates should not duplicate enrage.")
 
 
-func test_werebear_does_not_gain_knockback_resist_before_phase_two() -> void:
+func test_werebear_starts_with_permanent_knockback_resist_buff() -> void:
 	var werebear = add_child_autofree(WerebearScene.instantiate())
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
-	assert_false(werebear.buff_controller.has_buff(&"werebear_knockback_resist"))
+	assert_true(werebear.buff_controller.has_buff(&"werebear_knockback_resist"))
 
 
-func test_werebear_phase_two_applies_permanent_knockback_resist_buff() -> void:
+func test_werebear_phase_two_keeps_single_permanent_knockback_resist_buff() -> void:
 	var werebear = add_child_autofree(WerebearScene.instantiate())
 	await get_tree().process_frame
 	await get_tree().physics_frame
-
-	werebear.health.current_health = werebear.health.max_health * werebear.phase_two_health_ratio
-	werebear._update_boss_phase()
 
 	assert_true(werebear.buff_controller.has_buff(&"werebear_knockback_resist"))
 
@@ -285,7 +290,10 @@ func test_werebear_phase_two_applies_permanent_knockback_resist_buff() -> void:
 	for buff in werebear.buff_controller.get_active_buffs():
 		if buff != null and buff.stack_key == &"werebear_knockback_resist":
 			resist_count += 1
-	assert_eq(resist_count, 1, "Werebear should only add one permanent knockback-resist buff in phase two.")
+	assert_eq(resist_count, 1, "Werebear should start with exactly one permanent knockback-resist buff.")
+
+	werebear.health.current_health = werebear.health.max_health * werebear.phase_two_health_ratio
+	werebear._update_boss_phase()
 
 	werebear._update_boss_phase()
 
@@ -293,23 +301,23 @@ func test_werebear_phase_two_applies_permanent_knockback_resist_buff() -> void:
 	for buff in werebear.buff_controller.get_active_buffs():
 		if buff != null and buff.stack_key == &"werebear_knockback_resist":
 			resist_count += 1
-	assert_eq(resist_count, 1, "Repeated phase-two updates should not duplicate knockback resist.")
+	assert_eq(resist_count, 1, "Phase-two updates should not duplicate the permanent knockback resist buff.")
 
 
-func test_werebear_phase_two_knockback_resist_helper_is_idempotent() -> void:
+func test_werebear_boss_knockback_resist_helper_is_idempotent() -> void:
 	var werebear = add_child_autofree(WerebearScene.instantiate())
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
-	werebear._apply_phase_two_knockback_resist()
-	werebear._apply_phase_two_knockback_resist()
+	werebear._apply_boss_knockback_resist()
+	werebear._apply_boss_knockback_resist()
 
 	var resist_count := 0
 	for buff in werebear.buff_controller.get_active_buffs():
 		if buff != null and buff.stack_key == &"werebear_knockback_resist":
 			resist_count += 1
 
-	assert_eq(resist_count, 1, "Werebear should keep only one permanent knockback-resist buff when phase-two resist is applied repeatedly.")
+	assert_eq(resist_count, 1, "Werebear should keep only one permanent knockback-resist buff when the boss resist helper is applied repeatedly.")
 	assert_eq(
 		float(werebear.get_stat_value(&"knockback_taken_multiplier", 1.0)),
 		0.5,
@@ -317,47 +325,48 @@ func test_werebear_phase_two_knockback_resist_helper_is_idempotent() -> void:
 	)
 
 
-func test_werebear_phase_two_halves_knockback_velocity() -> void:
-	var werebear = add_child_autofree(WerebearScene.instantiate())
+func test_werebear_spawn_knockback_resist_halves_knockback_velocity() -> void:
+	var buffed_werebear = add_child_autofree(WerebearScene.instantiate())
+	var unbuffed_werebear = add_child_autofree(WerebearScene.instantiate())
 	var source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
-	werebear.global_position = Vector2.ZERO
-	werebear.knockback_velocity = 0.0
-	werebear.lifecycle_state.on_damaged(5.0, werebear.health.current_health, werebear.health.max_health, source)
-	var phase_one_knockback := absf(werebear.knockback_velocity)
+	_remove_werebear_knockback_resist(unbuffed_werebear)
 
-	werebear.knockback_velocity = 0.0
-	werebear.health.current_health = werebear.health.max_health * werebear.phase_two_health_ratio
-	werebear._update_boss_phase()
-	werebear.lifecycle_state.on_damaged(5.0, werebear.health.current_health, werebear.health.max_health, source)
-	var phase_two_knockback := absf(werebear.knockback_velocity)
+	buffed_werebear.global_position = Vector2.ZERO
+	buffed_werebear.knockback_velocity = 0.0
+	buffed_werebear.lifecycle_state.on_damaged(5.0, buffed_werebear.health.current_health, buffed_werebear.health.max_health, source)
+	var buffed_knockback := absf(buffed_werebear.knockback_velocity)
 
-	assert_eq(phase_one_knockback, werebear.KNOCKBACK_VELOCITY)
-	assert_eq(phase_two_knockback, werebear.KNOCKBACK_VELOCITY * 0.5)
+	unbuffed_werebear.global_position = Vector2.ZERO
+	unbuffed_werebear.knockback_velocity = 0.0
+	unbuffed_werebear.lifecycle_state.on_damaged(5.0, unbuffed_werebear.health.current_health, unbuffed_werebear.health.max_health, source)
+	var unbuffed_knockback := absf(unbuffed_werebear.knockback_velocity)
+
+	assert_eq(buffed_knockback, buffed_werebear.KNOCKBACK_VELOCITY * 0.5)
+	assert_eq(unbuffed_knockback, unbuffed_werebear.KNOCKBACK_VELOCITY)
 
 
-func test_werebear_phase_two_halves_knockback_travel_distance() -> void:
-	var phase_one_werebear = add_child_autofree(WerebearScene.instantiate())
-	var phase_one_source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
+func test_werebear_spawn_knockback_resist_halves_knockback_travel_distance() -> void:
+	var buffed_werebear = add_child_autofree(WerebearScene.instantiate())
+	var buffed_source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
-	var phase_one_distance: float = await _measure_knockback_distance(phase_one_werebear, phase_one_source)
+	var buffed_distance: float = await _measure_knockback_distance(buffed_werebear, buffed_source)
 
-	var phase_two_werebear = add_child_autofree(WerebearScene.instantiate())
-	var phase_two_source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
+	var unbuffed_werebear = add_child_autofree(WerebearScene.instantiate())
+	var unbuffed_source = add_child_autofree(FakeDamageSource.new(Vector2(-12.0, 0.0)))
 	await get_tree().process_frame
 	await get_tree().physics_frame
-	phase_two_werebear.health.current_health = phase_two_werebear.health.max_health * phase_two_werebear.phase_two_health_ratio
-	phase_two_werebear._update_boss_phase()
+	_remove_werebear_knockback_resist(unbuffed_werebear)
 
-	var phase_two_distance: float = await _measure_knockback_distance(phase_two_werebear, phase_two_source)
+	var unbuffed_distance: float = await _measure_knockback_distance(unbuffed_werebear, unbuffed_source)
 
-	assert_gt(phase_one_distance, 0.0)
-	assert_gt(phase_two_distance, phase_one_distance * 0.4)
-	assert_lt(phase_two_distance, phase_one_distance * 0.6)
+	assert_gt(unbuffed_distance, 0.0)
+	assert_gt(buffed_distance, unbuffed_distance * 0.4)
+	assert_lt(buffed_distance, unbuffed_distance * 0.6)
 
 
 func test_werebear_initialization_switches_bgm_to_boss_fight() -> void:

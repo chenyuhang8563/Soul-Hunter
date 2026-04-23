@@ -49,6 +49,7 @@ func _on_character_ready() -> void:
 		ai_module.set_home_position(home_marker.global_position)
 	motion_driver.setup(self, sprite, AIR_MOVE_MULTIPLIER, true)
 	_refresh_runtime_mode()
+	_apply_boss_knockback_resist()
 	_refresh_boss_ai_walk_speed()
 	_request_boss_bgm()
 
@@ -101,7 +102,7 @@ func _update_boss_phase() -> void:
 	phase_two_triggered = true
 	current_phase = 2
 	_apply_phase_two_enrage()
-	_apply_phase_two_knockback_resist()
+	_apply_boss_knockback_resist()
 	if attack_module != null and attack_module.has_method("enter_phase_two"):
 		attack_module.enter_phase_two()
 	if ai_module != null and ai_module.has_method("enter_phase_two"):
@@ -121,7 +122,7 @@ func _apply_phase_two_enrage() -> void:
 	add_buff(WerebearEnrageBuffScript.new())
 	_refresh_boss_ai_walk_speed()
 
-func _apply_phase_two_knockback_resist() -> void:
+func _apply_boss_knockback_resist() -> void:
 	if buff_controller == null or buff_controller.has_buff(&"werebear_knockback_resist"):
 		return
 	add_buff(WerebearKnockbackResistBuffScript.new())
