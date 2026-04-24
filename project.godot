@@ -29,6 +29,7 @@ TaskManager="*res://Global/task_manager.gd"
 SceneManager="*res://Global/scene_manager.tscn"
 InputBuffer="*uid://cfr6hvk4spmfe"
 VfxPool="*res://Global/vfx_pool.gd"
+PropManager="*res://Global/PropSystem/prop_manager.gd"
 
 [display]
 

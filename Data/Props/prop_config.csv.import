@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bvqb5nhueod5t"
+
+[deps]
+
+files=["res://Data/Props/prop_config.name.translation", "res://Data/Props/prop_config.type.translation", "res://Data/Props/prop_config.rarity.translation", "res://Data/Props/prop_config.description.translation", "res://Data/Props/prop_config.icon.translation", "res://Data/Props/prop_config.max.translation", "res://Data/Props/prop_config.buy.translation", "res://Data/Props/prop_config.sell.translation"]
+
+source_file="res://Data/Props/prop_config.csv"
+dest_files=["res://Data/Props/prop_config.name.translation", "res://Data/Props/prop_config.type.translation", "res://Data/Props/prop_config.rarity.translation", "res://Data/Props/prop_config.description.translation", "res://Data/Props/prop_config.icon.translation", "res://Data/Props/prop_config.max.translation", "res://Data/Props/prop_config.buy.translation", "res://Data/Props/prop_config.sell.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

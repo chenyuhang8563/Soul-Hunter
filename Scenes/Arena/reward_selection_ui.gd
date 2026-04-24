@@ -14,7 +14,7 @@ const BronzeFrameRegion := Rect2(35.0, 11.0, 132.0, 178.0)
 const SilverFrameRegion := Rect2(42.0, 19.0, 121.0, 164.0)
 const GoldFrameRegion := Rect2(26.0, 11.0, 112.0, 147.0)
 const DemonFrameRegion := Rect2(58.0, 28.0, 134.0, 194.0)
-const GodFrameRegion := Rect2(37.0, 8.0, 120.0, 171.0)
+const GodFrameRegion := Rect2(90.0, 34.0, 230.0, 336.0)
 
 var _panel: PanelContainer = null
 var _cards_box: HBoxContainer = null
