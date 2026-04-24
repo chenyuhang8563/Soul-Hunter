@@ -17,6 +17,7 @@ signal stats_changed()
 
 var _host: Object = null
 var _selected_cards: Array[StringName] = []
+var _selected_skill_cards: Array[StringName] = []
 var _selected_card_titles: Array[String] = []
 var _hud_summary_tokens: Array[Dictionary] = []
 var _hud_numeric_totals := {}
@@ -48,6 +49,7 @@ func setup(host: Object) -> void:
 
 func reset() -> void:
 	_selected_cards.clear()
+	_selected_skill_cards.clear()
 	_selected_card_titles.clear()
 	_hud_summary_tokens.clear()
 	_hud_numeric_totals.clear()
@@ -79,6 +81,8 @@ func apply_reward_card(card: Resource) -> void:
 		var card_id = card.get("id") as StringName
 		if card_id != &"":
 			_selected_cards.append(card_id)
+			if _card_has_skill_effects(card) and not _selected_skill_cards.has(card_id):
+				_selected_skill_cards.append(card_id)
 		var card_title := str(card.get("title"))
 		if not card_title.is_empty():
 			_selected_card_titles.append(card_title)
@@ -101,6 +105,9 @@ func modify_stat_value(stat_id: StringName, base_value: float) -> float:
 
 func get_selected_cards() -> Array[StringName]:
 	return _selected_cards.duplicate()
+
+func get_selected_skill_cards() -> Array[StringName]:
+	return _selected_skill_cards.duplicate()
 
 func get_selected_card_titles() -> Array[String]:
 	return _selected_card_titles.duplicate()
@@ -519,3 +526,14 @@ func _supports_developer_buff(card: Resource) -> bool:
 			continue
 		return false
 	return true
+
+func _card_has_skill_effects(card: Resource) -> bool:
+	if card == null or not card.has_method("get"):
+		return false
+	var effects: Array = card.get("effects")
+	for effect in effects:
+		if effect == null:
+			continue
+		if int(effect.effect_type) != int(RewardEffectDefinitionScript.EffectType.STAT_ADD):
+			return true
+	return false

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "WebSearch",
+      "Bash(claude mcp *)",
+      "Bash(\"E:\\\\Godot_v4.6.1-stable_win64.exe\\\\Godot_v4.6.1-stable_win64.exe\" --version)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebFetch(domain:gut.readthedocs.io)"
+    ]
+  }
+}

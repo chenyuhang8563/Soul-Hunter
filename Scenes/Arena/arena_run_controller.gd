@@ -178,7 +178,10 @@ func _start_wave(wave_index: int) -> void:
 func _roll_reward_options() -> Array:
 	if _reward_pool == null or not _reward_pool.has_method("roll_cards"):
 		return []
-	return _reward_pool.roll_cards(3, _rng)
+	var excluded_skill_card_ids: Array = []
+	if _run_modifier_controller != null and _run_modifier_controller.has_method("get_selected_skill_cards"):
+		excluded_skill_card_ids = _run_modifier_controller.get_selected_skill_cards()
+	return _reward_pool.roll_cards(3, _rng, excluded_skill_card_ids)
 
 func _get_total_waves() -> int:
 	if _wave_director != null and _wave_director.has_method("get_total_waves"):

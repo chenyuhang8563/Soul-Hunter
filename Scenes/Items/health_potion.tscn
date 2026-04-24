@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://dvsujoifwqeod"]
+
+[ext_resource type="Texture2D" uid="uid://x388sip732fg" path="res://Assets/Sprites/Items/health_potion_idle.png" id="1_wn3da"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wn3da"]
+atlas = ExtResource("1_wn3da")
+region = Rect2(0, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_trvg6"]
+atlas = ExtResource("1_wn3da")
+region = Rect2(8, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kcdmg"]
+atlas = ExtResource("1_wn3da")
+region = Rect2(16, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y23yh"]
+atlas = ExtResource("1_wn3da")
+region = Rect2(24, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0qjou"]
+atlas = ExtResource("1_wn3da")
+region = Rect2(32, 0, 8, 8)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_e7gh7"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wn3da")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_trvg6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kcdmg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y23yh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0qjou")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="HealthPotionIdle" type="AnimatedSprite2D" unique_id=1952845169]
+sprite_frames = SubResource("SpriteFrames_e7gh7")
+frame = 2
+frame_progress = 0.99890244

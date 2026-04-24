@@ -10,16 +10,11 @@ const SilverFrameTexture := preload("res://Assets/Sprites/UI/Cards/silver.png")
 const GoldFrameTexture := preload("res://Assets/Sprites/UI/Cards/gold.png")
 const DemonFrameTexture := preload("res://Assets/Sprites/UI/Cards/demon.png")
 const GodFrameTexture := preload("res://Assets/Sprites/UI/Cards/god.png")
-const BronzeFrameRegion := Rect2(41.0, 16.0, 120.0, 170.0)
+const BronzeFrameRegion := Rect2(35.0, 11.0, 132.0, 178.0)
 const SilverFrameRegion := Rect2(42.0, 19.0, 121.0, 164.0)
 const GoldFrameRegion := Rect2(26.0, 11.0, 112.0, 147.0)
 const DemonFrameRegion := Rect2(58.0, 28.0, 134.0, 194.0)
 const GodFrameRegion := Rect2(37.0, 8.0, 120.0, 171.0)
-const DefaultCardContentMargin := 6
-const FramedCardContentMarginLeft := 18
-const FramedCardContentMarginTop := 18
-const FramedCardContentMarginRight := 18
-const FramedCardContentMarginBottom := 18
 
 var _panel: PanelContainer = null
 var _cards_box: HBoxContainer = null
@@ -38,7 +33,8 @@ func present_cards(cards: Array) -> void:
 		child.queue_free()
 
 	for card in cards:
-		var frame_texture_resource := _create_card_frame_texture(_get_card_rarity(card))
+		var card_rarity := _get_card_rarity(card)
+		var frame_texture_resource := _create_card_frame_texture(card_rarity)
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(88.0, 128.0)
 		button.focus_mode = Control.FOCUS_NONE
@@ -61,10 +57,11 @@ func present_cards(cards: Array) -> void:
 		var content := MarginContainer.new()
 		content.name = "Content"
 		content.set_anchors_preset(Control.PRESET_FULL_RECT)
-		content.add_theme_constant_override("margin_left", FramedCardContentMarginLeft)
-		content.add_theme_constant_override("margin_top", FramedCardContentMarginTop)
-		content.add_theme_constant_override("margin_right", FramedCardContentMarginRight)
-		content.add_theme_constant_override("margin_bottom", FramedCardContentMarginBottom)
+		var card_margins := _get_content_margins(card_rarity)
+		content.add_theme_constant_override("margin_left", card_margins["left"])
+		content.add_theme_constant_override("margin_top", card_margins["top"])
+		content.add_theme_constant_override("margin_right", card_margins["right"])
+		content.add_theme_constant_override("margin_bottom", card_margins["bottom"])
 		button.add_child(content)
 
 		var layout := VBoxContainer.new()
@@ -124,6 +121,9 @@ func _create_frame_texture(texture: Texture2D, region: Rect2) -> AtlasTexture:
 	atlas_texture.atlas = texture
 	atlas_texture.region = region
 	return atlas_texture
+
+func _get_content_margins(_rarity: int) -> Dictionary:
+	return {"left": 18, "top": 18, "right": 18, "bottom": 18}
 
 func _build_ui() -> void:
 	if _panel != null and is_instance_valid(_panel):

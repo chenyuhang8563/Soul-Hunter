@@ -5,12 +5,18 @@ const RewardCardDefinitionScript := preload("res://Global/Roguelike/reward_card_
 
 @export var cards: Array[RewardCardDefinitionScript] = []
 
-func roll_cards(count: int, rng: RandomNumberGenerator) -> Array:
+func roll_cards(count: int, rng: RandomNumberGenerator, excluded_card_ids: Array = []) -> Array:
 	if count <= 0 or cards.is_empty():
 		return []
 
 	var generator := rng if rng != null else RandomNumberGenerator.new()
-	var available_cards: Array = cards.duplicate()
+	var excluded_lookup := {}
+	for card_id in excluded_card_ids:
+		excluded_lookup[StringName(card_id)] = true
+
+	var available_cards: Array = cards.filter(func(card):
+		return card != null and not excluded_lookup.has(card.id)
+	)
 	var rolled_cards: Array = []
 
 	while rolled_cards.size() < count and not available_cards.is_empty():

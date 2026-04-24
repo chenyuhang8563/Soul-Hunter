@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cexye5xyg2lew"
-path="res://.godot/imported/bronze.png-ba0ff08e4992936ff50fe97682307101.ctex"
+uid="uid://x388sip732fg"
+path="res://.godot/imported/health_potion_idle.png-144e5b7f7b44fd0d857f9b58546dabca.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/UI/Cards/bronze.png"
-dest_files=["res://.godot/imported/bronze.png-ba0ff08e4992936ff50fe97682307101.ctex"]
+source_file="res://Assets/Sprites/Items/health_potion_idle.png"
+dest_files=["res://.godot/imported/health_potion_idle.png-144e5b7f7b44fd0d857f9b58546dabca.ctex"]
 
 [params]
 

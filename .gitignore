@@ -5,7 +5,7 @@
 
 # Submodules (have their own git repos)
 godot-mcp/
-tests/
+test/
 
 addons
 .gutconfig.json
@@ -16,3 +16,6 @@ docs/
 .superpowers/
 .worktrees/
 .sandbox_home/
+
+# AI markdown files
+CLAUDE.md
