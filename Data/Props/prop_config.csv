@@ -1,6 +1,6 @@
 id,name,type,rarity,description,icon_path,max_stack,buy_price,sell_price
-1,生命药水,CONSUMABLE,COMMON,恢复30点生命值,@Scenes/Items/health_potion.tscn,99,50,25
-2,魔法药水,CONSUMABLE,COMMON,恢复20点魔法值,,99,50,25
+1,生命药水,CONSUMABLE,COMMON,恢复30点生命值,res://Assets/Sprites/Items/health_potion_idle.png,99,50,25
+2,魔法药水,CONSUMABLE,COMMON,恢复20点魔法值,res://Assets/Sprites/Items/aether_potion_idle.png,99,50,25
 3,铁剑,EQUIPMENT,UNCOMMON,一把普通的铁剑,,1,200,100
 4,皮革护甲,EQUIPMENT,UNCOMMON,轻便的皮革护甲,,1,300,150
 5,龙鳞,MATERIAL,EPIC,龙身上掉下来的稀有鳞片,,99,0,500

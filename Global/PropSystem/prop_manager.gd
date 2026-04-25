@@ -175,12 +175,13 @@ func remove_prop(item_id: int, count: int) -> bool:
 	prop_count_changed.emit(item_id, new_total)
 	return true
 
-## 使用物品 —— 仅发射 signal，由外部订阅者决定具体效果
+## 使用物品 —— 消耗 1 个并发射 signal，由外部订阅者决定具体效果
 func use_prop(item_id: int) -> void:
 	if get_prop_count(item_id) <= 0:
 		push_warning("PropManager.use_prop: 物品不足 ID=", item_id)
 		return
 
+	remove_prop(item_id, 1)
 	prop_used.emit(item_id)
 
 ## 查询某种物品在背包中的总数量

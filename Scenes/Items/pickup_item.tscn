@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://dlbdtddeqhmvt"]
+
+[ext_resource type="Script" uid="uid://vuexgl0s2pog" path="res://Scenes/Items/pickup_item.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://x388sip732fg" path="res://Assets/Sprites/Items/health_potion_idle.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p1"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p2"]
+atlas = ExtResource("2")
+region = Rect2(8, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p3"]
+atlas = ExtResource("2")
+region = Rect2(16, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p4"]
+atlas = ExtResource("2")
+region = Rect2(24, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p5"]
+atlas = ExtResource("2")
+region = Rect2(32, 0, 8, 8)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_potion"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p5")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pickup"]
+radius = 16.0
+
+[node name="root" type="Node2D" unique_id=1076925325]
+script = ExtResource("1")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=875560623]
+sprite_frames = SubResource("SpriteFrames_potion")
+autoplay = "default"
+
+[node name="PickupArea" type="Area2D" parent="." unique_id=220718549]
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PickupArea" unique_id=870684017]
+shape = SubResource("CircleShape2D_pickup")

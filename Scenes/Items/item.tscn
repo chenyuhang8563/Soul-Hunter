@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://vd5kqmg7epvj"]
+
+[ext_resource type="Script" uid="uid://2cssycpowx3k" path="res://Scenes/Items/item.gd" id="1_2vqgx"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_eb5tt"]
+
+[node name="Item" type="AnimatedSprite2D" unique_id=463825424]
+sprite_frames = SubResource("SpriteFrames_eb5tt")
+script = ExtResource("1_2vqgx")

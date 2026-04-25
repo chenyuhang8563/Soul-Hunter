@@ -47,5 +47,4 @@ animations = [{
 
 [node name="HealthPotionIdle" type="AnimatedSprite2D" unique_id=1952845169]
 sprite_frames = SubResource("SpriteFrames_e7gh7")
-frame = 2
-frame_progress = 0.99890244
+autoplay = "default"

@@ -12,6 +12,10 @@ const RunModifierControllerScript := preload("res://Character/Common/run_modifie
 const ARENA_ENEMY_GROUP := &"arena_enemy"
 const ARENA_WAVE_META_KEY := &"arena_wave_index"
 const WAVE_CLEAR_REWARD_BUFFER_SECONDS := 1.5
+const HEALTH_POTION_ID := 1
+const HEALTH_POTION_DROP_CHANCE := 0.5
+const HEALTH_POTION_HEAL_AMOUNT := 80
+const PICKUP_ITEM_SCENE := preload("res://Scenes/Items/pickup_item.tscn")
 
 enum RunState {
 	PREPARE,
@@ -44,6 +48,7 @@ var _wave_clear_buffer_token := 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_connect_prop_manager_signals()
 
 func _process(delta: float) -> void:
 	_sync_current_player_reference()
@@ -331,7 +336,16 @@ func _track_enemy(enemy: Node) -> void:
 				health_component.died.connect(death_callable, CONNECT_ONE_SHOT)
 
 func _on_enemy_died(_source: CharacterBody2D, enemy: Node) -> void:
+	if _rng.randf() < HEALTH_POTION_DROP_CHANCE:
+		_spawn_pickup(enemy.global_position, HEALTH_POTION_ID, 1)
 	_remove_active_enemy(enemy)
+
+func _spawn_pickup(position: Vector2, item_id: int, count: int) -> void:
+	var pickup = PICKUP_ITEM_SCENE.instantiate()
+	pickup.setup(item_id, count)
+	if _enemy_container != null:
+		_enemy_container.add_child(pickup)
+	pickup.jump_out(position)
 
 func _on_enemy_tree_exited(enemy: Node) -> void:
 	_remove_active_enemy(enemy)
@@ -488,3 +502,14 @@ func _disconnect_player_health() -> void:
 
 func _on_player_died(_source: CharacterBody2D) -> void:
 	fail_run()
+
+func _connect_prop_manager_signals() -> void:
+	if not PropManager.prop_used.is_connected(_on_prop_used):
+		PropManager.prop_used.connect(_on_prop_used)
+
+func _on_prop_used(item_id: int) -> void:
+	if item_id != HEALTH_POTION_ID:
+		return
+	if _player == null or not _player.has_method("heal"):
+		return
+	_player.heal(HEALTH_POTION_HEAL_AMOUNT)

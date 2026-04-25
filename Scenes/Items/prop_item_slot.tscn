@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://box4xrf8oionr"]
+
+[ext_resource type="Script" uid="uid://creu0gxhetpsx" path="res://Scenes/Items/prop_item_slot.gd" id="1_fc1lo"]
+[ext_resource type="Texture2D" uid="uid://bmqjg7ctwpb6a" path="res://Assets/Sprites/UI/BookMenu/Slot_01_Empty.png" id="2_6lf7h"]
+[ext_resource type="FontFile" uid="uid://bmo6inr1t3epg" path="res://Assets/Fonts/quaver.ttf" id="3_pv5ji"]
+
+[node name="PropItemSlot" type="Control" unique_id=1517543134]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_fc1lo")
+
+[node name="SlotBg" type="TextureRect" parent="." unique_id=802960463]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_6lf7h")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ItemIcon" type="TextureRect" parent="." unique_id=1117368918]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 0
+stretch_mode = 3
+
+[node name="StackLabel" type="Label" parent="." unique_id=2024440360]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -12.0
+offset_top = -7.0
+offset_right = -1.0
+offset_bottom = -1.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_fonts/font = ExtResource("3_pv5ji")
+theme_override_font_sizes/font_size = 6
+horizontal_alignment = 2
+vertical_alignment = 1
