@@ -120,22 +120,6 @@ func physics_process_ai(delta: float) -> float:
 	elif ai_state == AIState.IDLE or ai_state == AIState_BACKSTEP:
 		input_dir = 0.0
 
-	if input_dir != 0.0 and character.is_on_floor():
-		_cliff_check_timer += delta
-		if _cliff_check_timer >= CLIFF_CHECK_INTERVAL:
-			_cliff_check_timer = 0.0
-			var current_scene = character.get_tree().current_scene
-			var tilemap: TileMapLayer = TileMapUtils.get_tilemap_from_scene(current_scene)
-			if tilemap:
-				var look_ahead_distance = LOOK_AHEAD_DISTANCE
-				var check_depth = CLIFF_CHECK_DEPTH
-				var predicted_pos = character.global_position + Vector2(sign(input_dir) * look_ahead_distance, check_depth)
-				var map_coord = tilemap.local_to_map(tilemap.to_local(predicted_pos))
-				var tile_data = tilemap.get_cell_tile_data(map_coord)
-				if tile_data == null:
-					input_dir = 0.0
-					ai_state = AIState.IDLE
-
 	if input_dir != 0 and sprite != null:
 		sprite.flip_h = input_dir < 0
 

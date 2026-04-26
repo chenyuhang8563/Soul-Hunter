@@ -26,8 +26,8 @@ func _ready() -> void:
 	if not is_instance_valid(_pickup_area):
 		return
 
-	_pickup_area.monitoring = true
-	_pickup_area.monitorable = true
+	_pickup_area.set_deferred("monitoring", true)
+	_pickup_area.set_deferred("monitorable", true)
 
 	if is_instance_valid(_player_body):
 		_pickup_area.collision_mask |= _player_body.collision_layer

@@ -343,8 +343,16 @@ func _on_enemy_died(_source: CharacterBody2D, enemy: Node) -> void:
 func _spawn_pickup(position: Vector2, item_id: int, count: int) -> void:
 	var pickup = PICKUP_ITEM_SCENE.instantiate()
 	pickup.setup(item_id, count)
-	if _enemy_container != null:
+	call_deferred("_add_spawned_pickup", pickup, position)
+
+func _add_spawned_pickup(pickup: Node2D, position: Vector2) -> void:
+	if not is_instance_valid(pickup):
+		return
+	if is_instance_valid(_enemy_container):
 		_enemy_container.add_child(pickup)
+	else:
+		pickup.queue_free()
+		return
 	pickup.jump_out(position)
 
 func _on_enemy_tree_exited(enemy: Node) -> void:

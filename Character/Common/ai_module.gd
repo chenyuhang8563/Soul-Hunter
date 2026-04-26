@@ -2,10 +2,6 @@ extends RefCounted
 
 enum AIState { IDLE, CHASE, ATTACK, RETURN }
 
-# AI 悬崖检测常量
-const LOOK_AHEAD_DISTANCE := 15.0
-const CLIFF_CHECK_DEPTH := 20.0
-
 var character: CharacterBody2D
 var sprite: Sprite2D
 var visual_scope: Area2D
@@ -19,10 +15,6 @@ var ai_state := AIState.IDLE
 
 var walk_speed := 50.0
 var return_tolerance := 6.0
-
-# P1-7: 性能优化 - 悬崖检测节流
-var _cliff_check_timer := 0.0
-const CLIFF_CHECK_INTERVAL := 0.15  # 每0.15秒检查一次悬崖
 
 func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D, _attack_scope: Area2D, _line_of_sight: RayCast2D, _attack_module: AttackModuleBase, _walk_speed: float = 50.0, _return_tolerance: float = 6.0) -> void:
 	character = _character
@@ -176,25 +168,6 @@ func physics_process_ai(delta: float) -> float:
 		input_dir = _get_move_input()
 	elif ai_state == AIState.IDLE:
 		input_dir = 0.0
-
-	# P1-7: 边缘检测逻辑 - 节流优化，每0.15秒检查一次
-	if input_dir != 0.0 and character.is_on_floor():
-		_cliff_check_timer += delta
-		if _cliff_check_timer >= CLIFF_CHECK_INTERVAL:
-			_cliff_check_timer = 0.0
-			var current_scene = character.get_tree().current_scene
-			var tilemap: TileMapLayer = TileMapUtils.get_tilemap_from_scene(current_scene)
-			if tilemap:
-				# 预测角色前方一小段距离的脚下坐标
-				var look_ahead_distance = LOOK_AHEAD_DISTANCE
-				var check_depth = CLIFF_CHECK_DEPTH
-				var predicted_pos = character.global_position + Vector2(sign(input_dir) * look_ahead_distance, check_depth)
-				var map_coord = tilemap.local_to_map(tilemap.to_local(predicted_pos))
-				var tile_data = tilemap.get_cell_tile_data(map_coord)
-				# 如果前方脚下没有瓦片（悬崖），强制停止移动
-				if tile_data == null:
-					input_dir = 0.0
-					ai_state = AIState.IDLE # 重置为待机状态，防止不断抽搐
 
 	if input_dir != 0 and sprite != null:
 		sprite.flip_h = input_dir < 0
