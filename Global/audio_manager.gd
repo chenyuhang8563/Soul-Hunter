@@ -6,8 +6,10 @@ const HitFleshStream := preload("res://Assets/SFX/hit_flesh.wav")
 const DefaultBgmStream := preload("res://Assets/SFX/battle.wav")
 const AUDIO_MANAGER_GROUP := &"audio_manager_service"
 const BGM_BUS := &"BGM"
+const SFX_BUS := &"SFX"
 const BGM_LOW_PASS_CUTOFF_HZ := 900.0
 const BGM_LOW_PASS_RESONANCE := 0.8
+const MIN_VOLUME_DB := -80.0
 
 @export var sword_clash_volume_db := 0.0
 @export var sword_swing_volume_db := 0.0
@@ -17,6 +19,7 @@ const BGM_LOW_PASS_RESONANCE := 0.8
 
 var _bgm_player: AudioStreamPlayer = null
 var _bgm_bus_index := -1
+var _sfx_bus_index := -1
 var _bgm_low_pass_effect_index := -1
 var _bgm_pause_blur_enabled := false
 
@@ -26,6 +29,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_bgm_bus()
+	_setup_sfx_bus()
 	_setup_bgm_player()
 	play_default_bgm()
 	set_bgm_pause_blur(false)
@@ -47,12 +51,7 @@ func _setup_bgm_player() -> void:
 	add_child(_bgm_player)
 
 func _setup_bgm_bus() -> void:
-	_bgm_bus_index = AudioServer.get_bus_index(BGM_BUS)
-	if _bgm_bus_index == -1:
-		AudioServer.add_bus()
-		_bgm_bus_index = AudioServer.bus_count - 1
-		AudioServer.set_bus_name(_bgm_bus_index, BGM_BUS)
-		AudioServer.set_bus_send(_bgm_bus_index, &"Master")
+	_bgm_bus_index = _ensure_bus(BGM_BUS)
 
 	_bgm_low_pass_effect_index = _find_bgm_low_pass_effect_index(_bgm_bus_index)
 	if _bgm_low_pass_effect_index == -1:
@@ -64,6 +63,18 @@ func _setup_bgm_bus() -> void:
 
 	AudioServer.set_bus_volume_db(_bgm_bus_index, bgm_volume_db)
 	AudioServer.set_bus_effect_enabled(_bgm_bus_index, _bgm_low_pass_effect_index, false)
+
+func _setup_sfx_bus() -> void:
+	_sfx_bus_index = _ensure_bus(SFX_BUS)
+
+func _ensure_bus(bus_name: StringName) -> int:
+	var bus_index := AudioServer.get_bus_index(bus_name)
+	if bus_index == -1:
+		AudioServer.add_bus()
+		bus_index = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(bus_index, bus_name)
+		AudioServer.set_bus_send(bus_index, &"Master")
+	return bus_index
 
 func _find_bgm_low_pass_effect_index(bus_index: int) -> int:
 	var effect_count := AudioServer.get_bus_effect_count(bus_index)
@@ -86,12 +97,10 @@ func _get_sound_stream(sound_name: String) -> AudioStream:
 
 func _get_sound_bus(sound_name: String) -> StringName:
 	match sound_name:
-		"sword_swing", "hit_flesh":
-			return &"SFX_Battle"
-		"sword_clash":
-			return &"SFX_Battle"
+		"sword_swing", "hit_flesh", "sword_clash":
+			return SFX_BUS
 		_:
-			return &"SFX"
+			return SFX_BUS
 
 func _get_default_volume_db(sound_name: String) -> float:
 	match sound_name:
@@ -164,6 +173,39 @@ func set_bgm_pause_blur(enabled: bool) -> void:
 	_bgm_pause_blur_enabled = enabled
 	AudioServer.set_bus_effect_enabled(_bgm_bus_index, _bgm_low_pass_effect_index, enabled)
 	AudioServer.set_bus_volume_db(_bgm_bus_index, bgm_pause_blur_volume_db if enabled else bgm_volume_db)
+
+func set_bus_volume_linear(bus_name: StringName, value: float) -> void:
+	var bus_index := _ensure_bus(bus_name)
+	var clamped_value := clampf(value, 0.0, 1.0)
+	var volume_db := MIN_VOLUME_DB if clamped_value <= 0.0 else linear_to_db(clamped_value)
+	AudioServer.set_bus_volume_db(bus_index, volume_db)
+
+func get_bus_volume_linear(bus_name: StringName) -> float:
+	var bus_index := _ensure_bus(bus_name)
+	var volume_db := AudioServer.get_bus_volume_db(bus_index)
+	if volume_db <= MIN_VOLUME_DB:
+		return 0.0
+	return db_to_linear(volume_db)
+
+func set_bgm_volume_linear(value: float) -> void:
+	var clamped_value := clampf(value, 0.0, 1.0)
+	bgm_volume_db = MIN_VOLUME_DB if clamped_value <= 0.0 else linear_to_db(clamped_value)
+	if _bgm_pause_blur_enabled:
+		return
+	set_bus_volume_linear(BGM_BUS, clamped_value)
+
+func get_bgm_volume_linear() -> float:
+	if _bgm_pause_blur_enabled:
+		if bgm_volume_db <= MIN_VOLUME_DB:
+			return 0.0
+		return db_to_linear(bgm_volume_db)
+	return get_bus_volume_linear(BGM_BUS)
+
+func set_sfx_volume_linear(value: float) -> void:
+	set_bus_volume_linear(SFX_BUS, value)
+
+func get_sfx_volume_linear() -> float:
+	return get_bus_volume_linear(SFX_BUS)
 
 func is_bgm_playing() -> bool:
 	return _bgm_player != null and _bgm_player.playing

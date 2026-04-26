@@ -7,13 +7,18 @@ extends Control
 # ============================================================
 
 @onready var _book_sprite: AnimatedSprite2D = $BookSprite
-@onready var _red_tab: TextureButton = $RedTab
-@onready var _page_corner: Node2D = $PageCorner
-@onready var _backpack_icon: Sprite2D = $BackPackIcon
-@onready var _title_label: Label = $Label
-@onready var _container1: GridContainer = $ItemContainer1
-@onready var _container2: GridContainer = $ItemContainer2
-@onready var _divider: Sprite2D = $Divider
+@onready var _open_content: Control = $OpenContent
+@onready var _backpack_tab: TextureButton = $OpenContent/Tabs/BackpackTab
+@onready var _settings_tab: TextureButton = $OpenContent/Tabs/SettingsTab
+@onready var _backpack_page: Control = $OpenContent/Pages/BackpackPage
+@onready var _settings_page: Control = $OpenContent/Pages/SettingsPage
+@onready var _container1: GridContainer = $OpenContent/Pages/BackpackPage/ItemContainer1
+@onready var _container2: GridContainer = $OpenContent/Pages/BackpackPage/ItemContainer2
+@onready var _continue_button: Button = $OpenContent/Pages/SettingsPage/Actions/ContinueButton
+@onready var _save_button: Button = $OpenContent/Pages/SettingsPage/Actions/SaveButton
+@onready var _quit_button: Button = $OpenContent/Pages/SettingsPage/Actions/QuitButton
+@onready var _bgm_slider: Range = $OpenContent/Pages/SettingsPage/AudioSettings/BgmSlider
+@onready var _sfx_slider: Range = $OpenContent/Pages/SettingsPage/AudioSettings/SfxSlider
 
 # ============================================================
 #  状态
@@ -23,6 +28,17 @@ var _is_open := false
 var _is_animating := false
 static var _items_initialized := false
 
+const PAGE_BACKPACK := "backpack"
+const PAGE_SETTINGS := "settings"
+const ANIM_OPEN := "default"
+const ANIM_NEXT_PAGE := "next_page"
+const ANIM_PREVIOUS_PAGE := "previous_page"
+
+var _current_page := PAGE_BACKPACK
+var _pending_page := PAGE_BACKPACK
+var _is_page_turning := false
+var _syncing_audio_sliders := false
+
 # ============================================================
 #  初始化
 # ============================================================
@@ -30,19 +46,41 @@ static var _items_initialized := false
 func _ready() -> void:
 	# 停止自动播放，初始为合书状态
 	_book_sprite.stop()
+	_book_sprite.animation = ANIM_OPEN
 	_book_sprite.frame = 0
 
 	# 所有 UI 元素初始隐藏（仅书脊可见）
-	_set_pages_visible(false)
+	_set_open_content_visible(false)
 
 	# 监听动画完成
-	_book_sprite.animation_finished.connect(_on_animation_finished)
+	if not _book_sprite.animation_finished.is_connected(_on_animation_finished):
+		_book_sprite.animation_finished.connect(_on_animation_finished)
+	if not _backpack_tab.pressed.is_connected(_on_backpack_tab_pressed):
+		_backpack_tab.pressed.connect(_on_backpack_tab_pressed)
+	if not _settings_tab.pressed.is_connected(_on_settings_tab_pressed):
+		_settings_tab.pressed.connect(_on_settings_tab_pressed)
+	if not _continue_button.pressed.is_connected(_on_continue_pressed):
+		_continue_button.pressed.connect(_on_continue_pressed)
+	if not _save_button.pressed.is_connected(_on_save_pressed):
+		_save_button.pressed.connect(_on_save_pressed)
+	if not _quit_button.pressed.is_connected(_on_quit_pressed):
+		_quit_button.pressed.connect(_on_quit_pressed)
+	if not _bgm_slider.value_changed.is_connected(_on_bgm_slider_value_changed):
+		_bgm_slider.value_changed.connect(_on_bgm_slider_value_changed)
+	if not _sfx_slider.value_changed.is_connected(_on_sfx_slider_value_changed):
+		_sfx_slider.value_changed.connect(_on_sfx_slider_value_changed)
+	if _bgm_slider.has_signal("gui_input") and not _bgm_slider.gui_input.is_connected(_on_bgm_slider_gui_input):
+		_bgm_slider.gui_input.connect(_on_bgm_slider_gui_input)
+	if _sfx_slider.has_signal("gui_input") and not _sfx_slider.gui_input.is_connected(_on_sfx_slider_gui_input):
+		_sfx_slider.gui_input.connect(_on_sfx_slider_gui_input)
 
 	# 添加初始物品
 	_add_placeholder_items()
 
 	# 连接所有物品槽位的双击使用信号
 	_connect_slot_signals()
+	_select_page(PAGE_BACKPACK)
+	_sync_audio_sliders()
 
 	# 自身默认隐藏
 	visible = false
@@ -50,6 +88,9 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed:
+		toggle()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("pause"):
 		toggle()
 		get_viewport().set_input_as_handled()
 
@@ -68,12 +109,14 @@ func open() -> void:
 		return
 	_is_animating = true
 	_is_open = true
+	_current_page = PAGE_BACKPACK
 
 	# 重置翻书动画（确保从第 0 帧开始播放）
 	_book_sprite.stop()
+	_book_sprite.animation = ANIM_OPEN
 	_book_sprite.frame = 0
-	_set_pages_visible(false)
-	_book_sprite.play("default")
+	_set_open_content_visible(false)
+	_book_sprite.play(ANIM_OPEN)
 
 	# 显示自身
 	visible = true
@@ -85,9 +128,11 @@ func open() -> void:
 func close() -> void:
 	_is_open = false
 	_is_animating = false
+	_is_page_turning = false
 	_book_sprite.stop()
+	_book_sprite.animation = ANIM_OPEN
 	_book_sprite.frame = 0
-	_set_pages_visible(false)
+	_set_open_content_visible(false)
 	visible = false
 
 	# 恢复游戏
@@ -99,25 +144,135 @@ func close() -> void:
 
 func _on_animation_finished() -> void:
 	_is_animating = false
-	# 翻到最后一帧（书完全打开）
 	_book_sprite.stop()
-	_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count("default") - 1
-	# 显示页面内容
-	_set_pages_visible(true)
-	_populate_backpack()
+
+	if _is_page_turning:
+		_is_page_turning = false
+		_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count(_book_sprite.animation) - 1
+		_select_page(_pending_page)
+		return
+
+	# 翻到最后一帧（书完全打开）
+	_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count(ANIM_OPEN) - 1
+	_set_open_content_visible(true)
+	_select_page(_current_page)
 
 # ============================================================
 #  页面内容控制
 # ============================================================
 
-func _set_pages_visible(v: bool) -> void:
-	_red_tab.visible = v
-	_page_corner.visible = v
-	_backpack_icon.visible = v
-	_title_label.visible = v
-	_container1.visible = v
-	_container2.visible = v
-	_divider.visible = v
+func _set_open_content_visible(v: bool) -> void:
+	_open_content.visible = v
+
+
+func _select_page(page_id: String) -> void:
+	if page_id != PAGE_BACKPACK and page_id != PAGE_SETTINGS:
+		page_id = PAGE_BACKPACK
+
+	_current_page = page_id
+	_backpack_page.visible = page_id == PAGE_BACKPACK
+	_settings_page.visible = page_id == PAGE_SETTINGS
+
+	if page_id == PAGE_BACKPACK:
+		_populate_backpack()
+
+
+func _turn_to_page(page_id: String) -> void:
+	if page_id != PAGE_BACKPACK and page_id != PAGE_SETTINGS:
+		page_id = PAGE_BACKPACK
+	if page_id == _current_page or _is_animating:
+		return
+
+	_pending_page = page_id
+	_is_animating = true
+	_is_page_turning = true
+	_clear_page_content()
+
+	var turn_animation := ANIM_NEXT_PAGE
+	if _get_page_index(page_id) < _get_page_index(_current_page):
+		turn_animation = ANIM_PREVIOUS_PAGE
+
+	_book_sprite.stop()
+	_book_sprite.animation = turn_animation
+	_book_sprite.frame = 0
+	_book_sprite.play(turn_animation)
+
+
+func _clear_page_content() -> void:
+	_backpack_page.visible = false
+	_settings_page.visible = false
+
+
+func _get_page_index(page_id: String) -> int:
+	match page_id:
+		PAGE_BACKPACK:
+			return 0
+		PAGE_SETTINGS:
+			return 1
+		_:
+			return 0
+
+
+func _on_backpack_tab_pressed() -> void:
+	_turn_to_page(PAGE_BACKPACK)
+
+
+func _on_settings_tab_pressed() -> void:
+	_turn_to_page(PAGE_SETTINGS)
+
+func _on_continue_pressed() -> void:
+	close()
+
+func _on_save_pressed() -> void:
+	pass
+
+func _on_quit_pressed() -> void:
+	get_tree().quit()
+
+func _on_bgm_slider_value_changed(value: float) -> void:
+	if _syncing_audio_sliders:
+		return
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null and audio_manager.has_method("set_bgm_volume_linear"):
+		audio_manager.set_bgm_volume_linear(float(value))
+
+func _on_sfx_slider_value_changed(value: float) -> void:
+	if _syncing_audio_sliders:
+		return
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null and audio_manager.has_method("set_sfx_volume_linear"):
+		audio_manager.set_sfx_volume_linear(float(value))
+
+func _on_bgm_slider_gui_input(event: InputEvent) -> void:
+	_update_slider_from_pointer(_bgm_slider, event)
+
+func _on_sfx_slider_gui_input(event: InputEvent) -> void:
+	_update_slider_from_pointer(_sfx_slider, event)
+
+func _update_slider_from_pointer(slider: Range, event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_set_slider_from_local_x(slider)
+	elif event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		_set_slider_from_local_x(slider)
+
+func _set_slider_from_local_x(slider: Range) -> void:
+	if slider.size.x <= 0.0:
+		return
+	var ratio := clampf(slider.get_local_mouse_position().x / slider.size.x, 0.0, 1.0)
+	slider.value = lerpf(float(slider.min_value), float(slider.max_value), ratio)
+
+func _sync_audio_sliders() -> void:
+	_syncing_audio_sliders = true
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null:
+		if audio_manager.has_method("get_bgm_volume_linear"):
+			_bgm_slider.value = audio_manager.get_bgm_volume_linear()
+		if audio_manager.has_method("get_sfx_volume_linear"):
+			_sfx_slider.value = audio_manager.get_sfx_volume_linear()
+	_syncing_audio_sliders = false
+
+func _get_audio_manager() -> Node:
+	return get_tree().get_first_node_in_group(&"audio_manager_service")
 
 func _populate_backpack() -> void:
 	var slots = PropManager.get_all_slots()
