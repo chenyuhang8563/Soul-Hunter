@@ -162,6 +162,7 @@ func _turn_to_page(page_id: String) -> void:
 	_pending_page = page_id
 	_is_animating = true
 	_is_page_turning = true
+	_clear_page_content()
 
 	var turn_animation := ANIM_NEXT_PAGE
 	if _get_page_index(page_id) < _get_page_index(_current_page):
@@ -171,6 +172,11 @@ func _turn_to_page(page_id: String) -> void:
 	_book_sprite.animation = turn_animation
 	_book_sprite.frame = 0
 	_book_sprite.play(turn_animation)
+
+
+func _clear_page_content() -> void:
+	_backpack_page.visible = false
+	_settings_page.visible = false
 
 
 func _get_page_index(page_id: String) -> int:
