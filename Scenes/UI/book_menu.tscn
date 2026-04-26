@@ -148,7 +148,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"default",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -180,7 +180,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"next_page",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -212,7 +212,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"previous_page",
-"speed": 10.0
+"speed": 15.0
 }]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_spqkq"]
@@ -244,10 +244,7 @@ script = ExtResource("1_46sl7")
 [node name="BookSprite" type="AnimatedSprite2D" parent="." unique_id=1327746903]
 position = Vector2(160, 55)
 sprite_frames = SubResource("SpriteFrames_60jyv")
-animation = &"previous_page"
 autoplay = "default"
-frame = 8
-frame_progress = 1.0
 
 [node name="OpenContent" type="Control" parent="." unique_id=1408234711]
 anchors_preset = 0
