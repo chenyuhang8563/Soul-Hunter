@@ -10,6 +10,9 @@
 [ext_resource type="FontFile" uid="uid://bmo6inr1t3epg" path="res://Assets/Fonts/quaver.ttf" id="8_1bpp1"]
 [ext_resource type="PackedScene" uid="uid://box4xrf8oionr" path="res://Scenes/Items/prop_item_slot.tscn" id="9_60jyv"]
 [ext_resource type="Texture2D" uid="uid://bwibsokhsxcs7" path="res://Assets/Sprites/UI/BookMenu/Divider_04.png" id="10_60jyv"]
+[ext_resource type="Texture2D" uid="uid://jmh40nv3u7du" path="res://Assets/Sprites/UI/BookMenu/Tab05_Right_Normal.png" id="11_s0lkj"]
+[ext_resource type="Texture2D" uid="uid://cl08d151u1gvu" path="res://Assets/Sprites/UI/BookMenu/Icon_19.png" id="11_yxim0"]
+[ext_resource type="Texture2D" uid="uid://ckm1lag4jf26s" path="res://Assets/Sprites/UI/BookMenu/Tab05_Right_Selected.png" id="12_k5jjq"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_xsevr"]
 atlas = ExtResource("1_3dtxc")
@@ -90,7 +93,32 @@ sprite_frames = SubResource("SpriteFrames_60jyv")
 autoplay = "default"
 frame = 7
 
-[node name="RedTab" type="TextureButton" parent="." unique_id=773865755]
+[node name="OpenContent" type="Control" parent="." unique_id=1408234711]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="PageChrome" type="Control" parent="OpenContent" unique_id=892873496]
+layout_mode = 0
+
+[node name="Divider" type="Sprite2D" parent="OpenContent/PageChrome" unique_id=972590671]
+position = Vector2(117, 42)
+texture = ExtResource("10_60jyv")
+
+[node name="PageCorner" type="Node2D" parent="OpenContent/PageChrome" unique_id=21476954]
+
+[node name="PageFoldRight" type="Sprite2D" parent="OpenContent/PageChrome/PageCorner" unique_id=1056808737]
+position = Vector2(255, 31)
+texture = ExtResource("4_rupgi")
+
+[node name="PageFoldLeft" type="Sprite2D" parent="OpenContent/PageChrome/PageCorner" unique_id=984667134]
+position = Vector2(65, 31)
+texture = ExtResource("5_2tg7q")
+
+[node name="Tabs" type="Control" parent="OpenContent" unique_id=1078056961]
+layout_mode = 0
+anchors_preset = 0
+
+[node name="BackpackTab" type="TextureButton" parent="OpenContent/Tabs" unique_id=773865755]
 layout_mode = 0
 offset_left = 259.0
 offset_top = 36.0
@@ -99,21 +127,30 @@ offset_bottom = 68.0
 texture_normal = ExtResource("2_8prfg")
 texture_hover = ExtResource("3_46sl7")
 
-[node name="PageCorner" type="Node2D" parent="." unique_id=21476954]
-
-[node name="PageFoldRight" type="Sprite2D" parent="PageCorner" unique_id=1056808737]
-position = Vector2(255, 31)
-texture = ExtResource("4_rupgi")
-
-[node name="PageFoldLeft" type="Sprite2D" parent="PageCorner" unique_id=984667134]
-position = Vector2(65, 31)
-texture = ExtResource("5_2tg7q")
-
-[node name="BackPackIcon" type="Sprite2D" parent="." unique_id=1049065313]
-position = Vector2(273, 51)
+[node name="BackPackIcon" type="Sprite2D" parent="OpenContent/Tabs/BackpackTab" unique_id=1049065313]
+position = Vector2(14, 15)
 texture = ExtResource("7_rupgi")
 
-[node name="Label" type="Label" parent="." unique_id=1370827075]
+[node name="SettingsTab" type="TextureButton" parent="OpenContent/Tabs" unique_id=1904954367]
+layout_mode = 0
+offset_left = 258.0
+offset_top = 72.0
+offset_right = 290.0
+offset_bottom = 104.0
+texture_normal = ExtResource("11_s0lkj")
+texture_hover = ExtResource("12_k5jjq")
+
+[node name="SettingsIcon" type="Sprite2D" parent="OpenContent/Tabs/SettingsTab" unique_id=2085536259]
+position = Vector2(14, 15)
+texture = ExtResource("11_yxim0")
+
+[node name="Pages" type="Control" parent="OpenContent" unique_id=837880845]
+layout_mode = 0
+
+[node name="BackpackPage" type="Control" parent="OpenContent/Pages" unique_id=978322958]
+layout_mode = 0
+
+[node name="TitleLabel" type="Label" parent="OpenContent/Pages/BackpackPage" unique_id=1370827075]
 layout_mode = 0
 offset_left = 91.0
 offset_top = 30.0
@@ -125,7 +162,7 @@ theme_override_fonts/font = ExtResource("8_1bpp1")
 theme_override_font_sizes/font_size = 11
 text = "BackPack"
 
-[node name="ItemContainer1" type="GridContainer" parent="." unique_id=2128231494]
+[node name="ItemContainer1" type="GridContainer" parent="OpenContent/Pages/BackpackPage" unique_id=2128231494]
 layout_mode = 0
 offset_left = 68.0
 offset_top = 53.0
@@ -135,34 +172,34 @@ theme_override_constants/h_separation = 15
 theme_override_constants/v_separation = 15
 columns = 3
 
-[node name="PropItemSlot" parent="ItemContainer1" unique_id=1517543134 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=1517543134 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot2" parent="ItemContainer1" unique_id=527320957 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot2" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=527320957 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot3" parent="ItemContainer1" unique_id=428929612 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot3" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=428929612 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot4" parent="ItemContainer1" unique_id=1589536338 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot4" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=1589536338 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot5" parent="ItemContainer1" unique_id=1585942710 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot5" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=1585942710 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot6" parent="ItemContainer1" unique_id=2028103048 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot6" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=2028103048 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot7" parent="ItemContainer1" unique_id=1048785539 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot7" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=1048785539 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot8" parent="ItemContainer1" unique_id=747735253 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot8" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=747735253 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot9" parent="ItemContainer1" unique_id=148425704 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot9" parent="OpenContent/Pages/BackpackPage/ItemContainer1" unique_id=148425704 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="ItemContainer2" type="GridContainer" parent="." unique_id=1711059168]
+[node name="ItemContainer2" type="GridContainer" parent="OpenContent/Pages/BackpackPage" unique_id=1711059168]
 layout_mode = 0
 offset_left = 177.0
 offset_top = 53.0
@@ -172,33 +209,45 @@ theme_override_constants/h_separation = 15
 theme_override_constants/v_separation = 15
 columns = 3
 
-[node name="PropItemSlot" parent="ItemContainer2" unique_id=1814546576 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=1814546576 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot2" parent="ItemContainer2" unique_id=625888344 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot2" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=625888344 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot3" parent="ItemContainer2" unique_id=185962850 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot3" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=185962850 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot4" parent="ItemContainer2" unique_id=1189095865 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot4" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=1189095865 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot5" parent="ItemContainer2" unique_id=587015127 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot5" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=587015127 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot6" parent="ItemContainer2" unique_id=646557313 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot6" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=646557313 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot7" parent="ItemContainer2" unique_id=1083241632 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot7" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=1083241632 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot8" parent="ItemContainer2" unique_id=1030380326 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot8" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=1030380326 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="PropItemSlot9" parent="ItemContainer2" unique_id=738206318 instance=ExtResource("9_60jyv")]
+[node name="PropItemSlot9" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=738206318 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
-[node name="Divider" type="Sprite2D" parent="." unique_id=972590671]
-position = Vector2(117, 42)
-texture = ExtResource("10_60jyv")
+[node name="SettingsPage" type="Control" parent="OpenContent/Pages" unique_id=697227535]
+layout_mode = 0
+visible = false
+
+[node name="TitleLabel" type="Label" parent="OpenContent/Pages/SettingsPage" unique_id=1052597849]
+layout_mode = 0
+offset_left = 91.0
+offset_top = 30.0
+offset_right = 148.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(1, 1, 0.23137255, 1)
+theme_override_colors/font_shadow_color = Color(0, 0.7411765, 1, 1)
+theme_override_fonts/font = ExtResource("8_1bpp1")
+theme_override_font_sizes/font_size = 11
+text = "Settings"
