@@ -22,6 +22,12 @@ func test_default_page_is_backpack() -> void:
 func test_settings_tab_switches_to_settings_page() -> void:
 	_menu.get_node("OpenContent/Tabs/SettingsTab").pressed.emit()
 
+	assert_eq(_menu.get_node("BookSprite").animation, &"next_page")
+	assert_true(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
+	assert_false(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
+
+	_menu._on_animation_finished()
+
 	assert_false(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
 	assert_true(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
 	assert_eq(_menu.get_node("OpenContent/Pages/SettingsPage/TitleLabel").text, "Settings")
@@ -29,7 +35,14 @@ func test_settings_tab_switches_to_settings_page() -> void:
 
 func test_backpack_tab_switches_back_to_backpack_page() -> void:
 	_menu.get_node("OpenContent/Tabs/SettingsTab").pressed.emit()
+	_menu._on_animation_finished()
 	_menu.get_node("OpenContent/Tabs/BackpackTab").pressed.emit()
+
+	assert_eq(_menu.get_node("BookSprite").animation, &"previous_page")
+	assert_false(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
+	assert_true(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
+
+	_menu._on_animation_finished()
 
 	assert_true(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
 	assert_false(_menu.get_node("OpenContent/Pages/SettingsPage").visible)

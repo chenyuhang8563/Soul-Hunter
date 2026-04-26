@@ -4,7 +4,9 @@
 [ext_resource type="Script" uid="uid://cufj1knm4qwpe" path="res://Scenes/UI/book_menu.gd" id="1_46sl7"]
 [ext_resource type="Texture2D" uid="uid://bcc8l0pniwj04" path="res://Assets/Sprites/UI/BookMenu/Tab01_Right_Normal.png" id="2_8prfg"]
 [ext_resource type="Texture2D" uid="uid://dtwbq1d4vdyas" path="res://Assets/Sprites/UI/BookMenu/Tab01_Right_Selected.png" id="3_46sl7"]
+[ext_resource type="Texture2D" uid="uid://gbq8qc54dpv" path="res://Assets/Sprites/UI/BookMenu/Spellbook_NextPage.png" id="3_k5jjq"]
 [ext_resource type="Texture2D" uid="uid://cdtnubu1kp5ur" path="res://Assets/Sprites/UI/BookMenu/PageFold_Right.png" id="4_rupgi"]
+[ext_resource type="Texture2D" uid="uid://dl8v8lxicvqkv" path="res://Assets/Sprites/UI/BookMenu/Spellbook_PreviousPage.png" id="4_yinl7"]
 [ext_resource type="Texture2D" uid="uid://sbvxudrvalmk" path="res://Assets/Sprites/UI/BookMenu/PageFold_Left.png" id="5_2tg7q"]
 [ext_resource type="Texture2D" uid="uid://br3t1780mujh7" path="res://Assets/Sprites/UI/BookMenu/Icon_12_Outline.png" id="7_rupgi"]
 [ext_resource type="FontFile" uid="uid://bmo6inr1t3epg" path="res://Assets/Fonts/quaver.ttf" id="8_1bpp1"]
@@ -46,6 +48,70 @@ region = Rect2(1536, 0, 256, 240)
 atlas = ExtResource("1_3dtxc")
 region = Rect2(1792, 0, 256, 240)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_k5jjq"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(0, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yinl7"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(256, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4k3nr"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(512, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pr8je"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(768, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f2pc2"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(1024, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1dy5y"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(1280, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f8q8w"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(1536, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ewqr2"]
+atlas = ExtResource("3_k5jjq")
+region = Rect2(1792, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spqkq"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(0, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lg6yt"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(256, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xcxci"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(512, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wakwj"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(768, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h1jq4"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(1024, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oriwe"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(1280, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1dx5k"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(1536, 0, 256, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crtqe"]
+atlas = ExtResource("4_yinl7")
+region = Rect2(1792, 0, 256, 240)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_60jyv"]
 animations = [{
 "frames": [{
@@ -75,7 +141,65 @@ animations = [{
 }],
 "loop": false,
 "name": &"default",
-"speed": 20.0
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k5jjq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yinl7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4k3nr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pr8je")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f2pc2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1dy5y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f8q8w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ewqr2")
+}],
+"loop": false,
+"name": &"next_page",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spqkq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lg6yt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xcxci")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wakwj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h1jq4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oriwe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1dx5k")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crtqe")
+}],
+"loop": false,
+"name": &"previous_page",
+"speed": 10.0
 }]
 
 [node name="BookMenu" type="Control" unique_id=952916895]
@@ -90,15 +214,14 @@ script = ExtResource("1_46sl7")
 [node name="BookSprite" type="AnimatedSprite2D" parent="." unique_id=1327746903]
 position = Vector2(160, 55)
 sprite_frames = SubResource("SpriteFrames_60jyv")
+animation = &"default"
 autoplay = "default"
-frame = 7
 
 [node name="OpenContent" type="Control" parent="." unique_id=1408234711]
-layout_mode = 3
 anchors_preset = 0
 
 [node name="PageChrome" type="Control" parent="OpenContent" unique_id=892873496]
-layout_mode = 0
+anchors_preset = 0
 
 [node name="Divider" type="Sprite2D" parent="OpenContent/PageChrome" unique_id=972590671]
 position = Vector2(117, 42)
@@ -115,7 +238,6 @@ position = Vector2(65, 31)
 texture = ExtResource("5_2tg7q")
 
 [node name="Tabs" type="Control" parent="OpenContent" unique_id=1078056961]
-layout_mode = 0
 anchors_preset = 0
 
 [node name="BackpackTab" type="TextureButton" parent="OpenContent/Tabs" unique_id=773865755]
@@ -145,10 +267,10 @@ position = Vector2(14, 15)
 texture = ExtResource("11_yxim0")
 
 [node name="Pages" type="Control" parent="OpenContent" unique_id=837880845]
-layout_mode = 0
+anchors_preset = 0
 
 [node name="BackpackPage" type="Control" parent="OpenContent/Pages" unique_id=978322958]
-layout_mode = 0
+anchors_preset = 0
 
 [node name="TitleLabel" type="Label" parent="OpenContent/Pages/BackpackPage" unique_id=1370827075]
 layout_mode = 0
@@ -237,8 +359,8 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="SettingsPage" type="Control" parent="OpenContent/Pages" unique_id=697227535]
-layout_mode = 0
 visible = false
+anchors_preset = 0
 
 [node name="TitleLabel" type="Label" parent="OpenContent/Pages/SettingsPage" unique_id=1052597849]
 layout_mode = 0

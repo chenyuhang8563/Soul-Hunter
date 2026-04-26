@@ -25,8 +25,13 @@ static var _items_initialized := false
 
 const PAGE_BACKPACK := "backpack"
 const PAGE_SETTINGS := "settings"
+const ANIM_OPEN := "default"
+const ANIM_NEXT_PAGE := "next_page"
+const ANIM_PREVIOUS_PAGE := "previous_page"
 
 var _current_page := PAGE_BACKPACK
+var _pending_page := PAGE_BACKPACK
+var _is_page_turning := false
 
 # ============================================================
 #  初始化
@@ -35,6 +40,7 @@ var _current_page := PAGE_BACKPACK
 func _ready() -> void:
 	# 停止自动播放，初始为合书状态
 	_book_sprite.stop()
+	_book_sprite.animation = ANIM_OPEN
 	_book_sprite.frame = 0
 
 	# 所有 UI 元素初始隐藏（仅书脊可见）
@@ -83,9 +89,10 @@ func open() -> void:
 
 	# 重置翻书动画（确保从第 0 帧开始播放）
 	_book_sprite.stop()
+	_book_sprite.animation = ANIM_OPEN
 	_book_sprite.frame = 0
 	_set_open_content_visible(false)
-	_book_sprite.play("default")
+	_book_sprite.play(ANIM_OPEN)
 
 	# 显示自身
 	visible = true
@@ -97,7 +104,9 @@ func open() -> void:
 func close() -> void:
 	_is_open = false
 	_is_animating = false
+	_is_page_turning = false
 	_book_sprite.stop()
+	_book_sprite.animation = ANIM_OPEN
 	_book_sprite.frame = 0
 	_set_open_content_visible(false)
 	visible = false
@@ -111,10 +120,16 @@ func close() -> void:
 
 func _on_animation_finished() -> void:
 	_is_animating = false
-	# 翻到最后一帧（书完全打开）
 	_book_sprite.stop()
-	_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count("default") - 1
-	# 显示页面内容
+
+	if _is_page_turning:
+		_is_page_turning = false
+		_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count(_book_sprite.animation) - 1
+		_select_page(_pending_page)
+		return
+
+	# 翻到最后一帧（书完全打开）
+	_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count(ANIM_OPEN) - 1
 	_set_open_content_visible(true)
 	_select_page(_current_page)
 
@@ -138,12 +153,42 @@ func _select_page(page_id: String) -> void:
 		_populate_backpack()
 
 
+func _turn_to_page(page_id: String) -> void:
+	if page_id != PAGE_BACKPACK and page_id != PAGE_SETTINGS:
+		page_id = PAGE_BACKPACK
+	if page_id == _current_page or _is_animating:
+		return
+
+	_pending_page = page_id
+	_is_animating = true
+	_is_page_turning = true
+
+	var turn_animation := ANIM_NEXT_PAGE
+	if _get_page_index(page_id) < _get_page_index(_current_page):
+		turn_animation = ANIM_PREVIOUS_PAGE
+
+	_book_sprite.stop()
+	_book_sprite.animation = turn_animation
+	_book_sprite.frame = 0
+	_book_sprite.play(turn_animation)
+
+
+func _get_page_index(page_id: String) -> int:
+	match page_id:
+		PAGE_BACKPACK:
+			return 0
+		PAGE_SETTINGS:
+			return 1
+		_:
+			return 0
+
+
 func _on_backpack_tab_pressed() -> void:
-	_select_page(PAGE_BACKPACK)
+	_turn_to_page(PAGE_BACKPACK)
 
 
 func _on_settings_tab_pressed() -> void:
-	_select_page(PAGE_SETTINGS)
+	_turn_to_page(PAGE_SETTINGS)
 
 func _populate_backpack() -> void:
 	var slots = PropManager.get_all_slots()
