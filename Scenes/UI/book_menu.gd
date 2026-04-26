@@ -7,13 +7,13 @@ extends Control
 # ============================================================
 
 @onready var _book_sprite: AnimatedSprite2D = $BookSprite
-@onready var _red_tab: TextureButton = $RedTab
-@onready var _page_corner: Node2D = $PageCorner
-@onready var _backpack_icon: Sprite2D = $BackPackIcon
-@onready var _title_label: Label = $Label
-@onready var _container1: GridContainer = $ItemContainer1
-@onready var _container2: GridContainer = $ItemContainer2
-@onready var _divider: Sprite2D = $Divider
+@onready var _open_content: Control = $OpenContent
+@onready var _backpack_tab: TextureButton = $OpenContent/Tabs/BackpackTab
+@onready var _settings_tab: TextureButton = $OpenContent/Tabs/SettingsTab
+@onready var _backpack_page: Control = $OpenContent/Pages/BackpackPage
+@onready var _settings_page: Control = $OpenContent/Pages/SettingsPage
+@onready var _container1: GridContainer = $OpenContent/Pages/BackpackPage/ItemContainer1
+@onready var _container2: GridContainer = $OpenContent/Pages/BackpackPage/ItemContainer2
 
 # ============================================================
 #  状态
@@ -22,6 +22,11 @@ extends Control
 var _is_open := false
 var _is_animating := false
 static var _items_initialized := false
+
+const PAGE_BACKPACK := "backpack"
+const PAGE_SETTINGS := "settings"
+
+var _current_page := PAGE_BACKPACK
 
 # ============================================================
 #  初始化
@@ -33,16 +38,22 @@ func _ready() -> void:
 	_book_sprite.frame = 0
 
 	# 所有 UI 元素初始隐藏（仅书脊可见）
-	_set_pages_visible(false)
+	_set_open_content_visible(false)
 
 	# 监听动画完成
-	_book_sprite.animation_finished.connect(_on_animation_finished)
+	if not _book_sprite.animation_finished.is_connected(_on_animation_finished):
+		_book_sprite.animation_finished.connect(_on_animation_finished)
+	if not _backpack_tab.pressed.is_connected(_on_backpack_tab_pressed):
+		_backpack_tab.pressed.connect(_on_backpack_tab_pressed)
+	if not _settings_tab.pressed.is_connected(_on_settings_tab_pressed):
+		_settings_tab.pressed.connect(_on_settings_tab_pressed)
 
 	# 添加初始物品
 	_add_placeholder_items()
 
 	# 连接所有物品槽位的双击使用信号
 	_connect_slot_signals()
+	_select_page(PAGE_BACKPACK)
 
 	# 自身默认隐藏
 	visible = false
@@ -68,11 +79,12 @@ func open() -> void:
 		return
 	_is_animating = true
 	_is_open = true
+	_current_page = PAGE_BACKPACK
 
 	# 重置翻书动画（确保从第 0 帧开始播放）
 	_book_sprite.stop()
 	_book_sprite.frame = 0
-	_set_pages_visible(false)
+	_set_open_content_visible(false)
 	_book_sprite.play("default")
 
 	# 显示自身
@@ -87,7 +99,7 @@ func close() -> void:
 	_is_animating = false
 	_book_sprite.stop()
 	_book_sprite.frame = 0
-	_set_pages_visible(false)
+	_set_open_content_visible(false)
 	visible = false
 
 	# 恢复游戏
@@ -103,21 +115,35 @@ func _on_animation_finished() -> void:
 	_book_sprite.stop()
 	_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count("default") - 1
 	# 显示页面内容
-	_set_pages_visible(true)
-	_populate_backpack()
+	_set_open_content_visible(true)
+	_select_page(_current_page)
 
 # ============================================================
 #  页面内容控制
 # ============================================================
 
-func _set_pages_visible(v: bool) -> void:
-	_red_tab.visible = v
-	_page_corner.visible = v
-	_backpack_icon.visible = v
-	_title_label.visible = v
-	_container1.visible = v
-	_container2.visible = v
-	_divider.visible = v
+func _set_open_content_visible(v: bool) -> void:
+	_open_content.visible = v
+
+
+func _select_page(page_id: String) -> void:
+	if page_id != PAGE_BACKPACK and page_id != PAGE_SETTINGS:
+		page_id = PAGE_BACKPACK
+
+	_current_page = page_id
+	_backpack_page.visible = page_id == PAGE_BACKPACK
+	_settings_page.visible = page_id == PAGE_SETTINGS
+
+	if page_id == PAGE_BACKPACK:
+		_populate_backpack()
+
+
+func _on_backpack_tab_pressed() -> void:
+	_select_page(PAGE_BACKPACK)
+
+
+func _on_settings_tab_pressed() -> void:
+	_select_page(PAGE_SETTINGS)
 
 func _populate_backpack() -> void:
 	var slots = PropManager.get_all_slots()
