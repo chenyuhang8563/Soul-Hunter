@@ -15,6 +15,10 @@
 [ext_resource type="Texture2D" uid="uid://jmh40nv3u7du" path="res://Assets/Sprites/UI/BookMenu/Tab05_Right_Normal.png" id="11_s0lkj"]
 [ext_resource type="Texture2D" uid="uid://cl08d151u1gvu" path="res://Assets/Sprites/UI/BookMenu/Icon_19.png" id="11_yxim0"]
 [ext_resource type="Texture2D" uid="uid://ckm1lag4jf26s" path="res://Assets/Sprites/UI/BookMenu/Tab05_Right_Selected.png" id="12_k5jjq"]
+[ext_resource type="LabelSettings" uid="uid://ccjq02i8u7ovw" path="res://Resources/cn.tres" id="13_cn"]
+[ext_resource type="Texture2D" uid="uid://bduponev4ikac" path="res://Assets/Sprites/UI/BookMenu/Slider01_Box.png" id="14_slider_box"]
+[ext_resource type="Texture2D" uid="uid://qr1mccybqus0" path="res://Assets/Sprites/UI/BookMenu/Slider02_Bar04.png" id="15_slider_bar"]
+[ext_resource type="FontFile" uid="uid://b37hhjq33y1vy" path="res://Assets/Fonts/vonwaon-bitmap.ttf/VonwaonBitmap-16px.ttf" id="16_cn_font"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_xsevr"]
 atlas = ExtResource("1_3dtxc")
@@ -167,6 +171,9 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_ewqr2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k5jjq")
 }],
 "loop": false,
 "name": &"next_page",
@@ -196,6 +203,9 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_crtqe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spqkq")
 }],
 "loop": false,
 "name": &"previous_page",
@@ -214,18 +224,16 @@ script = ExtResource("1_46sl7")
 [node name="BookSprite" type="AnimatedSprite2D" parent="." unique_id=1327746903]
 position = Vector2(160, 55)
 sprite_frames = SubResource("SpriteFrames_60jyv")
-animation = &"default"
+animation = &"previous_page"
 autoplay = "default"
+frame = 8
+frame_progress = 1.0
 
 [node name="OpenContent" type="Control" parent="." unique_id=1408234711]
 anchors_preset = 0
 
 [node name="PageChrome" type="Control" parent="OpenContent" unique_id=892873496]
 anchors_preset = 0
-
-[node name="Divider" type="Sprite2D" parent="OpenContent/PageChrome" unique_id=972590671]
-position = Vector2(117, 42)
-texture = ExtResource("10_60jyv")
 
 [node name="PageCorner" type="Node2D" parent="OpenContent/PageChrome" unique_id=21476954]
 
@@ -358,6 +366,10 @@ layout_mode = 2
 [node name="PropItemSlot9" parent="OpenContent/Pages/BackpackPage/ItemContainer2" unique_id=738206318 instance=ExtResource("9_60jyv")]
 layout_mode = 2
 
+[node name="Divider" type="Sprite2D" parent="OpenContent/Pages/BackpackPage" unique_id=972590671]
+position = Vector2(117, 42)
+texture = ExtResource("10_60jyv")
+
 [node name="SettingsPage" type="Control" parent="OpenContent/Pages" unique_id=697227535]
 visible = false
 anchors_preset = 0
@@ -373,3 +385,90 @@ theme_override_colors/font_shadow_color = Color(0, 0.7411765, 1, 1)
 theme_override_fonts/font = ExtResource("8_1bpp1")
 theme_override_font_sizes/font_size = 11
 text = "Settings"
+
+[node name="Divider" type="Sprite2D" parent="OpenContent/Pages/SettingsPage" unique_id=1418459320]
+position = Vector2(117, 42)
+texture = ExtResource("10_60jyv")
+
+[node name="Actions" type="Control" parent="OpenContent/Pages/SettingsPage" unique_id=164023950]
+anchors_preset = 0
+
+[node name="ContinueButton" type="Button" parent="OpenContent/Pages/SettingsPage/Actions" unique_id=214431768]
+layout_mode = 0
+offset_left = 74.0
+offset_top = 55.0
+offset_right = 115.0
+offset_bottom = 73.0
+focus_mode = 0
+theme_override_fonts/font = ExtResource("16_cn_font")
+theme_override_font_sizes/font_size = 8
+text = "继续"
+
+[node name="SaveButton" type="Button" parent="OpenContent/Pages/SettingsPage/Actions" unique_id=130421964]
+layout_mode = 0
+offset_left = 74.0
+offset_top = 78.0
+offset_right = 115.0
+offset_bottom = 96.0
+focus_mode = 0
+theme_override_fonts/font = ExtResource("16_cn_font")
+theme_override_font_sizes/font_size = 8
+text = "保存"
+
+[node name="QuitButton" type="Button" parent="OpenContent/Pages/SettingsPage/Actions" unique_id=717165715]
+layout_mode = 0
+offset_left = 74.0
+offset_top = 101.0
+offset_right = 115.0
+offset_bottom = 119.0
+focus_mode = 0
+theme_override_fonts/font = ExtResource("16_cn_font")
+theme_override_font_sizes/font_size = 8
+text = "退出"
+
+[node name="AudioSettings" type="Control" parent="OpenContent/Pages/SettingsPage" unique_id=284914836]
+anchors_preset = 0
+
+[node name="BgmLabel" type="Label" parent="OpenContent/Pages/SettingsPage/AudioSettings" unique_id=114773265]
+layout_mode = 0
+offset_left = 164.0
+offset_top = 57.0
+offset_right = 210.0
+offset_bottom = 66.0
+label_settings = ExtResource("13_cn")
+text = "背景音乐"
+
+[node name="BgmSlider" type="TextureProgressBar" parent="OpenContent/Pages/SettingsPage/AudioSettings" unique_id=2097653538]
+layout_mode = 0
+offset_left = 164.0
+offset_top = 70.0
+offset_right = 212.0
+offset_bottom = 86.0
+mouse_filter = 0
+max_value = 1.0
+step = 0.01
+value = 1.0
+texture_under = ExtResource("14_slider_box")
+texture_progress = ExtResource("15_slider_bar")
+
+[node name="SfxLabel" type="Label" parent="OpenContent/Pages/SettingsPage/AudioSettings" unique_id=1160773703]
+layout_mode = 0
+offset_left = 164.0
+offset_top = 94.0
+offset_right = 210.0
+offset_bottom = 103.0
+label_settings = ExtResource("13_cn")
+text = "音效"
+
+[node name="SfxSlider" type="TextureProgressBar" parent="OpenContent/Pages/SettingsPage/AudioSettings" unique_id=544019486]
+layout_mode = 0
+offset_left = 164.0
+offset_top = 107.0
+offset_right = 212.0
+offset_bottom = 123.0
+mouse_filter = 0
+max_value = 1.0
+step = 0.01
+value = 1.0
+texture_under = ExtResource("14_slider_box")
+texture_progress = ExtResource("15_slider_bar")

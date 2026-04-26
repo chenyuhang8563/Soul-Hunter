@@ -14,6 +14,11 @@ extends Control
 @onready var _settings_page: Control = $OpenContent/Pages/SettingsPage
 @onready var _container1: GridContainer = $OpenContent/Pages/BackpackPage/ItemContainer1
 @onready var _container2: GridContainer = $OpenContent/Pages/BackpackPage/ItemContainer2
+@onready var _continue_button: Button = $OpenContent/Pages/SettingsPage/Actions/ContinueButton
+@onready var _save_button: Button = $OpenContent/Pages/SettingsPage/Actions/SaveButton
+@onready var _quit_button: Button = $OpenContent/Pages/SettingsPage/Actions/QuitButton
+@onready var _bgm_slider: Range = $OpenContent/Pages/SettingsPage/AudioSettings/BgmSlider
+@onready var _sfx_slider: Range = $OpenContent/Pages/SettingsPage/AudioSettings/SfxSlider
 
 # ============================================================
 #  状态
@@ -32,6 +37,7 @@ const ANIM_PREVIOUS_PAGE := "previous_page"
 var _current_page := PAGE_BACKPACK
 var _pending_page := PAGE_BACKPACK
 var _is_page_turning := false
+var _syncing_audio_sliders := false
 
 # ============================================================
 #  初始化
@@ -53,6 +59,20 @@ func _ready() -> void:
 		_backpack_tab.pressed.connect(_on_backpack_tab_pressed)
 	if not _settings_tab.pressed.is_connected(_on_settings_tab_pressed):
 		_settings_tab.pressed.connect(_on_settings_tab_pressed)
+	if not _continue_button.pressed.is_connected(_on_continue_pressed):
+		_continue_button.pressed.connect(_on_continue_pressed)
+	if not _save_button.pressed.is_connected(_on_save_pressed):
+		_save_button.pressed.connect(_on_save_pressed)
+	if not _quit_button.pressed.is_connected(_on_quit_pressed):
+		_quit_button.pressed.connect(_on_quit_pressed)
+	if not _bgm_slider.value_changed.is_connected(_on_bgm_slider_value_changed):
+		_bgm_slider.value_changed.connect(_on_bgm_slider_value_changed)
+	if not _sfx_slider.value_changed.is_connected(_on_sfx_slider_value_changed):
+		_sfx_slider.value_changed.connect(_on_sfx_slider_value_changed)
+	if _bgm_slider.has_signal("gui_input") and not _bgm_slider.gui_input.is_connected(_on_bgm_slider_gui_input):
+		_bgm_slider.gui_input.connect(_on_bgm_slider_gui_input)
+	if _sfx_slider.has_signal("gui_input") and not _sfx_slider.gui_input.is_connected(_on_sfx_slider_gui_input):
+		_sfx_slider.gui_input.connect(_on_sfx_slider_gui_input)
 
 	# 添加初始物品
 	_add_placeholder_items()
@@ -60,6 +80,7 @@ func _ready() -> void:
 	# 连接所有物品槽位的双击使用信号
 	_connect_slot_signals()
 	_select_page(PAGE_BACKPACK)
+	_sync_audio_sliders()
 
 	# 自身默认隐藏
 	visible = false
@@ -67,6 +88,9 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed:
+		toggle()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("pause"):
 		toggle()
 		get_viewport().set_input_as_handled()
 
@@ -99,6 +123,7 @@ func open() -> void:
 
 	# 暂停游戏
 	get_tree().paused = true
+	_set_bgm_pause_blur(true)
 
 
 func close() -> void:
@@ -113,6 +138,7 @@ func close() -> void:
 
 	# 恢复游戏
 	get_tree().paused = false
+	_set_bgm_pause_blur(false)
 
 # ============================================================
 #  翻书动画回调
@@ -195,6 +221,65 @@ func _on_backpack_tab_pressed() -> void:
 
 func _on_settings_tab_pressed() -> void:
 	_turn_to_page(PAGE_SETTINGS)
+
+func _on_continue_pressed() -> void:
+	close()
+
+func _on_save_pressed() -> void:
+	pass
+
+func _on_quit_pressed() -> void:
+	get_tree().quit()
+
+func _on_bgm_slider_value_changed(value: float) -> void:
+	if _syncing_audio_sliders:
+		return
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null and audio_manager.has_method("set_bgm_volume_linear"):
+		audio_manager.set_bgm_volume_linear(float(value))
+
+func _on_sfx_slider_value_changed(value: float) -> void:
+	if _syncing_audio_sliders:
+		return
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null and audio_manager.has_method("set_sfx_volume_linear"):
+		audio_manager.set_sfx_volume_linear(float(value))
+
+func _on_bgm_slider_gui_input(event: InputEvent) -> void:
+	_update_slider_from_pointer(_bgm_slider, event)
+
+func _on_sfx_slider_gui_input(event: InputEvent) -> void:
+	_update_slider_from_pointer(_sfx_slider, event)
+
+func _update_slider_from_pointer(slider: Range, event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_set_slider_from_local_x(slider)
+	elif event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		_set_slider_from_local_x(slider)
+
+func _set_slider_from_local_x(slider: Range) -> void:
+	if slider.size.x <= 0.0:
+		return
+	var ratio := clampf(slider.get_local_mouse_position().x / slider.size.x, 0.0, 1.0)
+	slider.value = lerpf(float(slider.min_value), float(slider.max_value), ratio)
+
+func _sync_audio_sliders() -> void:
+	_syncing_audio_sliders = true
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null:
+		if audio_manager.has_method("get_bgm_volume_linear"):
+			_bgm_slider.value = audio_manager.get_bgm_volume_linear()
+		if audio_manager.has_method("get_sfx_volume_linear"):
+			_sfx_slider.value = audio_manager.get_sfx_volume_linear()
+	_syncing_audio_sliders = false
+
+func _get_audio_manager() -> Node:
+	return get_tree().get_first_node_in_group(&"audio_manager_service")
+
+func _set_bgm_pause_blur(enabled: bool) -> void:
+	var audio_manager := _get_audio_manager()
+	if audio_manager != null and audio_manager.has_method("set_bgm_pause_blur"):
+		audio_manager.set_bgm_pause_blur(enabled)
 
 func _populate_backpack() -> void:
 	var slots = PropManager.get_all_slots()

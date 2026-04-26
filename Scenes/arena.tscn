@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://ce4x6ryhyyir0" path="res://Global/audio_manager.tscn" id="4_1v1nj"]
 [ext_resource type="Texture2D" uid="uid://m27f2dr2s1um" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 3.png" id="4_2cush"]
 [ext_resource type="Texture2D" uid="uid://dcjapwn62bn6p" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 2.png" id="5_5pgm5"]
-[ext_resource type="PackedScene" uid="uid://c5hja74ptp5kd" path="res://Scenes/UI/pause_ui.tscn" id="5_jk6ru"]
 [ext_resource type="Texture2D" uid="uid://downal3kdnp8f" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 1.png" id="6_bx68w"]
 [ext_resource type="PackedScene" uid="uid://bflhpvbukx4k" path="res://Scenes/UI/book_menu.tscn" id="11_iyva0"]
 
@@ -1226,7 +1225,5 @@ position = Vector2(35, 17)
 
 [node name="SpawnPointRight" type="Marker2D" parent="." unique_id=36842112]
 position = Vector2(282, 18)
-
-[node name="PauseUI" parent="." unique_id=96758534 instance=ExtResource("5_jk6ru")]
 
 [node name="AudioManager" parent="." unique_id=376390685 instance=ExtResource("4_1v1nj")]

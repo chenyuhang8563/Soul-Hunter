@@ -8,7 +8,6 @@
 [ext_resource type="Texture2D" uid="uid://downal3kdnp8f" path="res://Assets/Sprites/Environment/GandalfHardcore Background layers_layer 1.png" id="5_0qy5o"]
 [ext_resource type="PackedScene" uid="uid://dlll1sp3vdsb2" path="res://Character/Archer/archer.tscn" id="10_iaow0"]
 [ext_resource type="PackedScene" uid="uid://gkkfbypg37se" path="res://Character/Werebear/werebear.tscn" id="12_aees8"]
-[ext_resource type="PackedScene" uid="uid://c5hja74ptp5kd" path="res://Scenes/UI/pause_ui.tscn" id="12_yb21e"]
 [ext_resource type="PackedScene" uid="uid://ce4x6ryhyyir0" path="res://Global/audio_manager.tscn" id="13_aees8"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
@@ -1204,8 +1203,6 @@ use_kinematic_bodies = true
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=73439647]
 position = Vector2(160, 90)
-
-[node name="PauseUI" parent="." unique_id=96758534 instance=ExtResource("12_yb21e")]
 
 [node name="AudioManager" parent="." unique_id=1583249533 instance=ExtResource("13_aees8")]
 
