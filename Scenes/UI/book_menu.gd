@@ -123,7 +123,6 @@ func open() -> void:
 
 	# 暂停游戏
 	get_tree().paused = true
-	_set_bgm_pause_blur(true)
 
 
 func close() -> void:
@@ -138,7 +137,6 @@ func close() -> void:
 
 	# 恢复游戏
 	get_tree().paused = false
-	_set_bgm_pause_blur(false)
 
 # ============================================================
 #  翻书动画回调
@@ -275,11 +273,6 @@ func _sync_audio_sliders() -> void:
 
 func _get_audio_manager() -> Node:
 	return get_tree().get_first_node_in_group(&"audio_manager_service")
-
-func _set_bgm_pause_blur(enabled: bool) -> void:
-	var audio_manager := _get_audio_manager()
-	if audio_manager != null and audio_manager.has_method("set_bgm_pause_blur"):
-		audio_manager.set_bgm_pause_blur(enabled)
 
 func _populate_backpack() -> void:
 	var slots = PropManager.get_all_slots()

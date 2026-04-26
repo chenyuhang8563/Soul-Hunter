@@ -2,6 +2,17 @@ extends GutTest
 
 const BookMenuScene := preload("res://Scenes/UI/book_menu.tscn")
 
+class FakeAudioManager:
+	extends Node
+
+	var blur_call_count := 0
+
+	func _ready() -> void:
+		add_to_group(&"audio_manager_service")
+
+	func set_bgm_pause_blur(_enabled: bool) -> void:
+		blur_call_count += 1
+
 var _menu: Control
 
 
@@ -86,3 +97,13 @@ func test_save_button_is_inert() -> void:
 
 	assert_true(_menu.visible)
 	assert_true(get_tree().paused)
+
+
+func test_open_and_close_do_not_apply_bgm_pause_blur() -> void:
+	var fake_audio_manager := FakeAudioManager.new()
+	add_child_autofree(fake_audio_manager)
+
+	_menu.open()
+	_menu.close()
+
+	assert_eq(fake_audio_manager.blur_call_count, 0)
