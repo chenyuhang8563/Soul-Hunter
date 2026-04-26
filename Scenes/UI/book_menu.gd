@@ -8,6 +8,7 @@ extends Control
 
 @onready var _book_sprite: AnimatedSprite2D = $BookSprite
 @onready var _open_content: Control = $OpenContent
+@onready var _page_corner: Node2D = $OpenContent/PageChrome/PageCorner
 @onready var _backpack_tab: TextureButton = $OpenContent/Tabs/BackpackTab
 @onready var _settings_tab: TextureButton = $OpenContent/Tabs/SettingsTab
 @onready var _backpack_page: Control = $OpenContent/Pages/BackpackPage
@@ -149,6 +150,7 @@ func _on_animation_finished() -> void:
 	if _is_page_turning:
 		_is_page_turning = false
 		_book_sprite.frame = _book_sprite.sprite_frames.get_frame_count(_book_sprite.animation) - 1
+		_page_corner.visible = true
 		_select_page(_pending_page)
 		return
 
@@ -187,6 +189,7 @@ func _turn_to_page(page_id: String) -> void:
 	_is_animating = true
 	_is_page_turning = true
 	_clear_page_content()
+	_page_corner.visible = false
 
 	var turn_animation := ANIM_NEXT_PAGE
 	if _get_page_index(page_id) < _get_page_index(_current_page):

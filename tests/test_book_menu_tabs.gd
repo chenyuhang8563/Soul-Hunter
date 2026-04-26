@@ -36,11 +36,13 @@ func test_settings_tab_switches_to_settings_page() -> void:
 	assert_eq(_menu.get_node("BookSprite").animation, &"next_page")
 	assert_false(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
 	assert_false(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
+	assert_false(_menu.get_node("OpenContent/PageChrome/PageCorner").visible)
 
 	_menu._on_animation_finished()
 
 	assert_false(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
 	assert_true(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
+	assert_true(_menu.get_node("OpenContent/PageChrome/PageCorner").visible)
 	assert_eq(_menu.get_node("OpenContent/Pages/SettingsPage/TitleLabel").text, "Settings")
 
 
@@ -52,11 +54,13 @@ func test_backpack_tab_switches_back_to_backpack_page() -> void:
 	assert_eq(_menu.get_node("BookSprite").animation, &"previous_page")
 	assert_false(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
 	assert_false(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
+	assert_false(_menu.get_node("OpenContent/PageChrome/PageCorner").visible)
 
 	_menu._on_animation_finished()
 
 	assert_true(_menu.get_node("OpenContent/Pages/BackpackPage").visible)
 	assert_false(_menu.get_node("OpenContent/Pages/SettingsPage").visible)
+	assert_true(_menu.get_node("OpenContent/PageChrome/PageCorner").visible)
 	assert_eq(_menu.get_node("OpenContent/Pages/BackpackPage/TitleLabel").text, "BackPack")
 
 
