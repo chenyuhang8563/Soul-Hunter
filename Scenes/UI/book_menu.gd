@@ -78,7 +78,7 @@ func _ready() -> void:
 	# 添加初始物品
 	_add_placeholder_items()
 
-	# 连接所有物品槽位的双击使用信号
+	# 连接所有物品槽位的单击使用信号
 	_connect_slot_signals()
 	_select_page(PAGE_BACKPACK)
 	_sync_audio_sliders()
