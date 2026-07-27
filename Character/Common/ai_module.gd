@@ -12,6 +12,7 @@ var attack_module: AttackModuleBase = null
 var target: Node2D
 var home_position := Vector2.ZERO
 var ai_state := AIState.IDLE
+var _event_bus: Node = null
 
 var walk_speed := 50.0
 var return_tolerance := 6.0
@@ -25,6 +26,30 @@ func setup(_character: CharacterBody2D, _sprite: Sprite2D, _visual_scope: Area2D
 	attack_module = _attack_module
 	walk_speed = _walk_speed
 	return_tolerance = _return_tolerance
+	_connect_event_bus()
+
+func teardown() -> void:
+	_disconnect_event_bus()
+
+func _connect_event_bus() -> void:
+	if character == null or character.get_tree() == null:
+		return
+	var bus := character.get_tree().root.get_node_or_null("EventBus")
+	if bus == null or not bus.has_signal("player_body_replaced"):
+		return
+	var callback := Callable(self, "_on_player_body_replaced")
+	if not bus.is_connected(&"player_body_replaced", callback):
+		bus.connect(&"player_body_replaced", callback)
+	_event_bus = bus
+
+func _disconnect_event_bus() -> void:
+	if _event_bus == null or not is_instance_valid(_event_bus):
+		_event_bus = null
+		return
+	var callback := Callable(self, "_on_player_body_replaced")
+	if _event_bus.is_connected(&"player_body_replaced", callback):
+		_event_bus.disconnect(&"player_body_replaced", callback)
+	_event_bus = null
 
 func set_home_position(pos: Vector2) -> void:
 	home_position = pos
@@ -109,6 +134,20 @@ func is_valid_enemy(candidate: Node2D) -> bool:
 		if candidate.get_team_id() == character.get_team_id():
 			return false
 	return candidate.has_method("apply_damage")
+
+func retarget_if_tracking(old_target: Node2D, new_target: Node2D) -> void:
+	if target != old_target:
+		return
+	if new_target == null or not is_instance_valid(new_target):
+		return
+	if not is_valid_enemy(new_target):
+		return
+	target = new_target
+	if ai_state != AIState.ATTACK:
+		ai_state = AIState.CHASE
+
+func _on_player_body_replaced(old_body: Node2D, new_body: Node2D) -> void:
+	retarget_if_tracking(old_body, new_body)
 
 func find_player_attack_target() -> Node2D:
 	if attack_scope == null:

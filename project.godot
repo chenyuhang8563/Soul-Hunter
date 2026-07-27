@@ -23,6 +23,7 @@ buses/default_bus_layout="uid://dtjjmdtx160vb"
 
 DeveloperMode="*res://Global/developer_mode.gd"
 DialogueManager="*res://Global/dialogue_manager.gd"
+EventBus="*res://Global/event_bus.gd"
 MeleeSlashVfxManager="*res://Global/melee_slash_vfx_manager.gd"
 TaskEventBus="*res://Global/task_event_bus.gd"
 TaskManager="*res://Global/task_manager.gd"

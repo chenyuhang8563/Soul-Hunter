@@ -114,6 +114,8 @@ func _execute_detach() -> void:
 			if soldier.has_method("set_player_controlled"):
 				soldier.call("set_player_controlled", true)
 			soldier.set("team_id", 0)
+			if EventBus != null and EventBus.has_method("emit_player_body_replaced"):
+				EventBus.emit_player_body_replaced(owner, soldier)
 			
 			# Reuse the common dash pipeline so detach gets the same pass-through rules and visuals.
 			var detach_dash_velocity := current_direction * 300.0

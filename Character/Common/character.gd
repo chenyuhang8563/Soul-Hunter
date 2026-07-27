@@ -174,6 +174,8 @@ func _on_character_ready() -> void:
 	pass
 
 func _exit_tree() -> void:
+	if ai_module != null and ai_module.has_method("teardown"):
+		ai_module.teardown()
 	if health.health_changed.is_connected(_on_health_changed):
 		health.health_changed.disconnect(_on_health_changed)
 	if health.damaged.is_connected(_on_damaged):
