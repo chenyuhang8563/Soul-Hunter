@@ -18,5 +18,6 @@ docs/
 .worktrees/
 .sandbox_home/
 
-# AI markdown files
+# AI ignores files
 CLAUDE.md
+.codex/
