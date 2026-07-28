@@ -86,8 +86,11 @@ func receive_possession_from(possessor: CharacterBody2D) -> bool:
 	var run_modifier = owner.get("run_modifier_controller")
 	if run_modifier != null and run_modifier.has_method("record_possession"):
 		run_modifier.call("record_possession")
+	var possessor_pos: Vector2 = possessor.global_position
+	var target_pos: Vector2 = owner.global_position
 	if possessor.has_method("consume_for_possession"):
 		possessor.call("consume_for_possession")
+	VfxPool.play_possession_vfx(possessor_pos, target_pos)
 	return true
 
 func can_be_possessed_now() -> bool:

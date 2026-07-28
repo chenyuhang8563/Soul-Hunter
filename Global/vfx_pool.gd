@@ -16,6 +16,7 @@ const HurtParticlesScene := preload("res://Scenes/VFX/particles/hurt_particles.t
 const ParryParticlesScene := preload("res://Scenes/VFX/particles/parry_particles.tscn")
 const FinisherBurstParticlesScene := preload("res://Scenes/VFX/particles/finisher_burst_particles.tscn")
 const FinisherSlashParticlesScene := preload("res://Scenes/VFX/particles/finisher_slash_particles.tscn")
+const PossessionVfxScene := preload("res://Scenes/VFX/possession_vfx.tscn")
 
 var _scene_root: Node2D = null
 var _registry: Dictionary = {}
@@ -42,6 +43,7 @@ func _build_default_registry() -> Dictionary:
 		"parry_particles": {"scene": ParryParticlesScene, "prewarm": 4},
 		"finisher_burst": {"scene": FinisherBurstParticlesScene, "prewarm": 2},
 		"finisher_slash": {"scene": FinisherSlashParticlesScene, "prewarm": 2},
+		"possession": {"scene": PossessionVfxScene, "prewarm": 2},
 	}
 
 
@@ -127,6 +129,19 @@ func play_explosion(world_position: Vector2) -> void:
 		CONNECT_ONE_SHOT
 	)
 	effect.play(&"default")
+
+
+func play_possession_vfx(source_pos: Vector2, target_pos: Vector2) -> void:
+	var effect_node := _acquire_scene_effect(&"possession")
+	if effect_node == null:
+		return
+	if not effect_node.has_method("play_once"):
+		_release_effect(&"possession", effect_node)
+		return
+	var active_for_key: Array = _active[&"possession"]
+	active_for_key.append(effect_node)
+	var release_cb := Callable(self, "_release_effect").bind(&"possession", effect_node)
+	effect_node.call("play_once", source_pos, target_pos, false, release_cb)
 
 
 func play_scene_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0, completion_cb: Callable = Callable()) -> Node:
