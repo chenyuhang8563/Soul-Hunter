@@ -131,17 +131,21 @@ func play_explosion(world_position: Vector2) -> void:
 	effect.play(&"default")
 
 
-func play_possession_vfx(source_pos: Vector2, target_pos: Vector2) -> void:
+func play_possession_vfx(source_pos: Vector2, target_pos: Vector2, completion_cb: Callable = Callable()) -> bool:
 	var effect_node := _acquire_scene_effect(&"possession")
 	if effect_node == null:
-		return
+		return false
 	if not effect_node.has_method("play_once"):
 		_release_effect(&"possession", effect_node)
-		return
+		return false
 	var active_for_key: Array = _active[&"possession"]
 	active_for_key.append(effect_node)
-	var release_cb := Callable(self, "_release_effect").bind(&"possession", effect_node)
+	var release_cb := func() -> void:
+		_release_effect(&"possession", effect_node)
+		if completion_cb.is_valid():
+			completion_cb.call()
 	effect_node.call("play_once", source_pos, target_pos, false, release_cb)
+	return true
 
 
 func play_scene_effect(effect_key: StringName, world_position: Vector2, horizontal_direction: float = 0.0, completion_cb: Callable = Callable()) -> Node:

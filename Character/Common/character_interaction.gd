@@ -33,7 +33,7 @@ func process(delta: float) -> void:
 		if owner.is_player_controlled:
 			_update_player_interaction_target()
 		_prompt_icon_update_timer = 0.0
-	if owner.is_player_controlled and not DialogueManager.is_dialogue_active():
+	if owner.is_player_controlled and not DialogueManager.is_dialogue_active() and not owner.is_player_input_blocked():
 		_try_interact_with_current_target()
 	elif owner.is_player_controlled:
 		_clear_current_interaction_target()
@@ -41,7 +41,7 @@ func process(delta: float) -> void:
 func try_manual_possession() -> void:
 	_update_possession_prompt_icon()
 	owner._update_possessed_highlight()
-	if not owner.is_player_controlled or owner.is_dead or DialogueManager.is_dialogue_active():
+	if not owner.is_player_controlled or owner.is_dead or DialogueManager.is_dialogue_active() or owner.is_player_input_blocked():
 		return
 	if owner.has_method("is_possession_input_locked") and bool(owner.call("is_possession_input_locked")):
 		return
@@ -90,7 +90,12 @@ func receive_possession_from(possessor: CharacterBody2D) -> bool:
 	var target_pos: Vector2 = owner.global_position
 	if possessor.has_method("consume_for_possession"):
 		possessor.call("consume_for_possession")
-	VfxPool.play_possession_vfx(possessor_pos, target_pos)
+	var unlock_input_cb := Callable()
+	if owner.has_method("push_external_player_input_lock") and owner.has_method("pop_external_player_input_lock"):
+		owner.call("push_external_player_input_lock")
+		unlock_input_cb = Callable(owner, "pop_external_player_input_lock")
+	if not VfxPool.play_possession_vfx(possessor_pos, target_pos, unlock_input_cb) and unlock_input_cb.is_valid():
+		unlock_input_cb.call()
 	return true
 
 func can_be_possessed_now() -> bool:

@@ -18,6 +18,8 @@ func test_possession_vfx_travels_then_releases_to_the_pool() -> void:
 
 	assert_true(vfx.visible)
 	assert_false(vfx.get_node("TravelOrb").visible)
+	assert_eq(vfx.get_node("SourceWisp").scale, Vector2(2.0, 2.0))
+	assert_eq(vfx.get_node("TargetWisp").scale, Vector2(2.0, 2.0))
 
 	await get_tree().create_timer(0.35, true, false, true).timeout
 
@@ -26,6 +28,11 @@ func test_possession_vfx_travels_then_releases_to_the_pool() -> void:
 	assert_true(travel_orb.visible)
 	assert_true(trail_particles.emitting)
 	assert_false(trail_particles.local_coords)
+	var trail_material := trail_particles.process_material as ParticleProcessMaterial
+	assert_eq(trail_material.scale_min, 1.0)
+	assert_eq(trail_material.scale_max, 2.0)
+	assert_lt(trail_material.direction.x, 0.0)
+	assert_gt(trail_material.direction.y, 0.0)
 	assert_gt(travel_orb.global_position.y, 20.0)
 	assert_lt(travel_orb.global_position.y, 40.0)
 

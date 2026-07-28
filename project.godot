@@ -31,6 +31,7 @@ SceneManager="*res://Global/scene_manager.tscn"
 InputBuffer="*uid://cfr6hvk4spmfe"
 VfxPool="*res://Global/vfx_pool.gd"
 PropManager="*res://Global/PropSystem/prop_manager.gd"
+MCPRuntimeProbe="*uid://bsg12huaf1u5i"
 
 [display]
 
@@ -42,7 +43,7 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/AS2P/plugin.cfg", "res://addons/gut/plugin.cfg")
+enabled=PackedStringArray("res://addons/AS2P/plugin.cfg", "res://addons/godot_mcp/plugin.cfg", "res://addons/gut/plugin.cfg")
 
 [importer_defaults]
 

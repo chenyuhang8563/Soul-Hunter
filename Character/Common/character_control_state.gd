@@ -120,7 +120,7 @@ func is_developer_mode_active() -> bool:
 	return DeveloperMode.applies_to(owner)
 
 func try_toggle_developer_mode() -> void:
-	if not owner.is_player_controlled or DialogueManager.is_dialogue_active():
+	if not owner.is_player_controlled or DialogueManager.is_dialogue_active() or is_player_input_blocked():
 		return
 	if not InputMap.has_action("developer_mode_toggle"):
 		return
